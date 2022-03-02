@@ -52,6 +52,7 @@ def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_s
     file_names_existing = [file_name for file_name in file_names if os.path.isfile(path+file_name)]
     if len(file_names_existing) < len(file_names):
         # if a file doesn't exist, generate them all again
+        # to-do: make this more efficient and just generate the missing files
         # waveform
         wf = wfc.Waveform(wf_model_name, wf_other_var_dic)
         # lambidified detector reponses and derivatives
@@ -102,4 +103,4 @@ def basic_network_benchmarking(net, numerical_over_symbolic_derivs=True, only_ne
         net.calc_sky_area_90(only_net=only_net)
 
 # https://note.nkmk.me/en/python-numpy-nan-remove/
-without_rows_w_nan = lambda xarr : xarr[np.logical_not(np.isnan(xarr)).any(axis=1)]
+without_rows_w_nan = lambda xarr : xarr[np.logical_not(np.isnan(xarr).any(axis=1))]
