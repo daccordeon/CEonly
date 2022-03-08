@@ -35,7 +35,7 @@ class HiddenPrints:
         sys.stdout = self._original_stdout
         
 def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_string,
-                                locs, use_rot, output_path=None):
+                                locs, use_rot, output_path=None, print_progress=True):
     """generate symbolic derivatives, from generate_lambdified_functions.py from S. Borhanian 2020
     use network's wf_model_name, wf_other_var_dic, deriv_symbs_string, and use_rot
     will print 'Done.' when finished unless all files already exist in which it will print as such
@@ -58,7 +58,7 @@ def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_s
         # lambidified detector reponses and derivatives
         drd.generate_det_responses_derivs_sym(wf, deriv_symbs_string, locs=locs, use_rot=use_rot,
                                               user_lambdified_functions_path=output_path)   
-    else:
+    elif print_progress:
         print('All lambdified derivatives already exist.')
         
 def basic_network_benchmarking(net, numerical_over_symbolic_derivs=True, only_net=True,
