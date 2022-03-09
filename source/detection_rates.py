@@ -8,7 +8,7 @@ from scipy.optimize import curve_fit
 from scipy.integrate import quad
 from astropy.cosmology import Planck18
 from multiprocessing import Pool
-from p_tqdm import p_map
+from p_tqdm import p_map, p_umap
 from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines
@@ -55,21 +55,28 @@ sigmoid_3parameter = lambda z, a, b, c : ((1+b)/(1+b*np.exp(a*z)))**c
 
 flatten_list = lambda x : [z for y in x for z in y] # x = [y, ...], y = [z, ...]
 
-def parallel_map(f, x, display_progress_bar=False):
+def parallel_map(f, x, display_progress_bar=False, unordered_if_possible=False, **kwargs):
     """f is a function to apply to elements in iterable x,
     display_progress_bar is a bool about whether to use tqdm;
     returns a list.
     direct substitution doesn't work because pool.map and p_map work differently,
     e.g. the latter can take lambdas"""
     if display_progress_bar:
-        return list(p_map(f, x))
+        if unordered_if_possible:
+            return list(p_umap(f, x, **kwargs))
+        else:
+            return list(p_map(f, x, **kwargs))
     else:
         global _global_copy_of_f
         def _global_copy_of_f(x0):
             return f(x0)
         
         with Pool() as pool:
-            return list(pool.map(_global_copy_of_f, x))
+            # to-do: add unordered using imap or imap_unordered?
+            if unordered_if_possible:
+                return list(pool.imap_unordered(_global_copy_of_f, x, **kwargs))
+            else:
+                return list(pool.map(_global_copy_of_f, x, **kwargs))     
 
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
                                              mass_dict, spin_dict, redshifted,
@@ -133,7 +140,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
 
     # calculate results: z, snr, errs (logMc, logDL, eta, iota), sky area
     # p_umap is unordered in redshift for greater speed (check)
-    results = np.array(p_umap(calculate_benchmark_from_injection, inj_data, num_cpus=os.cpu_count()-1))
+    results = np.array(parallel_map(calculate_benchmark_from_injection, inj_data, num_cpus=os.cpu_count()-1, unordered_if_possible=True))
     # filter out NaNs
     results = without_rows_w_nan(results)
     if len(results) == 0:
@@ -237,7 +244,7 @@ def calculate_detection_rate_from_results(results, science_case, print_reach=Tru
     det_rate = lambda z0, snr_threshold : quad(lambda z : det_eff(z, snr_threshold)*merger_rate(z)/(1+z), 0, z0)[0]    
     return zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot
     
-def plot_snr_eff_detrate_vs_redshift(results, zavg_efflo_effhi,
+def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
                                     det_eff_fits, det_rate_limit, det_rate,
                                     zmin_plot, zmax_plot,
                                     file_tag, human_file_tag, show_fig=True,
@@ -304,7 +311,7 @@ def plot_snr_eff_detrate_vs_redshift(results, zavg_efflo_effhi,
     
 # Replicating Borhanian and Sathya 2022 injections and detection rates
 def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs,
-                                            show_fig=True, print_progress=True, print_reach=True, hack_merger_rate_coeff=None):
+                                            generate_fig=True, show_fig=True, print_progress=True, print_reach=True, hack_merger_rate_coeff=None):
     """initialises network, benchmarks against injections, calculates efficiency and detection rate, plots"""
     # initialisation
     locs = [x.split('_')[-1] for x in network_spec]
@@ -387,6 +394,11 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
                                                 conv_cos, conv_log, use_rot, only_net,
                                                 numerical_over_symbolic_derivs, numerical_deriv_settings,
                                                 file_tag)
+    else:
+        if (not generate_fig) & print_progress:
+            print('Results already exist; figure not (re)generated.')
+            # to-do: increase efficiency by making this check sooner? this case seems unlikely.
+            return
 
     results = np.load(f'data_redshift_snr_errs_sky-area/results_{file_tag}.npy')
     if print_progress: print('Results found and loaded.')
@@ -400,10 +412,11 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     
     # ------------------------------------------------
     # plotting
-    plot_snr_eff_detrate_vs_redshift(results,
-                                     zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot,
-                                     file_tag, human_file_tag, show_fig=show_fig,
-                                     print_progress=print_progress, hack_merger_rate_coeff=hack_merger_rate_coeff)
+    if generate_fig:
+        plot_snr_eff_detrate_vs_redshift(results, science_case,
+                                         zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot,
+                                         file_tag, human_file_tag, show_fig=show_fig,
+                                         print_progress=print_progress, hack_merger_rate_coeff=hack_merger_rate_coeff)
     
 # Collating different networks saved using the above method to generate B&S2022 Fig 2
 def collate_eff_detrate_vs_redshift(axs,
