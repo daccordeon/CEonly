@@ -457,14 +457,10 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
         else:
             return intermediate.replace('_WF_', '\nwaveform: ').replace('_NUM-INJS_', "\ninjections per bin: ")
 
-def compare_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, hack_merger_rate_coeff=None):
-    """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
-    even if the absolute detection rate is wildly (1e9) off
-    network_spec_list is assumed unique"""
+def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True):
+    """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network"""
     # finding file names
     net_labels = [network.Network(network_spec).label for network_spec in network_spec_list]
-    if plot_label is None:
-        plot_label = f"SCI-CASE_{science_case}{''.join(tuple('_NET_'+l for l in net_labels))}"
     
     file_list = os.listdir("data_redshift_snr_errs_sky-area")
     found_files = np.array([])
@@ -480,24 +476,35 @@ def compare_networks_from_saved_results(network_spec_list, science_case, save_fi
         # appending is slow but this problem is small
         unique_wf_index_list = []
         for i, wf in enumerate(decomp_files[:,1]):
-            # if specified a wf (with any auxillary), then skip all those that don't match
+            # if specified a wf (with any auxillary), then skip those that don't match
             if specific_wf is not None:
                 if wf != specific_wf:
                     continue
-    
-            if np.sum(decomp_files[:,1] == wf) == 1:
+            # if multiple files with same tag, then select the one with the greatest number of injections
+            num_injs = int(decomp_files[i,2])
+            num_injs_list = [int(j) for j in decomp_files[:,2][decomp_files[:,1] == wf]]
+            # covers the case where len(num_injs_list) = 1, i.e. unique wf
+            if num_injs == max(num_injs_list):
                 unique_wf_index_list.append(i)
-            else:
-                # if multiple files with same tag, then select the one with the greatest number of injections
-                num_injs_list = decomp_files[:,2][decomp_files[:,1] == wf]
-                unique_wf_index_list.append(num_injs_list.argmax())
-        found_files = np.append(found_files, matches[list(set(unique_wf_index_list))])
+        found_files = np.append(found_files, matches[list(set(unique_wf_index_list))]) #could flatten matches here
     found_files = found_files.flatten()
     if len(found_files) == 0:
         raise ValueError('No files found.')
-    else:
+    elif print_progress:
         print(f'Found {len(found_files)} file/s:', *found_files, sep='\n')
-       
+    return list(found_files)
+
+def compare_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, hack_merger_rate_coeff=None, print_progress=True):
+    """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
+    even if the absolute detection rate is wildly (1e9) off
+    network_spec_list is assumed unique"""
+    # finding file names
+    net_labels = [network.Network(network_spec).label for network_spec in network_spec_list]
+    if plot_label is None:
+        plot_label = f"SCI-CASE_{science_case}{''.join(tuple('_NET_'+l for l in net_labels))}"
+    
+    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress)
+
     # load file and add results to plot
     plt.rcParams.update({'font.size': 14})
     fig, axs = plt.subplots(2, 1, sharex=True, figsize=(6, 8), gridspec_kw={'wspace':0, 'hspace':0.05})
