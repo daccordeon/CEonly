@@ -1,38 +1,19 @@
 """benchmarking.py
-James Gardner, 2022"""
+James Gardner, March 2022"""
+from useful_functions import *
+
 from gwbench import network
 from gwbench import wf_class as wfc
 from gwbench import detector_response_derivatives as drd
 from gwbench import injections
 
-import os, sys
+import os
 import numpy as np
 # from p_tqdm import p_map
 from p_tqdm import p_umap
 from copy import deepcopy
 import matplotlib.pyplot as plt
 # from scipy.stats import gmean
-
-PI = np.pi
-SNR_THRESHOLD_LO = 10 # for detection
-SNR_THRESHOLD_HI = 100 # for high fidelity
-
-class PassEnterExit:
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-# https://stackoverflow.com/a/45669280; use as ``with HiddenPrints():''
-class HiddenPrints:
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        sys.stdout = open(os.devnull, 'w')
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout.close()
-        sys.stdout = self._original_stdout
         
 def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_string,
                                 locs, use_rot, output_path=None, print_progress=True):
@@ -101,6 +82,3 @@ def basic_network_benchmarking(net, numerical_over_symbolic_derivs=True, only_ne
         net.calc_errors(only_net=only_net) #cond_sup=# 1e15 (default) or None (allows all)
         # calculate the 90%-credible sky area (in [deg]^2)
         net.calc_sky_area_90(only_net=only_net)
-
-# https://note.nkmk.me/en/python-numpy-nan-remove/
-without_rows_w_nan = lambda xarr : xarr[np.logical_not(np.isnan(xarr).any(axis=1))]

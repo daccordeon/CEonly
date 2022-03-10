@@ -1,82 +1,18 @@
 """James Gardner, March 2022"""
-
+from useful_functions import *
+from constants import *
 from basic_benchmarking import *
+from filename_input_and_manipulations import *
+
 from gwbench.basic_relations import f_isco_Msolar
 
 from scipy.stats import gmean
 from scipy.optimize import curve_fit
 from scipy.integrate import quad
 from astropy.cosmology import Planck18
-from multiprocessing import Pool
-from p_tqdm import p_map, p_umap
 from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
-import matplotlib.lines as mlines
-
-# colours pulled from B&S2022 using Inkscape
-BS2022_STANDARD_6 = dict(nets=[
-    ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'],
-    ['V+_V', 'K+_K', 'Voyager-CBO_H', 'Voyager-CBO_L', 'Voyager-CBO_I'],
-    ['A+_H', 'A+_L', 'K+_K', 'A+_I', 'ET_ET1'],
-    ['V+_V', 'K+_K', 'A+_I', 'CE1-40-CBO_C'],
-    ['K+_K', 'A+_I', 'ET_ET1', 'CE1-40-CBO_C'],
-    ['ET_ET1', 'CE1-40-CBO_C', 'CE1-40-CBO_S']],
-    colours=['#8c510aff','#bf812dff','#dfc27dff','#80cdc1ff','#35978fff','#01665eff'])
-# https://flatuicolors.com/palette/us
-CE_ONLY = dict(nets=[
-    ['CE1-40-CBO_C', 'CE1-20-PMO_S'],
-    ['CE1-40-CBO_C', 'CE1-40-CBO_S'],
-    ['CE2-40-CBO_C', 'CE2-20-PMO_S'],
-    ['CE2-40-CBO_C', 'CE2-40-CBO_S']],
-    colours=['#a29bfe','#ff7675','#6c5ce7','#d63031'])
-CE_S_W_ET = dict(nets=[
-    ['CE1-20-PMO_S', 'ET_ET1'],
-    ['CE1-40-CBO_S', 'ET_ET1'],
-    ['CE2-20-PMO_S', 'ET_ET1'],
-    ['CE2-40-CBO_S', 'ET_ET1']],
-    colours=['#74b9ff','#fd79a8','#0984e3','#e84393'])
-# colour look-up given net_spec
-DICT_KEY_NETSPEC_VAL_COLOUR = dict()
-for dict_nets_colours in BS2022_STANDARD_6, CE_ONLY, CE_S_W_ET:
-    for net_spec in dict_nets_colours['nets']:
-        DICT_KEY_NETSPEC_VAL_COLOUR[repr(net_spec)] = dict_nets_colours['colours'][dict_nets_colours['nets'].index(net_spec)]
-
-HACK_DR_COEFF_BNS = 38
-HACK_DR_COEFF_BBH = 24
-def hack_coeff_default(science_case):
-    if science_case == 'BNS':
-        return HACK_DR_COEFF_BNS
-    elif science_case == 'BBH':
-        return HACK_DR_COEFF_BBH
-    else:
-        raise ValueError('Science case not recognised.')
-
-sigmoid_3parameter = lambda z, a, b, c : ((1+b)/(1+b*np.exp(a*z)))**c
-
-flatten_list = lambda x : [z for y in x for z in y] # x = [y, ...], y = [z, ...]
-
-def parallel_map(f, x, display_progress_bar=False, unordered_if_possible=False, **kwargs):
-    """f is a function to apply to elements in iterable x,
-    display_progress_bar is a bool about whether to use tqdm;
-    returns a list.
-    direct substitution doesn't work because pool.map and p_map work differently,
-    e.g. the latter can take lambdas"""
-    if display_progress_bar:
-        if unordered_if_possible:
-            return list(p_umap(f, x, **kwargs))
-        else:
-            return list(p_map(f, x, **kwargs))
-    else:
-        global _global_copy_of_f
-        def _global_copy_of_f(x0):
-            return f(x0)
-        
-        with Pool() as pool:
-            # to-do: add unordered using imap or imap_unordered?
-            if unordered_if_possible:
-                return list(pool.imap_unordered(_global_copy_of_f, x, **kwargs))
-            else:
-                return list(pool.map(_global_copy_of_f, x, **kwargs))     
+import matplotlib.lines as mlines   
 
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
                                              mass_dict, spin_dict, redshifted,
@@ -447,54 +383,7 @@ def collate_eff_detrate_vs_redshift(axs,
     axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot),  color=line_lo.get_color())
     axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot), color=line_hi.get_color(), linestyle='--')
 
-def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
-    intermediate = file.replace('results_', '').replace('.npy', '').replace('NET_', 'network: ').replace('_SCI-CASE_', '\nscience case: ').replace('..', ', ')
-    if net_only:
-        return intermediate.split('\n')[0]
-    else:
-        if two_rows_only:
-            return intermediate.replace('_WF_', ', waveform: ').replace('_NUM-INJS_', ", injections per bin: ")
-        else:
-            return intermediate.replace('_WF_', '\nwaveform: ').replace('_NUM-INJS_', "\ninjections per bin: ")
-
-def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True):
-    """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network"""
-    # finding file names
-    net_labels = [network.Network(network_spec).label for network_spec in network_spec_list]
-    
-    file_list = os.listdir("data_redshift_snr_errs_sky-area")
-    found_files = np.array([])
-    for net_label in net_labels:
-        # file_tag = f'NET_{net.label}_SCI-CASE_{science_case}_WF_..._NUM-INJS_{num_injs}'
-        file_tag_partial = f'NET_{net_label}_SCI-CASE_{science_case}'
-        # file is file_name
-        matches = np.array([file for file in file_list if file_tag_partial in file])
-        if len(matches) == 0:
-            continue
-        # [[f'NET_{net.label}_SCI-CASE_{science_case}', f'{wf_model_name}', f'{num_injs}', '.npy'], [...], ...]
-        decomp_files = np.array([file.replace('.npy', '').replace('_WF_', '_NUM-INJS_').split('_NUM-INJS_') for file in matches])
-        # appending is slow but this problem is small
-        unique_wf_index_list = []
-        for i, wf in enumerate(decomp_files[:,1]):
-            # if specified a wf (with any auxillary), then skip those that don't match
-            if specific_wf is not None:
-                if wf != specific_wf:
-                    continue
-            # if multiple files with same tag, then select the one with the greatest number of injections
-            num_injs = int(decomp_files[i,2])
-            num_injs_list = [int(j) for j in decomp_files[:,2][decomp_files[:,1] == wf]]
-            # covers the case where len(num_injs_list) = 1, i.e. unique wf
-            if num_injs == max(num_injs_list):
-                unique_wf_index_list.append(i)
-        found_files = np.append(found_files, matches[list(set(unique_wf_index_list))]) #could flatten matches here
-    found_files = found_files.flatten()
-    if len(found_files) == 0:
-        raise ValueError('No files found.')
-    elif print_progress:
-        print(f'Found {len(found_files)} file/s:', *found_files, sep='\n')
-    return list(found_files)
-
-def compare_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, hack_merger_rate_coeff=None, print_progress=True):
+def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, hack_merger_rate_coeff=None, print_progress=True):
     """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
     even if the absolute detection rate is wildly (1e9) off
     network_spec_list is assumed unique"""
