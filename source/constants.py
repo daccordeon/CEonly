@@ -1,6 +1,7 @@
 """James Gardner, March 2022"""
 from numpy import pi as PI
 
+# low and high SNR thresholds
 SNR_THRESHOLD_LO = 10 # for detection
 SNR_THRESHOLD_HI = 100 # for high fidelity
 
@@ -32,14 +33,3 @@ DICT_KEY_NETSPEC_VAL_COLOUR = dict()
 for dict_nets_colours in BS2022_STANDARD_6, CE_ONLY, CE_S_W_ET:
     for net_spec in dict_nets_colours['nets']:
         DICT_KEY_NETSPEC_VAL_COLOUR[repr(net_spec)] = dict_nets_colours['colours'][dict_nets_colours['nets'].index(net_spec)]
-
-# detection rate (DR) hack coefficients to correct scale manually
-HACK_DR_COEFF_BNS = 38
-HACK_DR_COEFF_BBH = 24
-def hack_coeff_default(science_case):
-    if science_case == 'BNS':
-        return HACK_DR_COEFF_BNS
-    elif science_case == 'BBH':
-        return HACK_DR_COEFF_BBH
-    else:
-        raise ValueError('Science case not recognised.')

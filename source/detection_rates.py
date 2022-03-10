@@ -2,7 +2,7 @@
 from useful_functions import *
 from constants import *
 from basic_benchmarking import *
-from filename_input_and_manipulations import *
+from filename_search_and_manipulation import *
 
 from gwbench.basic_relations import f_isco_Msolar
 
@@ -13,6 +13,17 @@ from astropy.cosmology import Planck18
 from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
+
+# detection rate (DR) hack coefficients to correct scale manually
+HACK_DR_COEFF_BNS = 38
+HACK_DR_COEFF_BBH = 24
+def hack_coeff_default(science_case):
+    if science_case == 'BNS':
+        return HACK_DR_COEFF_BNS
+    elif science_case == 'BBH':
+        return HACK_DR_COEFF_BBH
+    else:
+        raise ValueError('Science case not recognised.')
 
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
                                              mass_dict, spin_dict, redshifted,
@@ -240,7 +251,7 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
     axs[-1].xaxis.set_minor_formatter(plt.NullFormatter())
     axs[-1].set_xlabel('redshift, z')
 
-    fig.savefig(f'plots/snr_eff_rate_vs_redshift_{file_tag}.pdf', bbox_inches='tight')
+    fig.savefig(f'plots/snr_eff_rate_vs_redshift/snr_eff_rate_vs_redshift_{file_tag}.pdf', bbox_inches='tight')
     if show_fig:
         plt.show(fig)
     plt.close(fig)
@@ -458,7 +469,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     axs[0].legend(handles=new_handles, labels=labels, handlelength=2, bbox_to_anchor=(1.04,1), loc="upper left")
     axs[1].legend(handlelength=2, loc="upper left")
     if save_fig:
-        fig.savefig(f'plots/collated_eff_rate_vs_z_{plot_label}.pdf', bbox_inches='tight')
+        fig.savefig(f'plots/collated_eff_rate_vs_z/collated_eff_rate_vs_z_{plot_label}.pdf', bbox_inches='tight')
     if show_fig:
         plt.show(fig)
     plt.close(fig)
