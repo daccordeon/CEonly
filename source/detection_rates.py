@@ -87,7 +87,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
 
     # calculate results: z, snr, errs (logMc, logDL, eta, iota), sky area
     # p_umap is unordered in redshift for greater speed (check)
-    results = np.array(parallel_map(calculate_benchmark_from_injection, inj_data, num_cpus=os.cpu_count()-1, unordered_if_possible=True))
+    results = np.array(parallel_map(calculate_benchmark_from_injection, inj_data, num_cpus=os.cpu_count()-1, unordered=True))
     # filter out NaNs
     results = without_rows_w_nan(results)
     if len(results) == 0:

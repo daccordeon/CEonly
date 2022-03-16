@@ -28,25 +28,24 @@ sigmoid_3parameter = lambda z, a, b, c : ((1+b)/(1+b*np.exp(a*z)))**c
 
 flatten_list = lambda x : [z for y in x for z in y] # x = [y, ...], y = [z, ...]
 
-def parallel_map(f, x, display_progress_bar=False, unordered_if_possible=False, **kwargs):
+def parallel_map(f, x, display_progress_bar=False, unordered=False, num_cpus=os.cpu_count()):
     """f is a function to apply to elements in iterable x,
     display_progress_bar is a bool about whether to use tqdm;
     returns a list.
     direct substitution doesn't work because pool.map and p_map work differently,
     e.g. the latter can take lambdas"""
     if display_progress_bar:
-        if unordered_if_possible:
-            return list(p_umap(f, x, **kwargs))
+        if unordered:
+            return list(p_umap(f, x, num_cpus=num_cpus))
         else:
-            return list(p_map(f, x, **kwargs))
+            return list(p_map( f, x, num_cpus=num_cpus))
     else:
         global _global_copy_of_f
         def _global_copy_of_f(x0):
             return f(x0)
         
-        with Pool() as pool:
-            # to-do: add unordered using imap or imap_unordered?
-            if unordered_if_possible:
-                return list(pool.imap_unordered(_global_copy_of_f, x, **kwargs))
+        with Pool(processes=num_cpus) as pool:
+            if unordered:
+                return list(pool.imap_unordered(_global_copy_of_f, x))
             else:
-                return list(pool.map(_global_copy_of_f, x, **kwargs))  
+                return list(pool.map(_global_copy_of_f, x))  

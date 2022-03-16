@@ -16,20 +16,26 @@ BS2022_STANDARD_6 = dict(nets=[
     ['ET_ET1', 'CE1-40-CBO_C', 'CE1-40-CBO_S']],
     colours=['#8c510aff','#bf812dff','#dfc27dff','#80cdc1ff','#35978fff','#01665eff'])
 # https://flatuicolors.com/palette/us
-CE_ONLY = dict(nets=[
-    ['CE1-40-CBO_C', 'CE1-20-PMO_S'],
-    ['CE1-40-CBO_C', 'CE1-40-CBO_S'],
-    ['CE2-40-CBO_C', 'CE2-20-PMO_S'],
-    ['CE2-40-CBO_C', 'CE2-40-CBO_S']],
-    colours=['#a29bfe','#ff7675','#6c5ce7','#d63031'])
+# updated networks after meeting on 2022-03-11, now also studying 20-CBO and only CE2
+CE_ONLY_C_and_S = dict(nets=[
+    ['CE2-40-CBO_C', 'CE2-40-CBO_S'],
+    ['CE2-40-CBO_C', 'CE2-20-CBO_S'],
+    ['CE2-40-CBO_C', 'CE2-20-PMO_S']],
+    colours=['#0984e3', '#74b9ff', '#ff7675'])
+CE_ONLY_C_and_N = dict(nets=[
+    ['CE2-40-CBO_C', 'CE2-40-CBO_N'],
+    ['CE2-40-CBO_C', 'CE2-20-CBO_N'],
+    ['CE2-40-CBO_C', 'CE2-20-PMO_N']],
+    colours=['#6c5ce7', '#a29bfe', '#fd79a8'])
 CE_S_W_ET = dict(nets=[
-    ['CE1-20-PMO_S', 'ET_ET1'],
-    ['CE1-40-CBO_S', 'ET_ET1'],
-    ['CE2-20-PMO_S', 'ET_ET1'],
-    ['CE2-40-CBO_S', 'ET_ET1']],
-    colours=['#74b9ff','#fd79a8','#0984e3','#e84393'])
+    ['ET_ET1', 'CE2-40-CBO_S'],
+    ['ET_ET1', 'CE2-20-CBO_S'],
+    ['ET_ET1', 'CE2-20-PMO_S']],
+    colours=['#00b894', '#55efc4', '#fab1a0'])
+# list of net sets to replicate B&S2022 and study CE only science case 
+NET_DICT_LIST = [BS2022_STANDARD_6, CE_ONLY_C_and_S, CE_ONLY_C_and_N, CE_S_W_ET]
 # colour look-up table given net_spec
 DICT_KEY_NETSPEC_VAL_COLOUR = dict()
-for dict_nets_colours in BS2022_STANDARD_6, CE_ONLY, CE_S_W_ET:
+for dict_nets_colours in NET_DICT_LIST:
     for net_spec in dict_nets_colours['nets']:
         DICT_KEY_NETSPEC_VAL_COLOUR[repr(net_spec)] = dict_nets_colours['colours'][dict_nets_colours['nets'].index(net_spec)]
