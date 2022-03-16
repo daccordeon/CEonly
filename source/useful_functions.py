@@ -24,6 +24,7 @@ class HiddenPrints:
 # https://note.nkmk.me/en/python-numpy-nan-remove/
 without_rows_w_nan = lambda xarr : xarr[np.logical_not(np.isnan(xarr).any(axis=1))]
 
+# the modified sigmoid function with c free, for c=1 it is the regular sigmoid
 sigmoid_3parameter = lambda z, a, b, c : ((1+b)/(1+b*np.exp(a*z)))**c
 
 flatten_list = lambda x : [z for y in x for z in y] # x = [y, ...], y = [z, ...]
