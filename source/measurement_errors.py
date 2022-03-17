@@ -84,10 +84,12 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         xlim_list = ((1e0, 1e2), (1e-2, 1e2), (1e-7, 1e-4), (1e-6, 1e-3), (1e-2, 1e1), (1e-3, 1e1))
     
     for i in range(len(axs[1])):
+        axs[0, i].grid(which='both', axis='both', color='lightgrey')
+        axs[1, i].grid(which='both', axis='both', color='lightgrey')         
         axs[1, i].axhline(1, color='lightgrey', zorder=1)
         axs[1, i].set(xscale='log', yscale='log', xlabel=quantity_short_labels[i], xlim=xlim_list[i])
 
-    for ax in axs[:, 0]:
+    for ax in axs[:, 0]:   
         ax.axvspan(ax.get_xlim()[0], SNR_THRESHOLD_LO, alpha=0.5, color='lightgrey')
         
     # hist handles are boxes, want lines and so borrow from 1, 1 to avoid dotted

@@ -5,6 +5,14 @@ from numpy import pi as PI
 SNR_THRESHOLD_LO = 10 # for detection
 SNR_THRESHOLD_HI = 100 # for high fidelity
 
+# merger rates from Section IV-A in https://arxiv.org/abs/2111.03634v2.pdf
+GWTC3_MERGER_RATE_BNS = 105.5
+GWTC3_MERGER_RATE_BBH = 23.9
+# as quoted in B&S2022
+# to-do: add functionality to switch to old rates to compare directly to B&S2022
+# GWTC2_MERGER_RATE_BNS = 320
+# GWTC2_MERGER_RATE_BBH = 24
+
 # network sets
 # colours pulled from B&S2022 using Inkscape
 BS2022_STANDARD_6 = dict(nets=[

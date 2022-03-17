@@ -14,17 +14,6 @@ from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
 
-# detection rate (DR) hack coefficients to correct scale manually
-HACK_DR_COEFF_BNS = 38
-HACK_DR_COEFF_BBH = 24
-def hack_coeff_default(science_case):
-    if science_case == 'BNS':
-        return HACK_DR_COEFF_BNS
-    elif science_case == 'BBH':
-        return HACK_DR_COEFF_BBH
-    else:
-        raise ValueError('Science case not recognised.')
-
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
                                              mass_dict, spin_dict, redshifted,
                                              base_params, deriv_symbs_string, coeff_fisco,
@@ -93,8 +82,17 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
     if len(results) == 0:
         raise ValueError('All calculated values are NaN, FIM is ill-conditioned.')
     np.save(f'data_redshift_snr_errs_sky-area/results_{file_tag}.npy', results)  
-    
-def calculate_detection_rate_from_results(results, science_case, print_reach=True, hack_merger_rate_coeff=None):
+
+# 4*pi to convert from Mpc^3 sr^-1 (sr is steradian) to Mpc^3
+differential_comoving_volume = lambda z : 4.*PI*Planck18.differential_comoving_volume(z).value
+# normalisation of merger rate ($\dot{n}(z)$) to values in https://arxiv.org/pdf/2111.03606v2.pdf
+# 1e-9 converts Gpc^-3 to Mpc^-3 to match Planck18, in Fig 2 of Ngetal2021: the ndot_F rate is in Gpc^-3 yr^-1
+# injections.py mentions an old arXiv version: https://arxiv.org/pdf/2012.09876v1.pdf
+# this states that the ndot form in injections.py is just a proportionality relation, need to normalise
+merger_rate_bns = lambda z: GWTC3_MERGER_RATE_BNS/injections.bns_md_merger_rate(0)*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z)
+merger_rate_bbh = lambda z: GWTC3_MERGER_RATE_BBH/injections.mdbn_merger_rate(0)*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
+
+def calculate_detection_rate_from_results(results, science_case, print_reach=True):
     """calculting efficiency and detection rate for plotting from results"""
     # count efficiency over sources in (z, z+Delta_z)
     zmin_plot, zmax_plot, num_zbins_fine = 1e-2, 50, 40 # eyeballing 40 bins from Fig 2
@@ -157,30 +155,11 @@ def calculate_detection_rate_from_results(results, science_case, print_reach=Tru
             print(f"Given SNR threshold rho_* = {snr_threshold:3d}, reach ({1-reach_eff:.1%}) z_r = {reach:.3f} and horizon ({1-horizon_eff:.1%}) z_h = {horizon:.3f}")
             if reach == reach_initial_guess:
                 print('! Reach converged to initial guess, examine local slope.')
-        
-    # to-do: fix merger rate so that the plot reaches beyond 1e5 detections per year, maybe a units issue?
-    #merger_rate = lambda z: injections.bns_md_merger_rate(z) # too low (1e1) but below is too large (1e13)
-    # don't know if injections.bns_md_merger_rate(z) is R(z) or \dot{n}(z) (merger rate density)
-    # bns_md_merger_rate_uniform_comoving_volume_redshift_inversion_sampler suggests the latter
-    # 4*pi to convert from Mpc^3 sr^-1 (sr is steradian)
-    differential_comoving_volume = lambda z : 4.*PI*Planck18.differential_comoving_volume(z).value # in Mpc^3
-    
-    # the merger rate is still incorrect, so experiment with the missing factor
-    if hack_merger_rate_coeff is None:
-        hack_merger_rate_coeff = 1
-    elif hack_merger_rate_coeff == 'default':
-        hack_merger_rate_coeff = hack_coeff_default(science_case)
-    # 1e-9 converts Gpc^-3 to Mpc^-3 to match Planck18
+
     if science_case == 'BNS':
-        merger_rate = lambda z: hack_merger_rate_coeff*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z) # now in yr^-1? what is bns_md..._rate in?
-        # want merger rate density in Mpc^-3 yr^-1, not just 1e-9 difference (e.g. Mpc^3 to Gpc^3) or c
+        merger_rate = merger_rate_bns
     elif science_case == 'BBH':
-        # to-do: figure out remaining missing factors
-        # injections.py mentions an old arXiv version: https://arxiv.org/pdf/2012.09876v1.pdf
-        # this states that the ndot form in injections.py is just a proportionality relation
-        # in Fig 2 of Ngetal2021: the ndot_F rate is in Gpc^-3 yr^-1
-        # --> there is a conversion/units factor missing in my calculation! to-do: find out what it is.
-        merger_rate = lambda z: hack_merger_rate_coeff*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
+        merger_rate = merger_rate_bbh
     else:
         raise ValueError('Science case not recognised.')    
 
@@ -195,7 +174,7 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
                                     det_eff_fits, det_rate_limit, det_rate,
                                     zmin_plot, zmax_plot,
                                     file_tag, human_file_tag, show_fig=True,
-                                    print_progress=True, hack_merger_rate_coeff=None):
+                                    print_progress=True):
     """plotting to replicate Fig 2 in B&S2022
     to-do: tidy up number of arguments"""   
     # switching to using the same colour but different linestyles for LO and HI SNR threshold
@@ -238,18 +217,15 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
     axs[2].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot), '--', color=colour)
     axs[2].set_ylim((1e-1, 6e5)) # to match B&S2022 Fig 2
     if print_progress: print('Detection rate calculated.')
-    if hack_merger_rate_coeff is not None:
-        if hack_merger_rate_coeff == 'default':
-            hack_merger_rate_coeff = hack_coeff_default(science_case)
-        axs[2].set_ylabel(r'detection rate, $D_R$ / $\mathrm{{yr}}^{{-1}}$'+f'\nhack co-efficient: {hack_merger_rate_coeff}', color='red') # is wrong!
-        axs[2].tick_params(axis='y', colors='red') 
-    else:
-        axs[2].set_ylabel(r'detection rate, $D_R$ / $\mathrm{yr}^{-1}$')  
+    axs[2].set_ylabel(r'detection rate, $D_R$ / $\mathrm{yr}^{-1}$')  
     axs[-1].set_xscale('log')
     axs[-1].set_xlim((zmin_plot, zmax_plot))
     axs[-1].xaxis.set_minor_locator(plt.LogLocator(base=10.0, subs=0.1*np.arange(1, 10), numticks=10))
     axs[-1].xaxis.set_minor_formatter(plt.NullFormatter())
     axs[-1].set_xlabel('redshift, z')
+    axs[0].grid(which='both', axis='both', color='lightgrey')
+    axs[1].grid(which='both', axis='both', color='lightgrey')
+    axs[2].grid(which='both', axis='both', color='lightgrey')    
 
     fig.savefig(f'plots/snr_eff_rate_vs_redshift/snr_eff_rate_vs_redshift_{file_tag}.pdf', bbox_inches='tight')
     if show_fig:
@@ -258,7 +234,7 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
     
 # Replicating Borhanian and Sathya 2022 injections and detection rates
 def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs,
-                                            generate_fig=True, show_fig=True, print_progress=True, print_reach=True, hack_merger_rate_coeff=None):
+                                            generate_fig=True, show_fig=True, print_progress=True, print_reach=True):
     """initialises network, benchmarks against injections, calculates efficiency and detection rate, plots"""
     # initialisation
     locs = [x.split('_')[-1] for x in network_spec]
@@ -353,7 +329,7 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     # ------------------------------------------------
     # calculting efficiency and detection rate for plotting
     zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot = \
-        calculate_detection_rate_from_results(results, science_case, print_reach, hack_merger_rate_coeff=hack_merger_rate_coeff)
+        calculate_detection_rate_from_results(results, science_case, print_reach)
     
     if print_progress: print('Detection rate defined, now calculating...')
     
@@ -363,7 +339,7 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         plot_snr_eff_detrate_vs_redshift(results, science_case,
                                          zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot,
                                          file_tag, human_file_tag, show_fig=show_fig,
-                                         print_progress=print_progress, hack_merger_rate_coeff=hack_merger_rate_coeff)
+                                         print_progress=print_progress)
     
 # Collating different networks saved using the above method to generate B&S2022 Fig 2
 def collate_eff_detrate_vs_redshift(axs,
@@ -394,7 +370,7 @@ def collate_eff_detrate_vs_redshift(axs,
     axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot),  color=line_lo.get_color())
     axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot), color=line_hi.get_color(), linestyle='--')
 
-def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, hack_merger_rate_coeff=None, print_progress=True):
+def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, print_progress=True):
     """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
     even if the absolute detection rate is wildly (1e9) off
     network_spec_list is assumed unique"""
@@ -413,29 +389,24 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     axs[0].axhline(0, color='grey', linewidth=0.5)
     axs[0].axhline(1, color='grey', linewidth=0.5)
     axs[0].set_ylim((0-0.05, 1+0.05))
-    axs[0].set_ylabel(r'detection efficiency, $\varepsilon$')
+    axs[0].set_ylabel(r'detection efficiency, $\varepsilon$') 
     axs[1].set_ylim((1e-1, 6e5)) # to match B&S2022 Fig 2    
-    if hack_merger_rate_coeff is not None:
-        if hack_merger_rate_coeff == 'default':
-            hack_merger_rate_coeff = hack_coeff_default(science_case)
-        axs[1].set_ylabel(r'detection rate, $D_R$ / $\mathrm{{yr}}^{{-1}}$'+f'\nhack co-efficient: {hack_merger_rate_coeff}', color='red') # is wrong!
-        axs[1].tick_params(axis='y', colors='red') 
-    else:
-        axs[1].set_ylabel(r'detection rate, $D_R$ / $\mathrm{yr}^{-1}$')  
+    axs[1].set_ylabel(r'detection rate, $D_R$ / $\mathrm{yr}^{-1}$')  
     fig.align_ylabels()
     axs[-1].set_xscale('log')
     axs[-1].set_xlim((zaxis_plot[0], zaxis_plot[-1]))
     axs[-1].xaxis.set_minor_locator(plt.LogLocator(base=10.0, subs=0.1*np.arange(1, 10), numticks=10))
     axs[-1].xaxis.set_minor_formatter(plt.NullFormatter())
-    axs[-1].set_xlabel('redshift, z')    
-#     axs[-1].grid(True, which='both')
+    axs[-1].set_xlabel('redshift, z')
+    axs[0].grid(which='both', axis='both', color='lightgrey')   
+    axs[-1].grid(which='both', axis='both', color='lightgrey')
     
     colours_used = []
     for i, file in enumerate(found_files):
         results = np.load(f'data_redshift_snr_errs_sky-area/{file}')
         with HiddenPrints():
             zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, _, _ = \
-                calculate_detection_rate_from_results(results, science_case, print_reach=False, hack_merger_rate_coeff=hack_merger_rate_coeff)    
+                calculate_detection_rate_from_results(results, science_case, print_reach=False)    
         # to not repeatedly plot merger rate
         if i == 0:
             axs[1].loglog(zaxis_plot, parallel_map(det_rate_limit, zaxis_plot), color='black', linewidth=3, label=f'{science_case} merger rate')
