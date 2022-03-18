@@ -1,6 +1,7 @@
 """James Gardner, March 2022"""
 from useful_functions import *
 from constants import *
+from networks import DICT_NETSPEC_TO_COLOUR
 from basic_benchmarking import *
 from filename_search_and_manipulation import *
 
@@ -273,9 +274,10 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         'tc':    0,
         'phic':  0,
         'gmst0': 0, # assume zero given B2021
-        # to-do: find correct tidal parameters
-        'lam_t': 800, # combined dimensionless tidal deformability, 800 for GW170817, to-do: what did B&S2022 use?
-        'delta_lam_t': 0, # assuming zero but can be calculated if m1, m2, Love number, and EoS (i.e. radii) known
+        # B&S2022 uses tidal waveforms but turns tides off
+        # these can be calculated if m1, m2, Love number, and EoS (i.e. radii) known
+        'lam_t': 0, # combined dimensionless tidal deformability
+        'delta_lam_t': 0,
     }
 
     # derivative settings
@@ -292,11 +294,11 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     # injection settings - other: number of injections per redshift bin (over 6 bins)
     redshifted = 1 # whether sample masses already redshifted wrt z
     if wf_other_var_dic is not None:
-        file_tag = f'NET_{net.label}_SCI-CASE_{science_case}_WF_{wf_model_name}_{wf_other_var_dic["approximant"]}_NUM-INJS_{num_injs}'
-        human_file_tag = f'network: {net.label.replace("..", ", ")}\nscience case: {science_case}\nwaveform: {wf_model_name} with {wf_other_var_dic["approximant"]}\nnumber of injections per bin: {num_injs}'
+        file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_{wf_model_name}_{wf_other_var_dic["approximant"]}_NUM-INJS_{num_injs}'
+        human_file_tag = f'network: {net_label_styler(net.label).replace("..", ", ")}\nscience case: {science_case}\nwaveform: {wf_model_name} with {wf_other_var_dic["approximant"]}\nnumber of injections per bin: {num_injs}'
     else:
-        file_tag = f'NET_{net.label}_SCI-CASE_{science_case}_WF_{wf_model_name}_NUM-INJS_{num_injs}'
-        human_file_tag = f'network: {net.label.replace("..", ", ")}\nscience case: {science_case}\nwaveform: {wf_model_name}\nnumber of injections per bin: {num_injs}'    
+        file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_{wf_model_name}_NUM-INJS_{num_injs}'
+        human_file_tag = f'network: {net_label_styler(net.label).replace("..", ", ")}\nscience case: {science_case}\nwaveform: {wf_model_name}\nnumber of injections per bin: {num_injs}'    
     
     if print_progress: print('Network initialised.')
     # use symbolic derivatives if able
@@ -375,7 +377,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     even if the absolute detection rate is wildly (1e9) off
     network_spec_list is assumed unique"""
     # finding file names
-    net_labels = [network.Network(network_spec).label for network_spec in network_spec_list]
+    net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
     if plot_label is None:
         plot_label = f"SCI-CASE_{science_case}{''.join(tuple('_NET_'+l for l in net_labels))}"
     
@@ -419,8 +421,8 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
             
         net_spec = file.replace('NET_', '_SCI-CASE_').split('_SCI-CASE_')[1].split('..')
 
-        if repr(net_spec) in DICT_KEY_NETSPEC_VAL_COLOUR.keys():
-            colour = DICT_KEY_NETSPEC_VAL_COLOUR[repr(net_spec)]
+        if repr(net_spec) in DICT_NETSPEC_TO_COLOUR.keys():
+            colour = DICT_NETSPEC_TO_COLOUR[repr(net_spec)]
             # avoid duplicating colours in plot
             if colour in colours_used:
                 colour = None

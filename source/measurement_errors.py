@@ -1,6 +1,7 @@
 """James Gardner, March 2022"""
 from useful_functions import *
 from constants import *
+from networks import DICT_NETSPEC_TO_COLOUR
 from filename_search_and_manipulation import *
 
 import matplotlib.pyplot as plt
@@ -37,7 +38,7 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
 def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
     found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress)
-    net_labels = [network.Network(network_spec).label for network_spec in network_spec_list]
+    net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
     if plot_label is None:
         plot_label = ''.join(tuple('_NET_'+l for l in net_labels))[1:]
     if plot_title is None:
@@ -61,8 +62,8 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
             
         net_spec = file.replace('NET_', '_SCI-CASE_').split('_SCI-CASE_')[1].split('..')
 
-        if repr(net_spec) in DICT_KEY_NETSPEC_VAL_COLOUR.keys():
-            colour = DICT_KEY_NETSPEC_VAL_COLOUR[repr(net_spec)]
+        if repr(net_spec) in DICT_NETSPEC_TO_COLOUR.keys():
+            colour = DICT_NETSPEC_TO_COLOUR[repr(net_spec)]
             # avoid duplicating colours in plot
             if colour in colours_used:
                 colour = None

@@ -4,6 +4,9 @@ import numpy as np
 
 from gwbench import network
 
+# assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec
+net_label_styler = lambda net_label : net_label.replace('CE2', 'CE').replace('ET_ET1..ET_ET2..ET_ET3', 'ET_E').replace('Voyager', 'Voy')
+
 def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
     intermediate = file.replace('results_', '').replace('.npy', '').replace('NET_', 'network: ').replace('_SCI-CASE_', '\nscience case: ').replace('..', ', ')
     if net_only:
@@ -17,18 +20,18 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
 def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True):
     """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network"""
     # finding file names
-    net_labels = [network.Network(network_spec).label for network_spec in network_spec_list]
+    net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
     
     file_list = os.listdir("data_redshift_snr_errs_sky-area")
     found_files = np.array([])
     for net_label in net_labels:
-        # file_tag = f'NET_{net.label}_SCI-CASE_{science_case}_WF_..._NUM-INJS_{num_injs}'
+        # file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_..._NUM-INJS_{num_injs}'
         file_tag_partial = f'NET_{net_label}_SCI-CASE_{science_case}'
         # file is file_name
         matches = np.array([file for file in file_list if file_tag_partial in file])
         if len(matches) == 0:
             continue
-        # [[f'NET_{net.label}_SCI-CASE_{science_case}', f'{wf_model_name}', f'{num_injs}', '.npy'], [...], ...]
+        # [[f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}', f'{wf_model_name}', f'{num_injs}', '.npy'], [...], ...]
         decomp_files = np.array([file.replace('.npy', '').replace('_WF_', '_NUM-INJS_').split('_NUM-INJS_') for file in matches])
         # appending is slow but this problem is small
         unique_wf_index_list = []
