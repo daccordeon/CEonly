@@ -5,7 +5,7 @@ import numpy as np
 from gwbench import network
 
 # assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec
-net_label_styler = lambda net_label : net_label.replace('CE2', 'CE').replace('ET_ET1..ET_ET2..ET_ET3', 'ET_E').replace('Voyager', 'Voy')
+def net_label_styler(net_label): return net_label.replace('CE2', 'CE').replace('ET_ET1..ET_ET2..ET_ET3', 'ET_E').replace('Voyager', 'Voy')
 
 def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
     intermediate = file.replace('results_', '').replace('.npy', '').replace('NET_', 'network: ').replace('_SCI-CASE_', '\nscience case: ').replace('..', ', ')

@@ -85,13 +85,13 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
     np.save(f'data_redshift_snr_errs_sky-area/results_{file_tag}.npy', results)  
 
 # 4*pi to convert from Mpc^3 sr^-1 (sr is steradian) to Mpc^3
-differential_comoving_volume = lambda z : 4.*PI*Planck18.differential_comoving_volume(z).value
+def differential_comoving_volume(z): return  4.*PI*Planck18.differential_comoving_volume(z).value
 # normalisation of merger rate ($\dot{n}(z)$) to values in https://arxiv.org/pdf/2111.03606v2.pdf
 # 1e-9 converts Gpc^-3 to Mpc^-3 to match Planck18, in Fig 2 of Ngetal2021: the ndot_F rate is in Gpc^-3 yr^-1
 # injections.py mentions an old arXiv version: https://arxiv.org/pdf/2012.09876v1.pdf
 # this states that the ndot form in injections.py is just a proportionality relation, need to normalise
-merger_rate_bns = lambda z: GWTC3_MERGER_RATE_BNS/injections.bns_md_merger_rate(0)*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z)
-merger_rate_bbh = lambda z: GWTC3_MERGER_RATE_BBH/injections.mdbn_merger_rate(0)*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
+def merger_rate_bns(z): return GWTC3_MERGER_RATE_BNS/injections.bns_md_merger_rate(0)*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z)
+def merger_rate_bbh(z): return GWTC3_MERGER_RATE_BBH/injections.mdbn_merger_rate(0)*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
 
 def calculate_detection_rate_from_results(results, science_case, print_reach=True):
     """calculting efficiency and detection rate for plotting from results"""
@@ -166,9 +166,9 @@ def calculate_detection_rate_from_results(results, science_case, print_reach=Tru
 
     # i.e. "merger rate" in Fig 2, not R(z) but int R(z)/(1+z), i.e. if perfect efficiency, quad returns (value, error)
     # 1+z factor of time dilation of merger rate in observer frame z away
-    det_rate_limit = lambda z0 : quad(lambda z : merger_rate(z)/(1+z), 0, z0)[0]
+    def det_rate_limit(z0): return quad(lambda z : merger_rate(z)/(1+z), 0, z0)[0]
     # detection rate
-    det_rate = lambda z0, snr_threshold : quad(lambda z : det_eff(z, snr_threshold)*merger_rate(z)/(1+z), 0, z0)[0]    
+    def det_rate(z0, snr_threshold): return quad(lambda z : det_eff(z, snr_threshold)*merger_rate(z)/(1+z), 0, z0)[0]    
     return zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot
     
 def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,

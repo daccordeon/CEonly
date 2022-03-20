@@ -68,12 +68,21 @@ CE_CN_AND_ET = dict(nets=[
     colours=['#00cec9', '#81ecec', '#fab1a0'],
     label='CE_N_and_ET')
 
+# --- H0 science case: A+_S to get sky localisation for the ~10 BNS this decade ---
+NEMOLF_AND_2G = dict(nets=[
+    ['A+_S', 'A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'],
+    ['A+_S', 'A+_H', 'A+_L', 'V+_V', 'K+_K'],
+    ['A+_S', 'A+_H', 'A+_L']],
+    colours=['#00b894', '#55efc4', '#e17055'],
+    label='NEMO-LF_and_2G')
+
 # list of network sets (dicts) following meeting on 2022-03-17
 NET_DICT_LIST = [
     BS2022_SIX,
     CE_CS, CE_CN, CE_CNS,
     CE_S_AND_2G, CE_S_AND_VOYAGER, CE_S_AND_ET,
-    CE_CN_AND_ET
+    CE_CN_AND_ET,
+    NEMOLF_AND_2G
 ]
 # look-up table: given net_spec return colour
 DICT_NETSPEC_TO_COLOUR = dict()

@@ -22,12 +22,13 @@ class HiddenPrints:
         sys.stdout = self._original_stdout
 
 # https://note.nkmk.me/en/python-numpy-nan-remove/
-without_rows_w_nan = lambda xarr : xarr[np.logical_not(np.isnan(xarr).any(axis=1))]
+def without_rows_w_nan(xarr): return xarr[np.logical_not(np.isnan(xarr).any(axis=1))]
 
 # the modified sigmoid function with c free, for c=1 it is the regular sigmoid
-sigmoid_3parameter = lambda z, a, b, c : ((1+b)/(1+b*np.exp(a*z)))**c
+def sigmoid_3parameter(z, a, b, c): return ((1+b)/(1+b*np.exp(a*z)))**c
 
-flatten_list = lambda x : [z for y in x for z in y] # x = [y, ...], y = [z, ...]
+# x = [y, ...], y = [z, ...]
+def flatten_list(x): return [z for y in x for z in y]
 
 def parallel_map(f, x, display_progress_bar=False, unordered=False, num_cpus=os.cpu_count()):
     """f is a function to apply to elements in iterable x,
