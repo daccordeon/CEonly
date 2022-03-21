@@ -19,7 +19,7 @@ wf_model_name, wf_other_var_dic = 'lal_bbh', dict(approximant='IMRPhenomHM')
 
 # output file name, using SLURM_TASK_... will use file_tag once network initialised
 file_name = f'SLURM_TASK_{task_id}'
-    
+
 # generate and save injections in a separate file
 data_path = '/home/jgardner/CEonlyPony/source/data_injections/'
 detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs_per_zbin_per_task, generate_fig=False, show_fig=False, print_progress=False, print_reach=False, data_path=data_path, file_name=file_name)
