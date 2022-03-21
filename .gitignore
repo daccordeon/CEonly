@@ -10,3 +10,5 @@ gwbench.egg-info/
 *.pdf
 *.dat
 source/meetings/
+requirements.txt
+boris_guide_to_jupyter.txt
