@@ -20,7 +20,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
                                              base_params, deriv_symbs_string, coeff_fisco,
                                              conv_cos, conv_log, use_rot, only_net,
                                              numerical_over_symbolic_derivs, numerical_deriv_settings,
-                                             file_tag):
+                                             file_tag, data_path=None, file_name=None):
     """given network and variables, generate injections, benchmark, 
     and save results (snr, errors in logM logDL eta iota, sky area) as .npy
     to-do: tidy up number of arguments"""
@@ -82,7 +82,11 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
     results = without_rows_w_nan(results)
     if len(results) == 0:
         raise ValueError('All calculated values are NaN, FIM is ill-conditioned.')
-    np.save(f'data_redshift_snr_errs_sky-area/results_{file_tag}.npy', results)  
+    if data_path is None:
+        data_path = 'data_redshift_snr_errs_sky-area/'
+    if file_name is None:
+        file_name = f'results_{file_tag}.npy'
+    np.save(data_path+file_name, results)  
 
 # 4*pi to convert from Mpc^3 sr^-1 (sr is steradian) to Mpc^3
 def differential_comoving_volume(z): return  4.*PI*Planck18.differential_comoving_volume(z).value
@@ -234,8 +238,7 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
     plt.close(fig)
     
 # Replicating Borhanian and Sathya 2022 injections and detection rates
-def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs,
-                                            generate_fig=True, show_fig=True, print_progress=True, print_reach=True):
+def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path=None, file_name=None):
     """initialises network, benchmarks against injections, calculates efficiency and detection rate, plots"""
     # initialisation
     locs = [x.split('_')[-1] for x in network_spec]
@@ -300,6 +303,9 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_{wf_model_name}_NUM-INJS_{num_injs}'
         human_file_tag = f'network: {net_label_styler(net.label).replace("..", ", ")}\nscience case: {science_case}\nwaveform: {wf_model_name}\nnumber of injections per bin: {num_injs}'    
     
+    if file_name is None:
+        file_name = f'results_{file_tag}.npy'
+    
     if print_progress: print('Network initialised.')
     # use symbolic derivatives if able
     if (wf_model_name == 'tf2') | (wf_model_name == 'tf2_tidal'):
@@ -312,20 +318,18 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
 
     # ------------------------------------------------
     # generate results or skip if previously generated successfully (i.e. not ill-conditioned)
-    if not os.path.isfile(f'data_redshift_snr_errs_sky-area/results_{file_tag}.npy'):
-        save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
-                                                mass_dict, spin_dict, redshifted,
-                                                base_params, deriv_symbs_string, coeff_fisco,
-                                                conv_cos, conv_log, use_rot, only_net,
-                                                numerical_over_symbolic_derivs, numerical_deriv_settings,
-                                                file_tag)
+    if data_path is None:
+        data_path = 'data_redshift_snr_errs_sky-area/'
+    
+    if not os.path.isfile(data_path+file_name):
+        save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=data_path, file_name=file_name)
     else:
         if (not generate_fig) & print_progress:
             print('Results already exist; figure not (re)generated.')
             # to-do: increase efficiency by making this check sooner? this case seems unlikely.
             return
 
-    results = np.load(f'data_redshift_snr_errs_sky-area/results_{file_tag}.npy')
+    results = np.load(data_path+file_name)
     if print_progress: print('Results found and loaded.')
 
     # ------------------------------------------------
