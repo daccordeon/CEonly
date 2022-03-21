@@ -305,6 +305,8 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     
     if file_name is None:
         file_name = f'results_{file_tag}.npy'
+    elif file_name[:11] == 'SLURM_TASK_':
+        file_name = f'results_{file_tag}_TASK_{file_name[11:]}.npy'
     
     if print_progress: print('Network initialised.')
     # use symbolic derivatives if able
