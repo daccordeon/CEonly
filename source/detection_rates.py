@@ -14,9 +14,10 @@ from astropy.cosmology import Planck18
 from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
-#from memory_profiler import profile # comment out to get timestamps in plot
 
-# comment out this assignment to use mprof
+# --- to use mprof line-by-line or get timestamps in plot --- 
+#from memory_profiler import profile
+# --- to not profile memory usage ---
 def profile(func):
     """identity function to blank decorator call"""
     return func
