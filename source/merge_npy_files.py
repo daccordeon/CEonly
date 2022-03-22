@@ -18,7 +18,12 @@ def merge_npy_files(path, output_filename, pattern='*.npy', delete_input_files=F
 
 if __name__ == '__main__':
     file_tag = 'NET_A+_H..A+_L..V+_V..K+_K..A+_I_SCI-CASE_BBH_WF_lal_bbh_IMRPhenomHM_INJS-PER-ZBIN_10'
+    path = 'test_data/' 
+    #path = 'data_redshift_snr_errs_sky-area/'
     pattern = f'results_{file_tag}_TASK_*.npy'
-    output_filename = f'results_{file_tag}_MERGED.npy'
-    merge_npy_files('data_redshift_snr_errs_sky-area/', output_filename, pattern=pattern, delete_input_files=True)
+
+    num_injs_per_zbin_per_task = int(file_tag.split('_INJS-PER-ZBIN_')[1])
+    total_num_injs_per_zbin = num_injs_per_zbin_per_task*len(glob.glob(path+pattern))
+    output_filename = f'results_{file_tag.split("_INJS-PER-ZBIN_")[0]}_INJS-PER-ZBIN_{total_num_injs_per_zbin}.npy'
+    merge_npy_files(path, output_filename, pattern=pattern, delete_input_files=True)
 

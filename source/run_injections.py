@@ -1,5 +1,6 @@
 #!/bin/env/python3
-
+"""James Gardner, March 2022
+script for a single task's worth of injections for a hard-coded network, science case, and waveform"""
 import sys
 from gwbench import network
 from detection_rates import detection_rate_for_network_and_waveform
