@@ -5,8 +5,8 @@
 #SBATCH --error=stderr_job_run_injections.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=00:05:00 # HH:MM:SS
-#SBATCH --mem-per-cpu=500 # MB, use mprof to determine required time and memory per task
+#SBATCH --time=00:04:00 # HH:MM:SS
+#SBATCH --mem-per-cpu=200 # MB, use mprof to determine required time and memory per task
 #
 #SBATCH --array=1-10 # last value is the number of independent jobs
 

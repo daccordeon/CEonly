@@ -9,3 +9,4 @@ SNR_THRESHOLD_HI = 100
 # to-do: add functionality to switch to GWTC-2 rates to compare directly to B&S2022
 GWTC3_MERGER_RATE_BNS = 105.5
 GWTC3_MERGER_RATE_BBH = 23.9
+

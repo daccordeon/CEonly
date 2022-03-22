@@ -15,8 +15,11 @@ task_id, num_injs_per_zbin_per_task = (int(arg) for arg in sys.argv[1:]) # first
 
 # --- network, waveform, and injection parameters ---
 network_spec = ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I']
-science_case = 'BBH'
-wf_model_name, wf_other_var_dic = 'lal_bbh', dict(approximant='IMRPhenomHM')
+#science_case = 'BBH'
+#wf_model_name, wf_other_var_dic = 'lal_bbh', dict(approximant='IMRPhenomHM')
+science_case = 'BNS'
+# wf_model_name, wf_other_var_dic = 'lal_bns', dict(approximant='IMRPhenomD_NRTidalv2')
+wf_model_name, wf_other_var_dic = 'tf2_tidal', None
 
 # output file name, using SLURM_TASK_... will use file_tag once network initialised
 file_name = f'SLURM_TASK_{task_id}'

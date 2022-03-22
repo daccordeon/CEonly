@@ -17,9 +17,9 @@ def merge_npy_files(path, output_filename, pattern='*.npy', delete_input_files=F
     np.save(path+output_filename, merged_array)
 
 if __name__ == '__main__':
-    file_tag = 'NET_A+_H..A+_L..V+_V..K+_K..A+_I_SCI-CASE_BBH_WF_lal_bbh_IMRPhenomHM_INJS-PER-ZBIN_10'
-    path = 'test_data/' 
-    #path = 'data_redshift_snr_errs_sky-area/'
+    #file_tag = 'NET_A+_H..A+_L..V+_V..K+_K..A+_I_SCI-CASE_BBH_WF_lal_bbh_IMRPhenomHM_INJS-PER-ZBIN_10'
+    file_tag = 'NET_A+_H..A+_L..V+_V..K+_K..A+_I_SCI-CASE_BNS_WF_tf2_tidal_INJS-PER-ZBIN_10'
+    path = 'data_redshift_snr_errs_sky-area/'
     pattern = f'results_{file_tag}_TASK_*.npy'
 
     num_injs_per_zbin_per_task = int(file_tag.split('_INJS-PER-ZBIN_')[1])
