@@ -14,13 +14,20 @@ from astropy.cosmology import Planck18
 from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
+#from memory_profiler import profile # comment out to get timestamps in plot
 
+# comment out this assignment to use mprof
+def profile(func):
+    """identity function to blank decorator call"""
+    return func
+
+@profile
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
                                              mass_dict, spin_dict, redshifted,
                                              base_params, deriv_symbs_string, coeff_fisco,
                                              conv_cos, conv_log, use_rot, only_net,
                                              numerical_over_symbolic_derivs, numerical_deriv_settings,
-                                             file_tag, data_path=None, file_name=None):
+                                             file_tag, data_path=None, file_name=None, parallel=True):
     """given network and variables, generate injections, benchmark, 
     and save results (snr, errors in logM logDL eta iota, sky area) as .npy
     to-do: tidy up number of arguments"""
@@ -77,7 +84,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
 
     # calculate results: z, snr, errs (logMc, logDL, eta, iota), sky area
     # p_umap is unordered in redshift for greater speed (check)
-    results = np.array(parallel_map(calculate_benchmark_from_injection, inj_data, num_cpus=os.cpu_count()-1, unordered=True))
+    results = np.array(parallel_map(calculate_benchmark_from_injection, inj_data, num_cpus=os.cpu_count()-1, unordered=True, parallel=parallel))
     # filter out NaNs
     results = without_rows_w_nan(results)
     if len(results) == 0:
@@ -97,6 +104,7 @@ def differential_comoving_volume(z): return  4.*PI*Planck18.differential_comovin
 def merger_rate_bns(z): return GWTC3_MERGER_RATE_BNS/injections.bns_md_merger_rate(0)*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z)
 def merger_rate_bbh(z): return GWTC3_MERGER_RATE_BBH/injections.mdbn_merger_rate(0)*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
 
+@profile
 def calculate_detection_rate_from_results(results, science_case, print_reach=True):
     """calculting efficiency and detection rate for plotting from results"""
     # count efficiency over sources in (z, z+Delta_z)
@@ -174,12 +182,13 @@ def calculate_detection_rate_from_results(results, science_case, print_reach=Tru
     # detection rate
     def det_rate(z0, snr_threshold): return quad(lambda z : det_eff(z, snr_threshold)*merger_rate(z)/(1+z), 0, z0)[0]    
     return zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot
-    
+
+@profile
 def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
                                     det_eff_fits, det_rate_limit, det_rate,
                                     zmin_plot, zmax_plot,
                                     file_tag, human_file_tag, show_fig=True,
-                                    print_progress=True):
+                                    print_progress=True, parallel=True):
     """plotting to replicate Fig 2 in B&S2022
     to-do: tidy up number of arguments"""   
     # switching to using the same colour but different linestyles for LO and HI SNR threshold
@@ -217,9 +226,9 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
     # detection rate vs redshift
     # merger rate depends on star formation rate and the delay between formation and merger
     # use display_progress_bar in parallel_map to restore old p_map usage    
-    axs[2].loglog(zaxis_plot, parallel_map(det_rate_limit, zaxis_plot), color='black', linewidth=1)
-    axs[2].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot), '-',  color=colour)
-    axs[2].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot), '--', color=colour)
+    axs[2].loglog(zaxis_plot, parallel_map(det_rate_limit, zaxis_plot, parallel=parallel), color='black', linewidth=1)
+    axs[2].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot, parallel=parallel), '-',  color=colour)
+    axs[2].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot, parallel=parallel), '--', color=colour)
     axs[2].set_ylim((1e-1, 6e5)) # to match B&S2022 Fig 2
     if print_progress: print('Detection rate calculated.')
     axs[2].set_ylabel(r'detection rate, $D_R$ / $\mathrm{yr}^{-1}$')  
@@ -238,7 +247,8 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
     plt.close(fig)
     
 # Replicating Borhanian and Sathya 2022 injections and detection rates
-def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path=None, file_name=None):
+@profile
+def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path=None, file_name=None, parallel=True):
     """initialises network, benchmarks against injections, calculates efficiency and detection rate, plots"""
     # initialisation
     locs = [x.split('_')[-1] for x in network_spec]
@@ -295,12 +305,13 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     only_net = 1
 
     # injection settings - other: number of injections per redshift bin (over 6 bins)
+    # to-do: refactor file_tag generation
     redshifted = 1 # whether sample masses already redshifted wrt z
     if wf_other_var_dic is not None:
-        file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_{wf_model_name}_{wf_other_var_dic["approximant"]}_NUM-INJS_{num_injs}'
+        file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_{wf_model_name}_{wf_other_var_dic["approximant"]}_INJS-PER-ZBIN_{num_injs}'
         human_file_tag = f'network: {net_label_styler(net.label).replace("..", ", ")}\nscience case: {science_case}\nwaveform: {wf_model_name} with {wf_other_var_dic["approximant"]}\nnumber of injections per bin: {num_injs}'
     else:
-        file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_{wf_model_name}_NUM-INJS_{num_injs}'
+        file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_{wf_model_name}_INJS-PER-ZBIN_{num_injs}'
         human_file_tag = f'network: {net_label_styler(net.label).replace("..", ", ")}\nscience case: {science_case}\nwaveform: {wf_model_name}\nnumber of injections per bin: {num_injs}'    
     
     if file_name is None:
@@ -324,31 +335,31 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         data_path = 'data_redshift_snr_errs_sky-area/'
     
     if not os.path.isfile(data_path+file_name):
-        save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=data_path, file_name=file_name)
+        save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=data_path, file_name=file_name, parallel=parallel)
     else:
         if (not generate_fig) & print_progress:
             print('Results already exist; figure not (re)generated.')
             # to-do: increase efficiency by making this check sooner? this case seems unlikely.
             return
 
-    results = np.load(data_path+file_name)
-    if print_progress: print('Results found and loaded.')
-
-    # ------------------------------------------------
-    # calculting efficiency and detection rate for plotting
-    zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot = \
-        calculate_detection_rate_from_results(results, science_case, print_reach)
-    
-    if print_progress: print('Detection rate defined, now calculating...')
-    
-    # ------------------------------------------------
-    # plotting
     if generate_fig:
+        results = np.load(data_path+file_name)
+        if print_progress: print('Results found and loaded.')
+
+        # ------------------------------------------------
+        # calculting efficiency and detection rate for plotting
+        zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot = \
+            calculate_detection_rate_from_results(results, science_case, print_reach)
+    
+        if print_progress: print('Detection rate defined, now calculating...')
+        
+        # ------------------------------------------------
+        # plotting
         plot_snr_eff_detrate_vs_redshift(results, science_case,
                                          zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot,
                                          file_tag, human_file_tag, show_fig=show_fig,
-                                         print_progress=print_progress)
-    
+                                         print_progress=print_progress, parallel=parallel)
+
 # Collating different networks saved using the above method to generate B&S2022 Fig 2
 def collate_eff_detrate_vs_redshift(axs,
                                     zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zaxis_plot,
@@ -375,6 +386,7 @@ def collate_eff_detrate_vs_redshift(axs,
     # detection rate vs redshift
     # merger rate depends on star formation rate and the delay between formation and merger
     # use display_progress_bar in parallel_map to restore old p_map usage
+    # to-do: add parallel=True option
     axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot),  color=line_lo.get_color())
     axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot), color=line_hi.get_color(), linestyle='--')
 

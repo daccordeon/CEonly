@@ -13,9 +13,9 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
         return intermediate.split('\n')[0]
     else:
         if two_rows_only:
-            return intermediate.replace('_WF_', ', waveform: ').replace('_NUM-INJS_', ", injections per bin: ")
+            return intermediate.replace('_WF_', ', waveform: ').replace('_INJS-PER-ZBIN_', ", injections per bin: ")
         else:
-            return intermediate.replace('_WF_', '\nwaveform: ').replace('_NUM-INJS_', "\ninjections per bin: ")
+            return intermediate.replace('_WF_', '\nwaveform: ').replace('_INJS-PER-ZBIN_', "\ninjections per bin: ")
 
 def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True):
     """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network"""
@@ -25,14 +25,14 @@ def find_files_given_networks(network_spec_list, science_case, specific_wf=None,
     file_list = os.listdir("data_redshift_snr_errs_sky-area")
     found_files = np.array([])
     for net_label in net_labels:
-        # file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_..._NUM-INJS_{num_injs}'
+        # file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_..._INJS-PER-ZBIN_{num_injs}'
         file_tag_partial = f'NET_{net_label}_SCI-CASE_{science_case}'
         # file is file_name
         matches = np.array([file for file in file_list if file_tag_partial in file])
         if len(matches) == 0:
             continue
         # [[f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}', f'{wf_model_name}', f'{num_injs}', '.npy'], [...], ...]
-        decomp_files = np.array([file.replace('.npy', '').replace('_WF_', '_NUM-INJS_').split('_NUM-INJS_') for file in matches])
+        decomp_files = np.array([file.replace('.npy', '').replace('_WF_', '_INJS-PER-ZBIN_').split('_INJS-PER-ZBIN_') for file in matches])
         # appending is slow but this problem is small
         unique_wf_index_list = []
         for i, wf in enumerate(decomp_files[:,1]):
