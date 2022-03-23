@@ -5,8 +5,7 @@ from detection_rates import detection_rate_for_network_and_waveform
 from merge_npy_files import merge_all_task_npy_files
 
 import sys
-from useful_functions import flatten_list
-from networks import NET_DICT_LIST
+from networks import NET_LIST
 import glob
 
 # suppress warnings
@@ -20,7 +19,7 @@ task_id, network_id, num_injs_per_zbin_per_task, total_number_of_files = [int(x)
 
 # --- network, waveform, and injection parameters ---
 # tasks go through all 34 networks with two science cases for each
-network_spec = flatten_list([net_dict['nets'] for net_dict in NET_DICT_LIST])[network_id]
+network_spec = NET_LIST[network_id]
 # determine waveform based on science case
 if science_case == 'BNS':
     #wf_model_name, wf_other_var_dic = 'lal_bns', dict(approximant='IMRPhenomD_NRTidalv2')

@@ -1,5 +1,7 @@
 """James Gardner, March 2022
 using colours from https://flatuicolors.com/palette/us"""
+from useful_functions import flatten_list
+
 # colours pulled from B&S2022 using Inkscape
 BS2022_SIX = dict(nets=[
     ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'],
@@ -89,6 +91,7 @@ NET_DICT_LIST = [
     CE_CN_AND_ET,
     NEMOLF_AND_2G
 ]
+NET_LIST = flatten_list([net_dict['nets'] for net_dict in NET_DICT_LIST])
 # look-up table: given net_spec return colour
 DICT_NETSPEC_TO_COLOUR = dict()
 for net_dict in NET_DICT_LIST:
