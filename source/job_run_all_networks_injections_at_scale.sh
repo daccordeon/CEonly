@@ -5,16 +5,16 @@
 #SBATCH --error=stderr_job_run_all_injections_long.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=00:40:00 # HH:MM:SS
+#SBATCH --time=30:00:00 # HH:MM:SS
 #SBATCH --mem-per-cpu=200 # MB, use mprof to determine required time and memory per task
 #
-#SBATCH --array=1-680 # number of independent jobs, 680 = 34 networks, 2 science cases, 10 tasks each
+#SBATCH --array=1-17000 # number of independent jobs, 17000 = 34 networks, 2 science cases, 250 tasks each
 
 # tasks should go: net1-BNS, net1-BNS, net1-BBH, net1-BBH, net2-BNS, ...
 # use task index to select a network and a science case (the latter of which uniquely determines a waveform)
-NUM_TASKS_PER_NETWORK_SC_WF=10 # need to manually update number of tasks in array, to-do: automate this
+NUM_TASKS_PER_NETWORK_SC_WF=250 # need to manually update number of tasks in array, to-do: automate this
 SCIENCE_CASES=('BNS' 'BBH')
-NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 100) # 10 numerical injections/zbin takes 3 minutes on a single core
+NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000) # 10 numerical injections/zbin takes 3 minutes on a single core
 
 NUM_SCS=${#SCIENCE_CASES[*]} # length of SCIENCE_CASES
 # determine network in python script from task id
