@@ -8,7 +8,7 @@
 #SBATCH --time=00:06:00 # HH:MM:SS
 #SBATCH --mem-per-cpu=200 # MB, use mprof to determine required time and memory per task
 #
-#SBATCH --array=1-132 # last value is the number of independent jobs, 132 = 33 networks, 2 science cases, 2 tasks each
+#SBATCH --array=1-136 # last value is the number of independent jobs, 136 = 34 networks, 2 science cases, 2 tasks each
 
 # tasks should go: net1-BNS, net1-BNS, net1-BBH, net1-BBH, net2-BNS, ...
 # use task index to select a network and a science case (the latter of which uniquely determines a waveform)

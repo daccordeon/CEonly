@@ -9,9 +9,14 @@ BS2022_SIX = dict(nets=[
     ['K+_K', 'A+_I', 'ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C'],
     ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C', 'CE2-40-CBO_S']],
     colours=['#8c510aff', '#bf812dff', '#dfc27dff', '#80cdc1ff', '#35978fff', '#01665eff'],
-    label='BS2022')
+    label='BS2022-six')
 
 # --- CE only ---
+# - One in the US
+CE_C = dict(nets=[
+    ['CE2-40-CBO_C']],
+    colours=['#2d3436'],
+    label='CE_C')
 # - One in the US, One in Australia
 CE_CS = dict(nets=[
     ['CE2-40-CBO_C', 'CE2-40-CBO_S'],
@@ -52,21 +57,21 @@ CE_S_AND_VOYAGER = dict(nets=[
     ['V+_V', 'K+_K', 'Voyager-CBO_H', 'Voyager-CBO_L', 'Voyager-CBO_I', 'CE2-20-PMO_S']],
     colours=['#00cec9', '#81ecec', '#fab1a0'],
     label='CE_S_and_Voy') 
-# - CE_S + ET
+# - CE_S + ET, not yet examined, compare to CE_CN_AND_ET
 CE_S_AND_ET = dict(nets=[
-    ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C', 'CE2-40-CBO_S'],
-    ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C', 'CE2-20-CBO_S'],
-    ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C', 'CE2-20-PMO_S']],
+    ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_S'],
+    ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-20-CBO_S'],
+    ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-20-PMO_S']],
     colours=['#00cec9', '#81ecec', '#fab1a0'],
     label='CE_S_and_ET') 
 
-# --- CE_N with ET ---
+# --- CE_CN with ET ---
 CE_CN_AND_ET = dict(nets=[
     ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C', 'CE2-40-CBO_N'],
     ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C', 'CE2-20-CBO_N'],
     ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C', 'CE2-20-PMO_N']],
     colours=['#00cec9', '#81ecec', '#fab1a0'],
-    label='CE_N_and_ET')
+    label='CE_CN_and_ET')
 
 # --- H0 science case: A+_S to get sky localisation for the ~10 BNS this decade ---
 NEMOLF_AND_2G = dict(nets=[
@@ -79,7 +84,7 @@ NEMOLF_AND_2G = dict(nets=[
 # list of network sets (dicts) following meeting on 2022-03-17
 NET_DICT_LIST = [
     BS2022_SIX,
-    CE_CS, CE_CN, CE_CNS,
+    CE_C, CE_CS, CE_CN, CE_CNS,
     CE_S_AND_2G, CE_S_AND_VOYAGER, CE_S_AND_ET,
     CE_CN_AND_ET,
     NEMOLF_AND_2G
