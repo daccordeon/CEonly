@@ -37,7 +37,7 @@ data_path = '/home/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/'
 #print(f'task_id={task_id}, network_spec={network_spec}, science_case={science_case}, wf_model_name={wf_model_name}, wf_other_var_dic={wf_other_var_dic}, num_injs_per_zbin_per_task={num_injs_per_zbin_per_task}, file_name={file_name}')
 detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs_per_zbin_per_task, generate_fig=False, show_fig=False, print_progress=False, print_reach=False, data_path=data_path, file_name=file_name, parallel=False)
 
-# clean-up, if all files exist, then call the merge script
+# clean-up, if all task files exist, then call the merge script which only combines task files (therefore if previous data files exist they will be unharmed)
 # to-do: check if this is ever likely to happen in two threads at the same time, check if the ``race condition'' is impossible
 if total_number_of_files == len(glob.glob(data_path + 'results_*_TASK_*')):
     merge_all_task_npy_files(delete_input_files=True)

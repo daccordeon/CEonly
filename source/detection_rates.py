@@ -15,12 +15,12 @@ from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
 
-# --- to use mprof line-by-line or get timestamps in plot --- 
+# --- don't use if just trying to profile time (since it slows down) and memory usage --- just comment out the lines below --- only to use mprof line-by-line or get timestamps in plot --- 
 #from memory_profiler import profile
 # --- to not profile memory usage ---
-def profile(func):
-    """identity function to blank decorator call"""
-    return func
+#def profile(func):
+#    """identity function to blank decorator call"""
+#    return func
 
 @profile
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,

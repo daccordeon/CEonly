@@ -5,7 +5,7 @@
 #SBATCH --error=stderr_job_run_all_injections_long.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=30:00:00 # HH:MM:SS
+#SBATCH --time=30:00:00 # HH:MM:SS, an overestimate until mprof converges
 #SBATCH --mem-per-cpu=200 # MB, use mprof to determine required time and memory per task
 #
 #SBATCH --array=1-17000 # number of independent jobs, 17000 = 34 networks, 2 science cases, 250 tasks each

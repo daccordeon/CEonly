@@ -2,8 +2,8 @@
 # James Gardner, March 2022
 
 SCIENCE_CASES=('BNS' 'BBH')
-NUM_INJS_PER_ZBIN_PER_TASK_LIST=(100 10) # 10 numerical injections/zbin takes 3 minutes on a single core
-#NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 100)
+#NUM_INJS_PER_ZBIN_PER_TASK_LIST=(100 10) # 10 numerical injections/zbin takes 3 minutes on a single core
+NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000) # want to know how long it'll take to scale up to B&S2022
 
 for ((i=0; i<${#SCIENCE_CASES[@]}; i++ )); #{0..{${#SCIENCE_CASES[*]}-1}}
 do
