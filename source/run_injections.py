@@ -14,7 +14,9 @@ filterwarnings('ignore')
 task_id, num_injs_per_zbin_per_task = (int(arg) for arg in sys.argv[1:]) # first argv is the script's name
 
 # --- network, waveform, and injection parameters ---
-network_spec = ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I']
+#network_spec = ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I']
+# the slowest network in the set?
+network_spec = ['A+_H', 'A+_L', 'K+_K', 'A+_I', 'ET_ET1', 'ET_ET2', 'ET_ET3']
 #science_case = 'BBH'
 #wf_model_name, wf_other_var_dic = 'lal_bbh', dict(approximant='IMRPhenomHM')
 science_case = 'BNS'
