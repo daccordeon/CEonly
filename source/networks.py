@@ -1,6 +1,7 @@
 """James Gardner, March 2022
 using colours from https://flatuicolors.com/palette/us"""
 from useful_functions import flatten_list
+from filename_search_and_manipulation import net_spec_styler
 
 # colours pulled from B&S2022 using Inkscape
 BS2022_SIX = dict(nets=[
@@ -96,4 +97,5 @@ NET_LIST = flatten_list([net_dict['nets'] for net_dict in NET_DICT_LIST])
 DICT_NETSPEC_TO_COLOUR = dict()
 for net_dict in NET_DICT_LIST:
     for net_spec in net_dict['nets']:
-        DICT_NETSPEC_TO_COLOUR[repr(net_spec)] = net_dict['colours'][net_dict['nets'].index(net_spec)]
+        # using net_spec's recovered from net_label in filename after applying net_label_styler
+        DICT_NETSPEC_TO_COLOUR[net_spec_styler(net_spec)] = net_dict['colours'][net_dict['nets'].index(net_spec)]

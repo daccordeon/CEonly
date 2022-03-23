@@ -7,6 +7,8 @@ from gwbench import network
 # assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec
 def net_label_styler(net_label): return net_label.replace('CE2', 'CE').replace('ET_ET1..ET_ET2..ET_ET3', 'ET_E').replace('Voyager', 'Voy')
 
+def net_spec_styler(net_spec): return repr(net_spec).replace('CE2', 'CE').replace("'ET_ET1', 'ET_ET2', 'ET_ET3'", "'ET_E'").replace('Voyager', 'Voy')
+
 def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
     intermediate = file.replace('results_', '').replace('.npy', '').replace('NET_', 'network: ').replace('_SCI-CASE_', '\nscience case: ').replace('..', ', ')
     if net_only:
@@ -17,12 +19,12 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
         else:
             return intermediate.replace('_WF_', '\nwaveform: ').replace('_INJS-PER-ZBIN_', "\ninjections per bin: ")
 
-def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True):
+def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/'):
     """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network"""
     # finding file names
     net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
     
-    file_list = os.listdir("data_redshift_snr_errs_sky-area")
+    file_list = os.listdir(data_path) # alt. import glob; glob.glob(data_path+'*')
     found_files = np.array([])
     for net_label in net_labels:
         # file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_..._INJS-PER-ZBIN_{num_injs}'

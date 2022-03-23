@@ -16,11 +16,11 @@ from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
 
 # --- to use mprof line-by-line or get timestamps in plot --- 
-from memory_profiler import profile
+#from memory_profiler import profile
 # --- to not profile memory usage ---
-#def profile(func):
-#    """identity function to blank decorator call"""
-#    return func
+def profile(func):
+    """identity function to blank decorator call"""
+    return func
 
 @profile
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
@@ -391,7 +391,7 @@ def collate_eff_detrate_vs_redshift(axs,
     axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot),  color=line_lo.get_color())
     axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot), color=line_hi.get_color(), linestyle='--')
 
-def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, print_progress=True):
+def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/'):
     """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
     even if the absolute detection rate is wildly (1e9) off
     network_spec_list is assumed unique"""
@@ -400,7 +400,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     if plot_label is None:
         plot_label = f"SCI-CASE_{science_case}{''.join(tuple('_NET_'+l for l in net_labels))}"
     
-    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress)
+    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path)
 
     # load file and add results to plot
     plt.rcParams.update({'font.size': 14})
@@ -424,7 +424,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     
     colours_used = []
     for i, file in enumerate(found_files):
-        results = np.load(f'data_redshift_snr_errs_sky-area/{file}')
+        results = np.load(data_path + file)
         with HiddenPrints():
             zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, _, _ = \
                 calculate_detection_rate_from_results(results, science_case, print_reach=False)    
@@ -438,8 +438,9 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
         else:
             label = file_name_to_multiline_readable(file, net_only=True)
             
+        # net_spec is stylised from net_label, this is reflected in the keys of DICT_NETSPEC_TO_COLOUR
         net_spec = file.replace('NET_', '_SCI-CASE_').split('_SCI-CASE_')[1].split('..')
-
+        
         if repr(net_spec) in DICT_NETSPEC_TO_COLOUR.keys():
             colour = DICT_NETSPEC_TO_COLOUR[repr(net_spec)]
             # avoid duplicating colours in plot

@@ -35,9 +35,9 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
         else:
             axs[1, i].plot(data, cdf, color=colour, label=label, zorder=2)            
 
-def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None):
+def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/'):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
-    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress)
+    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path)
     net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
     if plot_label is None:
         plot_label = ''.join(tuple('_NET_'+l for l in net_labels))[1:]
@@ -53,13 +53,14 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     for i, file in enumerate(found_files):
         # redshift (z), integrated SNR (rho), measurement errors (logMc, logDL, eta, iota), 90% credible sky area
         # errs: fractional chirp mass, fractional luminosity distance, symmetric mass ratio, inclination angle
-        results = np.load(f'data_redshift_snr_errs_sky-area/{file}')
+        results = np.load(data_path + file)
                 
         if full_legend:
             legend_label = file_name_to_multiline_readable(file, two_rows_only=True)
         else:
             legend_label = file_name_to_multiline_readable(file, net_only=True)
             
+        # net_spec is stylised from net_label
         net_spec = file.replace('NET_', '_SCI-CASE_').split('_SCI-CASE_')[1].split('..')
 
         if repr(net_spec) in DICT_NETSPEC_TO_COLOUR.keys():
