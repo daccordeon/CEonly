@@ -1,11 +1,11 @@
 #!/bin/bash
 #
 #SBATCH --job-name=jobRunAllInjLng # 15 non-whitespace characters long
-#SBATCH --output=stdout_job_run_all_injections_long.txt
-#SBATCH --error=stderr_job_run_all_injections_long.txt
+#SBATCH --output=stdout_job_run_all_injections_at_scale.txt
+#SBATCH --error=stderr_job_run_all_injections_at_scale.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=30:00:00 # HH:MM:SS, an overestimate until mprof converges
+#SBATCH --time=08:00:00 # HH:MM:SS
 #SBATCH --mem-per-cpu=200 # MB, use mprof to determine required time and memory per task
 #
 #SBATCH --array=1-17000 # number of independent jobs, 17000 = 34 networks, 2 science cases, 250 tasks each
@@ -14,7 +14,7 @@
 # use task index to select a network and a science case (the latter of which uniquely determines a waveform)
 NUM_TASKS_PER_NETWORK_SC_WF=250 # need to manually update number of tasks in array, to-do: automate this
 SCIENCE_CASES=('BNS' 'BBH')
-NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000) # 10 numerical injections/zbin takes 3 minutes on a single core
+NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000) 
 
 NUM_SCS=${#SCIENCE_CASES[*]} # length of SCIENCE_CASES
 # determine network in python script from task id
@@ -26,4 +26,3 @@ NUM_INJS_PER_ZBIN_PER_TASK=${NUM_INJS_PER_ZBIN_PER_TASK_LIST[$SCIENCE_CASE_INDEX
 
 # arguments: task_id, network_id, science_case, num_injs_per_zbin_per_task
 srun python3 -u /home/jgardner/CEonlyPony/source/run_injections_for_network_id.py $SLURM_ARRAY_TASK_ID $NETWORK_INDEX $SCIENCE_CASE $NUM_INJS_PER_ZBIN_PER_TASK
-

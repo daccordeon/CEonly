@@ -15,14 +15,6 @@ from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
 
-# --- don't use if just trying to profile time (since it slows down) and memory usage --- just comment out the lines below --- only to use mprof line-by-line or get timestamps in plot --- 
-#from memory_profiler import profile
-# --- to not profile memory usage ---
-#def profile(func):
-#    """identity function to blank decorator call"""
-#    return func
-
-@profile
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
                                              mass_dict, spin_dict, redshifted,
                                              base_params, deriv_symbs_string, coeff_fisco,
@@ -105,7 +97,6 @@ def differential_comoving_volume(z): return  4.*PI*Planck18.differential_comovin
 def merger_rate_bns(z): return GWTC3_MERGER_RATE_BNS/injections.bns_md_merger_rate(0)*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z)
 def merger_rate_bbh(z): return GWTC3_MERGER_RATE_BBH/injections.mdbn_merger_rate(0)*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
 
-@profile
 def calculate_detection_rate_from_results(results, science_case, print_reach=True):
     """calculting efficiency and detection rate for plotting from results"""
     # count efficiency over sources in (z, z+Delta_z)
@@ -184,7 +175,6 @@ def calculate_detection_rate_from_results(results, science_case, print_reach=Tru
     def det_rate(z0, snr_threshold): return quad(lambda z : det_eff(z, snr_threshold)*merger_rate(z)/(1+z), 0, z0)[0]    
     return zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot
 
-@profile
 def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
                                     det_eff_fits, det_rate_limit, det_rate,
                                     zmin_plot, zmax_plot,
@@ -248,7 +238,6 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
     plt.close(fig)
     
 # Replicating Borhanian and Sathya 2022 injections and detection rates
-@profile
 def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path=None, file_name=None, parallel=True):
     """initialises network, benchmarks against injections, calculates efficiency and detection rate, plots"""
     # initialisation
