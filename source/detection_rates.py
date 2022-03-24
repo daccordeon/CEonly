@@ -120,13 +120,11 @@ def calculate_detection_rate_from_results(results, science_case, print_reach=Tru
     # needs high maxfev to converge
     # can use bounds and maxfev together, stack exchange lied!
     p0, bounds, maxfev = [5, 0.01, 0.1], [[0.03,5e-5,0.01], [600,0.2,2]], 1e5
-    popt_lo, _ = curve_fit(sigmoid_3parameter, zavg_efflo_effhi[:,0], zavg_efflo_effhi[:,1],
-                             method='dogbox', p0=p0, bounds=bounds, maxfev=maxfev)
+    popt_lo, _ = curve_fit(sigmoid_3parameter, zavg_efflo_effhi[:,0], zavg_efflo_effhi[:,1], method='dogbox', p0=p0, bounds=bounds, maxfev=maxfev)
     if np.all(zavg_efflo_effhi[:,2] == 0):
         popt_hi = 1, -1, 1 # f(z) = 0
     else:
-        popt_hi, _ = curve_fit(sigmoid_3parameter, zavg_efflo_effhi[:,0], zavg_efflo_effhi[:,2],
-                             method='dogbox', p0=p0, bounds=bounds, maxfev=maxfev)
+        popt_hi, _ = curve_fit(sigmoid_3parameter, zavg_efflo_effhi[:,0], zavg_efflo_effhi[:,2], method='dogbox', p0=p0, bounds=bounds, maxfev=maxfev)
     popts = [popt_lo, popt_hi]
     
 #         perrs = [np.sqrt(np.diag(pcov)) for pcov in pcovs]

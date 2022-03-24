@@ -8,11 +8,11 @@
 #SBATCH --time=08:00:00 # HH:MM:SS
 #SBATCH --mem-per-cpu=200 # MB, use mprof to determine required time and memory per task
 #
-#SBATCH --array=1-17000 # number of independent jobs, 17000 = 34 networks, 2 science cases, 250 tasks each, watch out for MaxArraySize in /apps/slurm/etc/slurm.config
+#SBATCH --array=1-2040 # number of independent jobs, 34 networks, 2 science cases, # tasks each belove, watch out for MaxArraySize=2048 in /apps/slurm/etc/slurm.config
 
 # tasks should go: net1-BNS, net1-BNS, net1-BBH, net1-BBH, net2-BNS, ...
 # use task index to select a network and a science case (the latter of which uniquely determines a waveform)
-NUM_TASKS_PER_NETWORK_SC_WF=250 # need to manually update number of tasks in array, to-do: automate this
+NUM_TASKS_PER_NETWORK_SC_WF=30 # need to manually update number of tasks in array, to-do: automate this
 SCIENCE_CASES=('BNS' 'BBH')
 NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000) 
 
@@ -26,3 +26,4 @@ NUM_INJS_PER_ZBIN_PER_TASK=${NUM_INJS_PER_ZBIN_PER_TASK_LIST[$SCIENCE_CASE_INDEX
 
 # arguments: task_id, network_id, science_case, num_injs_per_zbin_per_task
 srun python3 -u /fred/oz209/jgardner/CEonlyPony/source/run_injections_for_network_id.py $SLURM_ARRAY_TASK_ID $NETWORK_INDEX $SCIENCE_CASE $NUM_INJS_PER_ZBIN_PER_TASK
+
