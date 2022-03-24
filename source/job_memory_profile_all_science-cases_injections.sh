@@ -6,7 +6,7 @@
 #
 #SBATCH --ntasks=1
 #SBATCH --time=48:00:00 # HH:MM:SS
-#SBATCH --mem-per-cpu=1000 # MB
+#SBATCH --mem-per-cpu=10000 # MB
 #
 #SBATCH --array=1-2
 
