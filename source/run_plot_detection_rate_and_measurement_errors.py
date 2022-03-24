@@ -36,12 +36,12 @@ else:
     plot_label = f'NET_{network_label}_SCI-CASE_{science_case}_WF_{wf_model_name}'
     plot_title = f'Networks: {network_label}, science-case: {science_case}, waveform: {wf_model_name}'        
 
-data_path = '/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area'
+data_path = '/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/'
 
 # --- detection rate plot ---
 # compare to Fig 1 and 2 in Borhanian and Sathya 2022
 # being lazy and not specifying unique waveform using specify_waveform, assuming that other waveforms not present
-compare_detection_rate_of_networks_from_saved_results(network_set, science_case, plot_label=plot_label, show_fig=False, data_path=data_path)
+compare_detection_rate_of_networks_from_saved_results(network_set, science_case, plot_label=plot_label, show_fig=False, data_path=data_path, print_progress=False)
 
 # --- measurement errors plot ---
 # compare to Fig 3 and 4 in B&S 2022
