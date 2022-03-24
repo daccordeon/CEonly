@@ -15,12 +15,7 @@ from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
 
-def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
-                                             mass_dict, spin_dict, redshifted,
-                                             base_params, deriv_symbs_string, coeff_fisco,
-                                             conv_cos, conv_log, use_rot, only_net,
-                                             numerical_over_symbolic_derivs, numerical_deriv_settings,
-                                             file_tag, data_path=None, file_name=None, parallel=True):
+def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=None, file_name=None, parallel=True):
     """given network and variables, generate injections, benchmark, 
     and save results (snr, errors in logM logDL eta iota, sky area) as .npy
     to-do: tidy up number of arguments"""
@@ -60,11 +55,9 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs,
         # net_copy is automatically deleted once out of scope (is copying necessary with Pool()?)
         net_copy = deepcopy(net)
         inj_params = dict(**base_params, **varied_params)
-        net_copy.set_net_vars(f=f, inj_params=inj_params, deriv_symbs_string=deriv_symbs_string,
-                              conv_cos=conv_cos, conv_log=conv_log, use_rot=use_rot)
+        net_copy.set_net_vars(f=f, inj_params=inj_params, deriv_symbs_string=deriv_symbs_string, conv_cos=conv_cos, conv_log=conv_log, use_rot=use_rot)
 
-        basic_network_benchmarking(net_copy, numerical_over_symbolic_derivs=numerical_over_symbolic_derivs, only_net=only_net,
-                                   numerical_deriv_settings=numerical_deriv_settings, hide_prints=True)
+        basic_network_benchmarking(net_copy, numerical_over_symbolic_derivs=numerical_over_symbolic_derivs, only_net=only_net, numerical_deriv_settings=numerical_deriv_settings, hide_prints=True)
 
         if net_copy.wc_fisher:
             # convert sigma_cos(iota) into sigma_iota
@@ -173,11 +166,7 @@ def calculate_detection_rate_from_results(results, science_case, print_reach=Tru
     def det_rate(z0, snr_threshold): return quad(lambda z : det_eff(z, snr_threshold)*merger_rate(z)/(1+z), 0, z0)[0]    
     return zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot
 
-def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi,
-                                    det_eff_fits, det_rate_limit, det_rate,
-                                    zmin_plot, zmax_plot,
-                                    file_tag, human_file_tag, show_fig=True,
-                                    print_progress=True, parallel=True):
+def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot, file_tag, human_file_tag, show_fig=True, print_progress=True, parallel=True):
     """plotting to replicate Fig 2 in B&S2022
     to-do: tidy up number of arguments"""   
     # switching to using the same colour but different linestyles for LO and HI SNR threshold
@@ -343,15 +332,10 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         
         # ------------------------------------------------
         # plotting
-        plot_snr_eff_detrate_vs_redshift(results, science_case,
-                                         zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot,
-                                         file_tag, human_file_tag, show_fig=show_fig,
-                                         print_progress=print_progress, parallel=parallel)
+        plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot, file_tag, human_file_tag, show_fig=show_fig, print_progress=print_progress, parallel=parallel)
 
 # Collating different networks saved using the above method to generate B&S2022 Fig 2
-def collate_eff_detrate_vs_redshift(axs,
-                                    zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zaxis_plot,
-                                    colours=None, label=None):
+def collate_eff_detrate_vs_redshift(axs, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zaxis_plot, colours=None, label=None, parallel=True):
     """collate plots to replicate Fig 2 in B&S2022, adds curves to existing axs
     defaults to using the same colour"""
     if colours is None:
@@ -374,11 +358,10 @@ def collate_eff_detrate_vs_redshift(axs,
     # detection rate vs redshift
     # merger rate depends on star formation rate and the delay between formation and merger
     # use display_progress_bar in parallel_map to restore old p_map usage
-    # to-do: add parallel=True option
-    axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot),  color=line_lo.get_color())
-    axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot), color=line_hi.get_color(), linestyle='--')
+    axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot, parallel=parallel), color=line_lo.get_color())
+    axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot, parallel=parallel), color=line_hi.get_color(), linestyle='--')
 
-def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/'):
+def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/', parallel=True):
     """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
     even if the absolute detection rate is wildly (1e9) off
     network_spec_list is assumed unique"""
@@ -417,7 +400,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
                 calculate_detection_rate_from_results(results, science_case, print_reach=False)    
         # to not repeatedly plot merger rate
         if i == 0:
-            axs[1].loglog(zaxis_plot, parallel_map(det_rate_limit, zaxis_plot), color='black', linewidth=3, label=f'{science_case} merger rate')
+            axs[1].loglog(zaxis_plot, parallel_map(det_rate_limit, zaxis_plot, parallel=parallel), color='black', linewidth=3, label=f'{science_case} merger rate')
 #             print(f'maximum detection rate at z={zaxis_plot[-1]} is {det_rate_limit(zaxis_plot[-1])}')
         
         if full_legend:
@@ -438,7 +421,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
         else:
             colour = None
 
-        collate_eff_detrate_vs_redshift(axs, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zaxis_plot, label=label, colours=[colour, colour])
+        collate_eff_detrate_vs_redshift(axs, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zaxis_plot, label=label, colours=[colour, colour], parallel=parallel)
 
     handles, labels = axs[0].get_legend_handles_labels()
     # updating handles

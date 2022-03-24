@@ -11,4 +11,4 @@
 #SBATCH --array=1-20 # 10 network sets and 2 science cases with a unique waveform each
 
 # James Gardner, March 2022
-srun python3 -u run_plot_detection_rate_and_measurement_errors.py ${SLURM_ARRAY_TASK_ID}
+srun python3 -u run_plot_detection_rate_and_measurement_errors.py $SLURM_ARRAY_TASK_ID
