@@ -16,7 +16,7 @@
 NUM_INJS_PER_ZBIN_PER_TASK=10
 
 # arguments: task_id, num_injs_per_task
-srun python3 -u /home/jgardner/CEonlyPony/source/run_injections.py $SLURM_ARRAY_TASK_ID $NUM_INJS_PER_ZBIN_PER_TASK
+srun python3 -u /fred/oz209/jgardner/CEonlyPony/source/run_injections.py $SLURM_ARRAY_TASK_ID $NUM_INJS_PER_ZBIN_PER_TASK
 
 # guide for pleasingly (aka. embarrassingly) parallel scripting where lots of jobs are created that are each single-threaded
 # https://supercomputing.swin.edu.au/docs/2-ozstar/oz-slurm-examples.html#embarrassingly-parallel-example

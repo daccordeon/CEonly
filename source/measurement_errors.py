@@ -83,7 +83,13 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     if xlim_list is None:
         xlim_list = tuple((None, None) for _ in range(6))
     elif xlim_list == 'B&S2022':
-        xlim_list = ((1e0, 1e2), (1e-2, 1e2), (1e-7, 1e-4), (1e-6, 1e-3), (1e-2, 1e1), (1e-3, 1e1))
+        if science_case == 'BNS':
+            xlim_list = ((1e0, 1e2), (1e-2, 1e2), (1e-7, 1e-4), (1e-6, 1e-3), (1e-2, 1e1), (1e-3, 1e1))
+        elif science_case == 'BBH':
+            xlim_list = ((1e0, 1e3), (1e-3, 1e2), (1e-6, 1e-1), (1e-7, 1e-2), (1e-3, 1e0), (1e-3, 1e0))
+        else:
+            raise ValueError('Science case not recognised.')
+        
     
     for i in range(len(axs[1])):
         axs[0, i].grid(which='both', axis='both', color='lightgrey')

@@ -84,7 +84,7 @@ NEMOLF_AND_2G = dict(nets=[
     colours=['#00b894', '#55efc4', '#e17055'],
     label='NEMO-LF_and_2G')
 
-# list of network sets (dicts) following meeting on 2022-03-17
+# list of 10 network sets (dicts)
 NET_DICT_LIST = [
     BS2022_SIX,
     CE_C, CE_CS, CE_CN, CE_CNS,

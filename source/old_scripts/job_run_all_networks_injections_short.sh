@@ -27,5 +27,5 @@ SCIENCE_CASE=${SCIENCE_CASES[$SCIENCE_CASE_INDEX]}
 NUM_INJS_PER_ZBIN_PER_TASK=${NUM_INJS_PER_ZBIN_PER_TASK_LIST[$SCIENCE_CASE_INDEX]}
 
 # arguments: task_id, network_id, science_case, num_injs_per_zbin_per_task, num_files
-srun python3 -u /home/jgardner/CEonlyPony/source/run_injections_for_network_id.py $SLURM_ARRAY_TASK_ID $NETWORK_INDEX $SCIENCE_CASE $NUM_INJS_PER_ZBIN_PER_TASK $NUM_FILES
+srun python3 -u /fred/oz209/jgardner/CEonlyPony/source/run_injections_for_network_id.py $SLURM_ARRAY_TASK_ID $NETWORK_INDEX $SCIENCE_CASE $NUM_INJS_PER_ZBIN_PER_TASK $NUM_FILES
 
