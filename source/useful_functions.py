@@ -4,15 +4,8 @@ import numpy as np
 from p_tqdm import p_map, p_umap
 from multiprocessing import Pool
 
-class PassEnterExit:
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-# https://stackoverflow.com/a/45669280; use as ``with HiddenPrints():''
 class HiddenPrints:
+    """https://stackoverflow.com/a/45669280; use as ``with HiddenPrints():''"""
     def __enter__(self):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
@@ -21,17 +14,28 @@ class HiddenPrints:
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
-# https://note.nkmk.me/en/python-numpy-nan-remove/
-def without_rows_w_nan(xarr): return xarr[np.logical_not(np.isnan(xarr).any(axis=1))]
+class PassEnterExit:
+    """do-nothing class to replace HiddenPrints with in with statements to allow prints"""
+    def __enter__(self):
+        pass
 
-# the modified sigmoid function with c free, for c=1 it is the regular sigmoid
-def sigmoid_3parameter(z, a, b, c): return ((1+b)/(1+b*np.exp(a*z)))**c
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass        
+        
+def without_rows_w_nan(xarr):
+    """https://note.nkmk.me/en/python-numpy-nan-remove/"""
+    return xarr[np.logical_not(np.isnan(xarr).any(axis=1))]
 
-# x = [y, ...], y = [z, ...]
-def flatten_list(x): return [z for y in x for z in y]
+def sigmoid_3parameter(z, a, b, c):
+    """the modified sigmoid function with c free, for c=1 it is the regular sigmoid"""
+    return ((1+b)/(1+b*np.exp(a*z)))**c
 
-def parallel_map(f, x, display_progress_bar=False, unordered=False, num_cpus=os.cpu_count(), parallel=True):
-    """f is a function to apply to elements in iterable x,
+def flatten_list(x):
+    """x = [y, ...], y = [z, ...]"""
+    return [z for y in x for z in y]
+
+def parallel_map(fn, xarr, display_progress_bar=False, unordered=False, num_cpus=os.cpu_count(), parallel=True):
+    """fn is a function to apply to elements in iterable xarr,
     display_progress_bar is a bool about whether to use tqdm;
     returns a list.
     direct substitution doesn't work because pool.map and p_map work differently,
@@ -39,18 +43,18 @@ def parallel_map(f, x, display_progress_bar=False, unordered=False, num_cpus=os.
     if parallel:
         if display_progress_bar:
             if unordered:
-                return list(p_umap(f, x, num_cpus=num_cpus))
+                return list(p_umap(fn, xarr, num_cpus=num_cpus))
             else:
-                return list(p_map( f, x, num_cpus=num_cpus))
+                return list(p_map(fn, xarr, num_cpus=num_cpus))
         else:
-            global _global_copy_of_f
-            def _global_copy_of_f(x0):
-                return f(x0)
+            global _global_copy_of_fn
+            def _global_copy_of_fn(x0):
+                return fn(x0)
         
             with Pool(processes=num_cpus) as pool:
                 if unordered:
-                    return list(pool.imap_unordered(_global_copy_of_f, x))
+                    return list(pool.imap_unordered(_global_copy_of_fn, xarr))
                 else:
-                    return list(pool.map(_global_copy_of_f, x))
+                    return list(pool.map(_global_copy_of_fn, xarr))
     else:
-        return list(map(f, x))
+        return list(map(fn, xarr))

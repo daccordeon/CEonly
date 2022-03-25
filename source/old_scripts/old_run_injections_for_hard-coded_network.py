@@ -21,7 +21,9 @@ else:
 # --- network, waveform, and injection parameters ---
 #network_spec = ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I']
 # the slowest network in the set?
-network_spec = ['A+_H', 'A+_L', 'K+_K', 'A+_I', 'ET_ET1', 'ET_ET2', 'ET_ET3']
+# network_spec = ['A+_H', 'A+_L', 'K+_K', 'A+_I', 'ET_ET1', 'ET_ET2', 'ET_ET3']
+# one of the missing networks from the first 30k run, chosen for having many detectors
+network_spec = ['V+_V', 'K+_K', 'Voyager-CBO_H', 'Voyager-CBO_L', 'Voyager-CBO_I', 'CE2-40-CBO_S']
 
 if science_case == 'BNS':
     #wf_model_name, wf_other_var_dic = 'lal_bns', dict(approximant='IMRPhenomD_NRTidalv2')
@@ -38,4 +40,3 @@ file_name = f'SLURM_TASK_{task_id}'
 data_path = '/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/'
 #print(f'task_id={task_id}, network_spec={network_spec}, science_case={science_case}, wf_model_name={wf_model_name}, wf_other_var_dic={wf_other_var_dic}, num_injs_per_zbin_per_task={num_injs_per_zbin_per_task}, file_name={file_name}')
 detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs_per_zbin_per_task, generate_fig=False, show_fig=False, print_progress=False, print_reach=False, data_path=data_path, file_name=file_name, parallel=False)
-

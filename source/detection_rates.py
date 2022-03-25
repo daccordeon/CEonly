@@ -45,11 +45,12 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_
         Mtot = Mc/eta**0.6
         #fisco = (6**1.5*PI*Mtot)**-1 # missing some number of Msun, c=1, G=1 factors
         fisco = f_isco_Msolar(Mtot) #4.4/Mtot*1e3 # Hz # from https://arxiv.org/pdf/2011.05145.pdf
-        fmin, fmax = 5., float(max(min(coeff_fisco*fisco, 1024), 10)) # to stop f being too small
-        # select df from 1/16 (fine from B&S2022) to 10 (coarse) Hz
-        df = (fmax-fmin)/(1024-fmin)*10+(1024-fmax)/(1024-fmin)*1/16
+        # chosing fmax in 10 <= coeff_fisco*fisco <= 1024, truncating to boundary values, NB: B&S2022 doesn't include the lower bound
+        fmin, fmax = 5., float(max(min(coeff_fisco*fisco, 1024), 10))
+        # using df from B&S2022, coarser values tend to lead to an IndexError with high injection BBHs (no explanation why)
+        df = 1/16.
         f = np.arange(fmin, fmax, df)
-        # to diagnose len(f) == 1 error
+        # to diagnose len(f) == 1 IndexError, but this print isn't showing up?
         if len(f) == 1: print(f, fmin, fmax, df, coeff_fisco, fisco)
 
         # net_copy is automatically deleted once out of scope (is copying necessary with Pool()?)

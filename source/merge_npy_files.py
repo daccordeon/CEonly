@@ -41,4 +41,3 @@ def merge_all_task_npy_files(path='data_redshift_snr_errs_sky-area/', pattern='r
     
 if __name__ == '__main__':
     merge_all_task_npy_files(delete_input_files=True)
-
