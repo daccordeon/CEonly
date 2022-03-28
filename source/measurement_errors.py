@@ -1,13 +1,13 @@
 """James Gardner, March 2022"""
 from useful_functions import *
 from constants import *
-from networks import DICT_NETSPEC_TO_COLOUR
+from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
 from filename_search_and_manipulation import *
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
-def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, label, normalise_count=True, threshold_by_SNR=True):
+def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, label, normalise_count=True, threshold_by_SNR=True):
     """add PDFs wrt dlog(x) and CDFs on log-log scale to axs"""
     for i, data in enumerate(results_reordered):
         # using low SNR threshold as cut-off for all non-SNR quantities, this might leave few sources remaining (e.g. for HLVKI+)
@@ -22,7 +22,7 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
             weights = np.full(len(data), 1/len(data))
         else:
             weights = None
-        axs[0, i].hist(data, weights=weights, histtype='step', bins=log_bins, color=colour, label=label)
+        axs[0, i].hist(data, weights=weights, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label)
             
         # # binned CDF
         # axs[1, i].hist(data, density=True, cumulative=True, histtype='step', color='k', bins=log_bins)
@@ -31,11 +31,11 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
         cdf = np.arange(len(data))/len(data)
         if i == 0:
             # invert SNR CDF to ``highlight behaviour at large values'' - B&S2022
-            axs[1, i].plot(data, 1-cdf, linestyle='--', color=colour, label=label, zorder=2)
+            axs[1, i].plot(data, 1-cdf, color=colour, linestyle=linestyle, label=label, zorder=2)
         else:
-            axs[1, i].plot(data, cdf, color=colour, label=label, zorder=2)            
+            axs[1, i].plot(data, cdf, color=colour, linestyle=linestyle, label=label, zorder=2)            
 
-def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/'):
+def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/', linestyles_from_BS2022=False):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
     found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
     if found_files is None or len(found_files) == 0:
@@ -73,11 +73,16 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
             else:
                 colours_used.append(colour)
         else:
-            colour = None        
+            colour = None    
+            
+        if linestyles_from_BS2022:
+            linestyle = BS2022_SIX['linestyles'][[net_spec_styler(net) for net in BS2022_SIX['nets']].index(str(net_spec))]
+        else:
+            linestyle = None
         
         # re-order results columns to have sky-area second
         results_reordered = [results.transpose()[i] for i in (1, -1, 2, 4, 3, 5)]
-        add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, legend_label, normalise_count=normalise_count, threshold_by_SNR=threshold_by_SNR) 
+        add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, legend_label, normalise_count=normalise_count, threshold_by_SNR=threshold_by_SNR) 
         
     quantity_short_labels = (r'SNR, $\rho$', r'$\Omega$ / $\mathrm{deg}^2$', r'$\Delta\mathcal{M}/\mathcal{M}$', r'$\Delta\eta$', r'$\Delta D_L/D_L$', r'$\Delta\iota$')
 
@@ -104,7 +109,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         
     # hist handles are boxes, want lines and so borrow from 1, 1 to avoid dotted
     handles, _ = axs[1, 1].get_legend_handles_labels()
-    axs[0, 0].legend(handles=handles, handlelength=1, bbox_to_anchor=(0, -1.7), loc="upper left")
+    axs[0, 0].legend(handles=handles, handlelength=1.5, bbox_to_anchor=(0, -1.7), loc="upper left")
     title = r'collated PDFs wrt $\mathrm{d}\log(x)$ and CDFs'+f'\n{plot_title}'
     if threshold_by_SNR:
         title = title.replace('\n', f', non-SNR quantities thresholded by SNR > {SNR_THRESHOLD_LO}\n')
@@ -118,7 +123,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     if CDFmin == 'B&S2022':
         CDFmin = 1e-4
     axs[1, 0].set(ylabel='CDF', ylim=(CDFmin, 1e0+1))
-    axs[1, 0].legend(labels=['1-CDF'], handles=[mlines.Line2D([], [], color='k', linestyle='--')], handlelength=1, loc='lower left')
+    axs[1, 0].legend(labels=['1-CDF'], handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='lower left')
     axs[1, 1].legend(labels=['CDF'],   handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='lower left')
     fig.align_labels()
 

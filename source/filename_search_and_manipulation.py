@@ -1,5 +1,5 @@
 """James Gardner, March 2022"""
-import os
+import glob
 import numpy as np
 
 from gwbench import network
@@ -20,11 +20,12 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
             return intermediate.replace('_WF_', '\nwaveform: ').replace('_INJS-PER-ZBIN_', "\ninjections per bin: ")
 
 def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/', raise_error_if_no_files_found=True):
-    """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network"""
+    """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network; returned list of files do not have data_path prepended"""
     # finding file names
     net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
     
-    file_list = os.listdir(data_path) # alt. import glob; glob.glob(data_path+'*')
+    # return files wrt data_path (i.e. exclude the path from glob results); ignore task files
+    file_list = [file.replace(data_path, '') for file in glob.glob(data_path + '*') if not "TASK" in file] 
     found_files = np.array([])
     for net_label in net_labels:
         # file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_..._INJS-PER-ZBIN_{num_injs}'

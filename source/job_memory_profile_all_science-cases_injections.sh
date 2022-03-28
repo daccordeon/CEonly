@@ -18,7 +18,8 @@ let "SCIENCE_CASE_INDEX = $SLURM_ARRAY_TASK_ID - 1"
 SCIENCE_CASE=${SCIENCE_CASES[$SCIENCE_CASE_INDEX]}
 NUM_INJS_PER_ZBIN_PER_TASK=${NUM_INJS_PER_ZBIN_PER_TASK_LIST[$SCIENCE_CASE_INDEX]}
 
-# ensure that @profile is enabled in detection_rates.py and that data files don't already exist (if they do, then just increment the task ID, currently 0, below)
+# ensure that the data files don't already exist (if they do, then just increment the task ID, currently 0, below)
+TASK_ID_FOR_FILENAME=1
 #echo "mprof_plot_${SCIENCE_CASE}_${NUM_INJS_PER_ZBIN_PER_TASK}.pdf"
 # use hard-coded network otherwise the network id is required to be known
-srun mprof run /fred/oz209/jgardner/CEonlyPony/source/old_scripts/old_run_injections_for_hard-coded_network.py 0 ${NUM_INJS_PER_ZBIN_PER_TASK} ${SCIENCE_CASE}; mprof plot -o "mprof_plot_${SCIENCE_CASE}_${NUM_INJS_PER_ZBIN_PER_TASK}.pdf"
+srun mprof run -o "mprof_plot_injs_${SCIENCE_CASE}_${NUM_INJS_PER_ZBIN_PER_TASK}.dat" /fred/oz209/jgardner/CEonlyPony/source/old_scripts/old_run_injections_for_hard-coded_network.py ${TASK_ID_FOR_FILENAME} ${NUM_INJS_PER_ZBIN_PER_TASK} ${SCIENCE_CASE}; mprof plot -o "mprof_plot_injs_${SCIENCE_CASE}_${NUM_INJS_PER_ZBIN_PER_TASK}.pdf" "mprof_plot_injs_${SCIENCE_CASE}_${NUM_INJS_PER_ZBIN_PER_TASK}.dat"

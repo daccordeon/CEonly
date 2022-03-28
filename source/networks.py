@@ -3,7 +3,7 @@ using colours from https://flatuicolors.com/palette/us"""
 from useful_functions import flatten_list
 from filename_search_and_manipulation import net_spec_styler
 
-# colours pulled from B&S2022 using Inkscape
+# colours and linestyles pulled from B&S2022
 BS2022_SIX = dict(nets=[
     ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'],
     ['V+_V', 'K+_K', 'Voyager-CBO_H', 'Voyager-CBO_L', 'Voyager-CBO_I'],
@@ -12,7 +12,8 @@ BS2022_SIX = dict(nets=[
     ['K+_K', 'A+_I', 'ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C'],
     ['ET_ET1', 'ET_ET2', 'ET_ET3', 'CE2-40-CBO_C', 'CE2-40-CBO_S']],
     colours=['#8c510aff', '#bf812dff', '#dfc27dff', '#80cdc1ff', '#35978fff', '#01665eff'],
-    label='BS2022-six')
+    label='BS2022-six',
+    linestyles=[(0,(1,1)), (0,(5,1,1,1,1,1)), (0,(5,1,1,1)), (0,(5,1)), (0,(1,2)), '-'])
 
 # --- CE only ---
 # - One in the US
@@ -93,7 +94,7 @@ NET_DICT_LIST = [
     NEMOLF_AND_2G
 ]
 NET_LIST = flatten_list([net_dict['nets'] for net_dict in NET_DICT_LIST])
-# look-up table: given net_spec return colour
+# look-up table: given net_spec return colour, will override if same net_spec used twice
 DICT_NETSPEC_TO_COLOUR = dict()
 for net_dict in NET_DICT_LIST:
     for net_spec in net_dict['nets']:

@@ -12,11 +12,9 @@ gwbench.egg-info/
 source/meetings/
 requirements.txt
 boris_guide_to_jupyter.txt
-source/detection_rates.py
-source/filename_search_and_manipulation.py
 source/job_run_injections.sh
 source/mprof_run_injections.sh
 source/run_injections.py
-source/stderr_job_run_injections.txt
-source/stdout_job_run_injections.txt
 source/data_20--200_injs.zip
+*stderr*.txt
+*stdout*.txt

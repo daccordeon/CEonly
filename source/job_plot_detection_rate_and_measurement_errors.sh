@@ -5,8 +5,8 @@
 #SBATCH --error=stderr_job_plot_detection_rate_and_measurement_errors.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=04:00:00 # HH:MM:SS
-#SBATCH --mem-per-cpu=1000 # MB, overestimates: use mprof to narrow
+#SBATCH --time=00:02:00 # HH:MM:SS, mprof maximum: 40 s
+#SBATCH --mem-per-cpu=2000 # MB, mprof maximum: 800 MB
 #
 #SBATCH --array=1-40 # 10 network sets, 2 science cases with a unique waveform each, 2 plots
 
