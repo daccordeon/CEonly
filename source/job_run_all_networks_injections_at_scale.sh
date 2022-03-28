@@ -8,7 +8,7 @@
 #SBATCH --time=08:00:00 # HH:MM:SS
 #SBATCH --mem-per-cpu=200 # MB, use mprof to determine required time and memory per task
 #
-#SBATCH --array=1-2040 # number of independent jobs, 34 networks, 2 science cases, some number of tasks each set below, watch out for MaxArraySize=2048 in /apps/slurm/etc/slurm.config
+#SBATCH --array=1-2040 # number of independent jobs, 34 networks, 2 science cases, some number of tasks each set below, watch out for MaxArraySize=2048 and the maximum concurrent jobs of 1000 in /apps/slurm/etc/slurm.config
 
 # tasks should go: net1-BNS, net1-BNS, net1-BBH, net1-BBH, net2-BNS, ...
 # use task index to select a network and a science case (the latter of which uniquely determines a waveform)

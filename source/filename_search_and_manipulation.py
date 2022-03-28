@@ -19,7 +19,7 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
         else:
             return intermediate.replace('_WF_', '\nwaveform: ').replace('_INJS-PER-ZBIN_', "\ninjections per bin: ")
 
-def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/'):
+def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/', raise_error_if_no_files_found=True):
     """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network"""
     # finding file names
     net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
@@ -51,7 +51,13 @@ def find_files_given_networks(network_spec_list, science_case, specific_wf=None,
         found_files = np.append(found_files, matches[list(set(unique_wf_index_list))]) #could flatten matches here
     found_files = found_files.flatten()
     if len(found_files) == 0:
-        raise ValueError('No files found.')
-    elif print_progress:
-        print(f'Found {len(found_files)} file/s:', *found_files, sep='\n')
-    return list(found_files)
+        message = f'No files found for network {network_spec_list} and science case {science_case}'
+        if specific_wf is not None: message += f'with waveform {specific_wf}'
+        if raise_error_if_no_files_found:
+            raise ValueError(message)
+        else:
+            print(message)
+            return list(found_files)
+    else:
+        if print_progress: print(f'Found {len(found_files)} file/s:', *found_files, sep='\n')
+        return list(found_files)

@@ -37,7 +37,9 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
 
 def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/'):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
-    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path)
+    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
+    if found_files is None or len(found_files) == 0:
+        return
     net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
     if plot_label is None:
         plot_label = ''.join(tuple('_NET_'+l for l in net_labels))[1:]

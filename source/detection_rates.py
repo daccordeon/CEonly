@@ -46,13 +46,12 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_
         #fisco = (6**1.5*PI*Mtot)**-1 # missing some number of Msun, c=1, G=1 factors
         fisco = f_isco_Msolar(Mtot) #4.4/Mtot*1e3 # Hz # from https://arxiv.org/pdf/2011.05145.pdf
         # chosing fmax in 10 <= coeff_fisco*fisco <= 1024, truncating to boundary values, NB: B&S2022 doesn't include the lower bound
-        fmin, fmax = 5., float(max(min(coeff_fisco*fisco, 1024), 10))
-        # using df from B&S2022, coarser values tend to lead to an IndexError with high injection BBHs (no explanation why)
-        df = 1/16.
+        fmax_bounds = (10, 1024)
+        fmin, fmax = 5., float(max(min(coeff_fisco*fisco, fmax_bounds[1]), fmax_bounds[0])) # to stop f being too small
+        # df linearly transitions from 1/16 (fine from B&S2022) to 10 (coarse to save computation time) Hz
+        df = (fmax-fmax_bounds[0])/(fmax_bounds[1]-fmax_bounds[0])*10+(fmax_bounds[1]-fmax)/(fmax_bounds[1]-fmax_bounds[0])*1/16
         f = np.arange(fmin, fmax, df)
-        # to diagnose len(f) == 1 IndexError, but this print isn't showing up?
-        if len(f) == 1: print(f, fmin, fmax, df, coeff_fisco, fisco)
-
+        
         # net_copy is automatically deleted once out of scope (is copying necessary with Pool()?)
         net_copy = deepcopy(net)
         inj_params = dict(**base_params, **varied_params)
@@ -371,7 +370,9 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     if plot_label is None:
         plot_label = f"SCI-CASE_{science_case}{''.join(tuple('_NET_'+l for l in net_labels))}"
     
-    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path)
+    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
+    if found_files is None or len(found_files) == 0:
+        return
 
     # load file and add results to plot
     plt.rcParams.update({'font.size': 14})

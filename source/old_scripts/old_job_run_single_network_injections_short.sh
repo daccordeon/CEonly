@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=job_run_injections
-#SBATCH --output=stdout_job_run_injections.txt
-#SBATCH --error=stderr_job_run_injections.txt
+#SBATCH --output=stdout_old_job_run_single_network_injections_short.txt
+#SBATCH --error=stderr_old_job_run_single_network_injections_short.txt
 #
 #SBATCH --ntasks=1
 #SBATCH --time=00:04:00 # HH:MM:SS
