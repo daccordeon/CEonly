@@ -45,8 +45,8 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_
         Mtot = Mc/eta**0.6
         #fisco = (6**1.5*PI*Mtot)**-1 # missing some number of Msun, c=1, G=1 factors
         fisco = f_isco_Msolar(Mtot) #4.4/Mtot*1e3 # Hz # from https://arxiv.org/pdf/2011.05145.pdf
-        # chosing fmax in 10 <= coeff_fisco*fisco <= 1024, truncating to boundary values, NB: B&S2022 doesn't include the lower bound
-        fmax_bounds = (10, 1024)
+        # chosing fmax in 20 <= coeff_fisco*fisco <= 1024, truncating to boundary values, NB: B&S2022 doesn't include the lower bound which must be included to avoid an IndexError with the automatically truncated fmin from the V+ and aLIGO curves stored in gwbench that start at 10 Hz, this can occur for Mtot > 3520 Msun with massive BBH mergers although those masses are at least an order of magnitude beyond any observed so far
+        fmax_bounds = (20, 1024)
         fmin, fmax = 5., float(max(min(coeff_fisco*fisco, fmax_bounds[1]), fmax_bounds[0])) # to stop f being too small
         # df linearly transitions from 1/16 (fine from B&S2022) to 10 (coarse to save computation time) Hz
         df = (fmax-fmax_bounds[0])/(fmax_bounds[1]-fmax_bounds[0])*10+(fmax_bounds[1]-fmax)/(fmax_bounds[1]-fmax_bounds[0])*1/16
