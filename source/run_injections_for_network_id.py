@@ -15,8 +15,8 @@ filterwarnings('ignore')
 
 # input arguments from bash
 # to-do: look into argparse for a kwarg alternative to sys.argv
-task_id, network_id, science_case, num_injs_per_zbin_per_task, total_number_of_files = sys.argv[1:] # first argv is the script's name
-task_id, network_id, num_injs_per_zbin_per_task, total_number_of_files = [int(x) for x in (task_id, network_id, num_injs_per_zbin_per_task, total_number_of_files)]
+task_id, network_id, science_case, num_injs_per_zbin_per_task, total_number_of_files, merge_bool = sys.argv[1:] # first argv is the script's name
+task_id, network_id, num_injs_per_zbin_per_task, total_number_of_files, merge_bool = [int(x) for x in (task_id, network_id, num_injs_per_zbin_per_task, total_number_of_files, merge_bool)]
 
 # --- network, waveform, and injection parameters ---
 # tasks go through all 34 networks with two science cases for each
@@ -48,5 +48,5 @@ detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_nam
 
 # clean-up, if all task files exist, then call the merge script which only combines task files (therefore if previous data files exist they will be unharmed)
 # to-do: check if this is ever likely to happen in two threads at the same time, check if the ``race condition'' is impossible
-if total_number_of_files == len(glob.glob(data_path + 'results_*_TASK_*')):
+if merge_bool and (total_number_of_files == len(glob.glob(data_path + 'results_*_TASK_*'))):
     merge_all_task_npy_files(delete_input_files=True)
