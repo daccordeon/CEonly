@@ -6,7 +6,7 @@
 #
 #SBATCH --ntasks=1
 #SBATCH --time=08:00:00 # HH:MM:SS
-#SBATCH --mem-per-cpu=200 # MB, use mprof to determine required time and memory per task
+#SBATCH --mem-per-cpu=200 # MB, determined from mprof (175 MB, 50 min for BNS, 7 hr for BBH)
 #
 #SBATCH --array=1-2040 # number of independent jobs, 34 networks, 2 science cases, some number of tasks each set below, watch out for MaxArraySize=2048 and the maximum concurrent jobs of 1000 in /apps/slurm/etc/slurm.config
 
