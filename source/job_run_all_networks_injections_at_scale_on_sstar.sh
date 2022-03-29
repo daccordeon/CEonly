@@ -5,7 +5,7 @@
 #SBATCH --error=stderr_job_run_all_injections_at_scale_on_sstar.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=08:00:00 # HH:MM:SS
+#SBATCH --time=12:00:00 # HH:MM:SS, sstar cores are 4/3 times slower than skylake (farnarkle) cores
 #SBATCH --mem-per-cpu=200 # MB, determined from mprof (175 MB, 50 min for BNS, 7 hr for BBH)
 #
 #SBATCH --array=1-2040 # number of independent jobs, 34 networks, 2 science cases, some number of tasks each set below, watch out for MaxArraySize=2048 and the maximum concurrent jobs of 1000 in /apps/slurm/etc/slurm.config
@@ -18,7 +18,7 @@ NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000)
 
 NUM_NETWORKS=34
 NUM_SCS=${#SCIENCE_CASES[*]} # length of SCIENCE_CASES
-let "NUM_FILES = $NUM_NETWORKS*$NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF"
+let "NUM_FILES = $NUM_NETWORKS*$NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF*2" # final factor of two is from farnarkle1/2 + sstar
 # whether to automatically merge all the task files
 MERGE_BOOL=0
 # determine network in python script from task id

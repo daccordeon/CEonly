@@ -18,7 +18,7 @@ NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000)
 
 NUM_NETWORKS=34
 NUM_SCS=${#SCIENCE_CASES[*]} # length of SCIENCE_CASES
-let "NUM_FILES = $NUM_NETWORKS*$NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF"
+let "NUM_FILES = $NUM_NETWORKS*$NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF*2" # final factor of two is from farnarkle1/2 + sstar
 # whether to automatically merge all the task files
 MERGE_BOOL=0
 # determine network in python script from task id

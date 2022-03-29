@@ -15,6 +15,6 @@ boris_guide_to_jupyter.txt
 source/job_run_injections.sh
 source/mprof_run_injections.sh
 source/run_injections.py
-source/data_20--200_injs.zip
 *stderr*.txt
 *stdout*.txt
+*.zip
