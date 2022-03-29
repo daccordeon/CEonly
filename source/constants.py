@@ -10,3 +10,8 @@ SNR_THRESHOLD_HI = 100
 GWTC3_MERGER_RATE_BNS = 105.5
 GWTC3_MERGER_RATE_BBH = 23.9
 
+# sky areas, https://en.wikipedia.org/wiki/Square_degree
+TOTAL_SKY_AREA_SQR_DEG = 129600/PI
+MOON_SKY_AREA_SQR_DEG = PI*(0.5/2)**2 # varies with distance from Earth
+# from Rana, check decadal predictions for ZTF
+EM_FOLLOWUP_SKY_AREA_SQR_DEG = 10

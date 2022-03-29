@@ -1,20 +1,27 @@
+# i/python checkoints
 __pycache__
 *.pyc
 *.swp
-*out
+.ipynb_checkpoints
+# plots
+*.pdf
+*.png
+*.jpg
+# data
 *.npy
+*.dat
+*.zip
+# job output
+*stderr*.txt
+*stdout*.txt
+# miscellaneous
+*out
 build/
 dist/
 gwbench.egg-info/
-.ipynb_checkpoints
-*.pdf
-*.dat
 source/meetings/
 requirements.txt
 boris_guide_to_jupyter.txt
 source/job_run_injections.sh
 source/mprof_run_injections.sh
 source/run_injections.py
-*stderr*.txt
-*stdout*.txt
-*.zip

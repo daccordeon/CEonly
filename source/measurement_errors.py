@@ -3,6 +3,7 @@ from useful_functions import *
 from constants import *
 from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
 from filename_search_and_manipulation import *
+from useful_plotting_functions import force_log_grid
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
@@ -11,29 +12,47 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
     """add PDFs wrt dlog(x) and CDFs on log-log scale to axs"""
     for i, data in enumerate(results_reordered):
         # using low SNR threshold as cut-off for all non-SNR quantities, this might leave few sources remaining (e.g. for HLVKI+)
+        # to-do: rewrite lo and hi to reduce repetition; handle data_hi being empty       
+        data_hi_empty = False
         if threshold_by_SNR & (i != 0):
-            data = data[results_reordered[0] > SNR_THRESHOLD_LO]
-        
-        data.sort() # sorts in place
-        log_bins = np.geomspace(data.min(), data.max(), num_bins)
+            data_lo = data[results_reordered[0] > SNR_THRESHOLD_LO]
+            data_hi = data[results_reordered[0] > SNR_THRESHOLD_HI]
+            if len(data_hi) == 0:
+                data_hi_empty = True
+        else:
+            # relabel data to data_lo
+            data_lo = data
+            data_hi_empty = True
+
+        data_lo.sort()
+        if not data_hi_empty:
+            data_hi.sort()
+            log_bins = np.geomspace(min(data_lo.min(), data_hi.min()), max(data_lo.max(), data_hi.max()), num_bins)
+        else: 
+            log_bins = np.geomspace(data_lo.min(), data_lo.max(), num_bins)            
         # density vs weights is normalising integral (area under the curve) vs total count, integral behaves counter-intuitively visually with logarithmic axis 
         if normalise_count:
             # normalise wrt dlog(x)
-            weights = np.full(len(data), 1/len(data))
+            weights_lo = np.full(len(data_lo), 1/len(data_lo))
+            if not data_hi_empty: weights_hi = np.full(len(data_hi), 1/len(data_hi))
         else:
-            weights = None
-        axs[0, i].hist(data, weights=weights, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label)
+            weights_lo = None
+            if not data_hi_empty: weights_hi = None
+                
+        axs[0, i].hist(data_lo, weights=weights_lo, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label, linewidth=0.5)
+        if not data_hi_empty: axs[0, i].hist(data_hi, weights=weights_hi, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label)
             
-        # # binned CDF
-        # axs[1, i].hist(data, density=True, cumulative=True, histtype='step', color='k', bins=log_bins)
-        # axs[1, i].hist(data, density=True, cumulative=-1, histtype='step', color='r', bins=log_bins)
-        # unbinned CDF
-        cdf = np.arange(len(data))/len(data)
+        cdf_lo = np.arange(len(data_lo))/len(data_lo)    
         if i == 0:
             # invert SNR CDF to ``highlight behaviour at large values'' - B&S2022
-            axs[1, i].plot(data, 1-cdf, color=colour, linestyle=linestyle, label=label, zorder=2)
+            # unbinned CDF
+            axs[1, i].plot(data_lo, 1 - cdf_lo, color=colour, linestyle=linestyle, label=label, zorder=2, linewidth=0.5)
         else:
-            axs[1, i].plot(data, cdf, color=colour, linestyle=linestyle, label=label, zorder=2)            
+            axs[1, i].plot(data_lo, cdf_lo, color=colour, linestyle=linestyle, label=label, zorder=2, linewidth=0.5)   
+            if not data_hi_empty: 
+                cdf_hi = np.arange(len(data_hi))/len(data_hi)                            
+                axs[1, i].plot(data_hi, cdf_hi, color=colour, linestyle=linestyle, label=label, zorder=2)
+                axs[1, i].fill(np.append(data_hi, data_lo[::-1]), np.append(cdf_hi, cdf_lo[::-1]), color=colour, alpha=0.1)
 
 def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/', linestyles_from_BS2022=False):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
@@ -47,8 +66,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         plot_title = plot_label
 
     plt.rcParams.update({'font.size': 14})
-    wspace = 0.3 if xlim_list == 'B&S2022' else 0.1
-    fig, axs = plt.subplots(2, 6, sharex='col', sharey='row', figsize=(16, 4), gridspec_kw=dict(wspace=wspace, hspace=0.1))
+    fig, axs = plt.subplots(2, 6, sharex='col', sharey='row', figsize=(20, 6), gridspec_kw=dict(wspace=0.1, hspace=0.1))
     
     # same colours manipulation as compare_networks_from_saved_results
     colours_used = []
@@ -91,16 +109,16 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         xlim_list = tuple((None, None) for _ in range(6))
     elif xlim_list == 'B&S2022':
         if science_case == 'BNS':
-            xlim_list = ((1e0, 1e2), (1e-2, 1e2), (1e-7, 1e-4), (1e-6, 1e-3), (1e-2, 1e1), (1e-3, 1e1))
+            xlim_list = [(1e0, 1e2), (1e-2, 1e2), (1e-7, 1e-4), (1e-6, 1e-3), (1e-2, 1e1), (1e-3, 1e1)]
         elif science_case == 'BBH':
-            xlim_list = ((1e0, 1e3), (1e-3, 1e2), (1e-6, 1e-1), (1e-7, 1e-2), (1e-3, 1e0), (1e-3, 1e0))
+            xlim_list = [(1e0, 1e3), (1e-3, 1e2), (1e-6, 1e-1), (1e-7, 1e-2), (1e-3, 1e0), (1e-3, 1e0)]
         else:
             raise ValueError('Science case not recognised.')
-        
+        # perturb the xlim_list to avoid ticklabels overhanging the boundary of each subplot, perturbation must work on any scale
+        epsilon = 1e-5
+        xlim_list = [(xlim[0]*(1 + epsilon), xlim[1]*(1 - epsilon)) for xlim in xlim_list]
     
-    for i in range(len(axs[1])):
-        axs[0, i].grid(which='both', axis='both', color='lightgrey')
-        axs[1, i].grid(which='both', axis='both', color='lightgrey')         
+    for i in range(len(axs[1])):         
         axs[1, i].axhline(1, color='lightgrey', zorder=1)
         axs[1, i].set(xscale='log', yscale='log', xlabel=quantity_short_labels[i], xlim=xlim_list[i])
 
@@ -109,7 +127,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         
     # hist handles are boxes, want lines and so borrow from 1, 1 to avoid dotted
     handles, _ = axs[1, 1].get_legend_handles_labels()
-    axs[0, 0].legend(handles=handles, handlelength=1.5, bbox_to_anchor=(0, -1.7), loc="upper left")
+    axs[0, 0].legend(handles=handles, handlelength=1.5, bbox_to_anchor=(0, -1.35), loc="upper left")
     title = r'collated PDFs wrt $\mathrm{d}\log(x)$ and CDFs'+f'\n{plot_title}'
     if threshold_by_SNR:
         title = title.replace('\n', f', non-SNR quantities thresholded by SNR > {SNR_THRESHOLD_LO}\n')
@@ -127,6 +145,12 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     axs[1, 1].legend(labels=['CDF'],   handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='lower left')
     fig.align_labels()
 
+    fig.canvas.draw()
+    for ax in axs[0]:
+        force_log_grid(ax, log_axis='x')
+    for ax in axs[1]:
+        force_log_grid(ax, log_axis='both')        
+    
     if save_fig:
         fig.savefig(f'plots/collated_PDFs_and_CDFs_snr_errs_sky-area/collated_PDFs_and_CDFs_snr_errs_sky-area_{plot_label}.pdf', bbox_inches='tight')
     if show_fig:

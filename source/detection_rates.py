@@ -4,6 +4,7 @@ from constants import *
 from networks import DICT_NETSPEC_TO_COLOUR
 from basic_benchmarking import *
 from filename_search_and_manipulation import *
+from useful_plotting_functions import force_log_grid
 
 from gwbench.basic_relations import f_isco_Msolar
 
@@ -214,10 +215,12 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi, de
     axs[-1].set_xlim((zmin_plot, zmax_plot))
     axs[-1].xaxis.set_minor_locator(plt.LogLocator(base=10.0, subs=0.1*np.arange(1, 10), numticks=10))
     axs[-1].xaxis.set_minor_formatter(plt.NullFormatter())
-    axs[-1].set_xlabel('redshift, z')
-    axs[0].grid(which='both', axis='both', color='lightgrey')
-    axs[1].grid(which='both', axis='both', color='lightgrey')
-    axs[2].grid(which='both', axis='both', color='lightgrey')    
+    axs[-1].set_xlabel('redshift, z') 
+    
+    fig.canvas.draw()
+    force_log_grid(axs[0], log_axis='both')
+    force_log_grid(axs[1], log_axis='x')
+    force_log_grid(axs[2], log_axis='both')    
 
     fig.savefig(f'plots/snr_eff_rate_vs_redshift/snr_eff_rate_vs_redshift_{file_tag}.pdf', bbox_inches='tight')
     if show_fig:
@@ -391,9 +394,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     axs[-1].xaxis.set_minor_locator(plt.LogLocator(base=10.0, subs=0.1*np.arange(1, 10), numticks=10))
     axs[-1].xaxis.set_minor_formatter(plt.NullFormatter())
     axs[-1].set_xlabel('redshift, z')
-    axs[0].grid(which='both', axis='both', color='lightgrey')   
-    axs[-1].grid(which='both', axis='both', color='lightgrey')
-    
+
     colours_used = []
     for i, file in enumerate(found_files):
         results = np.load(data_path + file)
@@ -433,6 +434,11 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
         mlines.Line2D([], [], marker='s', linestyle='--', color=handle.get_c())] for handle in handles[::3]]).flatten())
     axs[0].legend(handles=new_handles, labels=labels, handlelength=2, bbox_to_anchor=(1.04,1), loc="upper left")
     axs[1].legend(handlelength=2, loc="upper left")
+    
+    fig.canvas.draw()
+    force_log_grid(axs[0], log_axis='x')
+    force_log_grid(axs[-1], log_axis='both')    
+    
     if save_fig:
         fig.savefig(f'plots/collated_eff_rate_vs_z/collated_eff_rate_vs_z_{plot_label}.pdf', bbox_inches='tight')
     if show_fig:
