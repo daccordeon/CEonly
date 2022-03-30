@@ -3,24 +3,27 @@ from useful_functions import *
 from constants import *
 from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
 from filename_search_and_manipulation import *
-from useful_plotting_functions import force_log_grid
+from useful_plotting_functions import *
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
-def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, label, normalise_count=True, threshold_by_SNR=True):
-    """add PDFs wrt dlog(x) and CDFs on log-log scale to axs"""
+def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, label, normalise_count=True, threshold_by_SNR=True, contour=True):
+    """add PDFs wrt dlog(x) and CDFs on log-log scale to axs.
+    the bool contour controls whether to display contours on the CDFs between SNR > 100 (detected well) and SNR > 10 (detected) curves"""
     for i, data in enumerate(results_reordered):
         # using low SNR threshold as cut-off for all non-SNR quantities, this might leave few sources remaining (e.g. for HLVKI+)
-        # to-do: rewrite lo and hi to reduce repetition; handle data_hi being empty       
+        # to-do: rewrite lo and hi to reduce repetition; handle data_hi being empty 
+        # add legend for contour like Kuns+2020
         data_hi_empty = False
-        if threshold_by_SNR & (i != 0):
+        if threshold_by_SNR and (i != 0):
             data_lo = data[results_reordered[0] > SNR_THRESHOLD_LO]
             data_hi = data[results_reordered[0] > SNR_THRESHOLD_HI]
+            # to-do: fix contour issue as loud sources should have lower errors 
+            #if i == 1: print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
             if len(data_hi) == 0:
                 data_hi_empty = True
-        else:
-            # relabel data to data_lo
+        if (not (threshold_by_SNR and (i != 0))) or (not contour):
             data_lo = data
             data_hi_empty = True
 
@@ -32,29 +35,37 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
             log_bins = np.geomspace(data_lo.min(), data_lo.max(), num_bins)            
         # density vs weights is normalising integral (area under the curve) vs total count, integral behaves counter-intuitively visually with logarithmic axis 
         if normalise_count:
-            # normalise wrt dlog(x)
+            # normalise wrt dlog(x), i.e. to the height rather than the actual integrated area of each column
             weights_lo = np.full(len(data_lo), 1/len(data_lo))
             if not data_hi_empty: weights_hi = np.full(len(data_hi), 1/len(data_hi))
         else:
             weights_lo = None
             if not data_hi_empty: weights_hi = None
-                
-        axs[0, i].hist(data_lo, weights=weights_lo, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label, linewidth=0.5)
-        if not data_hi_empty: axs[0, i].hist(data_hi, weights=weights_hi, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label)
-            
+        
+        if contour and (i != 0):
+            linewidth_lo, label_lo = 0.5, None
+        else:
+            linewidth_lo, label_lo = None, label
+
+        if not data_hi_empty:
+            # trying with weights_lo, not normalised but check if it is the tail
+            axs[0, i].hist(data_hi, weights=np.full(len(data_hi), 1/len(data_lo)), histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label)
+        axs[0, i].hist(data_lo, weights=weights_lo, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label_lo, linewidth=linewidth_lo)
+        
         cdf_lo = np.arange(len(data_lo))/len(data_lo)    
         if i == 0:
             # invert SNR CDF to ``highlight behaviour at large values'' - B&S2022
             # unbinned CDF
-            axs[1, i].plot(data_lo, 1 - cdf_lo, color=colour, linestyle=linestyle, label=label, zorder=2, linewidth=0.5)
+            axs[1, i].plot(data_lo, 1 - cdf_lo, color=colour, linestyle=linestyle, zorder=2, label=label_lo)
         else:
-            axs[1, i].plot(data_lo, cdf_lo, color=colour, linestyle=linestyle, label=label, zorder=2, linewidth=0.5)   
+            # add legend to ax[1, 1] so that handles can be used by ax[0, 0] later
+            axs[1, i].plot(data_lo, cdf_lo, color=colour, linestyle=linestyle, zorder=2, linewidth=linewidth_lo, label=label_lo) 
             if not data_hi_empty: 
                 cdf_hi = np.arange(len(data_hi))/len(data_hi)                            
-                axs[1, i].plot(data_hi, cdf_hi, color=colour, linestyle=linestyle, label=label, zorder=2)
+                axs[1, i].plot(data_hi, cdf_hi, color=colour, linestyle=linestyle, zorder=2, label=label)
                 axs[1, i].fill(np.append(data_hi, data_lo[::-1]), np.append(cdf_hi, cdf_lo[::-1]), color=colour, alpha=0.1)
 
-def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/', linestyles_from_BS2022=False):
+def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/', linestyles_from_BS2022=False, contour=False):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
     found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
     if found_files is None or len(found_files) == 0:
@@ -100,9 +111,9 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         
         # re-order results columns to have sky-area second
         results_reordered = [results.transpose()[i] for i in (1, -1, 2, 4, 3, 5)]
-        add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, legend_label, normalise_count=normalise_count, threshold_by_SNR=threshold_by_SNR) 
+        add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, legend_label, normalise_count=normalise_count, threshold_by_SNR=threshold_by_SNR, contour=contour) 
         
-    quantity_short_labels = (r'SNR, $\rho$', r'$\Omega$ / $\mathrm{deg}^2$', r'$\Delta\mathcal{M}/\mathcal{M}$', r'$\Delta\eta$', r'$\Delta D_L/D_L$', r'$\Delta\iota$')
+    quantity_short_labels = (r'SNR, $\rho$', r'$\Omega_{90}$ / $\mathrm{deg}^2$', r'$\Delta\mathcal{M}/\mathcal{M}$', r'$\Delta\eta$', r'$\Delta D_L/D_L$', r'$\Delta\iota$')
 
     # from B&S 2022
     if xlim_list is None:
@@ -122,11 +133,17 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         axs[1, i].axhline(1, color='lightgrey', zorder=1)
         axs[1, i].set(xscale='log', yscale='log', xlabel=quantity_short_labels[i], xlim=xlim_list[i])
 
+    # SNR threshold
     for ax in axs[:, 0]:   
         ax.axvspan(ax.get_xlim()[0], SNR_THRESHOLD_LO, alpha=0.5, color='lightgrey')
         
+    # sky area threshold
+    for ax in axs[:, 1]:
+        ax.axvspan(TOTAL_SKY_AREA_SQR_DEG, ax.get_xlim()[1], alpha=0.5, color='k')
+        ax.axvline(EM_FOLLOWUP_SKY_AREA_SQR_DEG, color='k', linestyle='--', linewidth=1)       
+        
     # hist handles are boxes, want lines and so borrow from 1, 1 to avoid dotted
-    handles, _ = axs[1, 1].get_legend_handles_labels()
+    handles, _ = axs[1, 0].get_legend_handles_labels()
     axs[0, 0].legend(handles=handles, handlelength=1.5, bbox_to_anchor=(0, -1.35), loc="upper left")
     title = r'collated PDFs wrt $\mathrm{d}\log(x)$ and CDFs'+f'\n{plot_title}'
     if threshold_by_SNR:
@@ -141,8 +158,12 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     if CDFmin == 'B&S2022':
         CDFmin = 1e-4
     axs[1, 0].set(ylabel='CDF', ylim=(CDFmin, 1e0+1))
-    axs[1, 0].legend(labels=['1-CDF'], handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='lower left')
-    axs[1, 1].legend(labels=['CDF'],   handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='lower left')
+    axs[1, 0].legend(labels=['1-CDF'], handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='lower left', frameon=False)
+    if contour:
+        axs[0, 1].legend(labels=[f'SNR>{SNR_THRESHOLD_LO}', f'SNR>{SNR_THRESHOLD_HI}'], handles=[mlines.Line2D([], [], color='k', linewidth=0.5), mlines.Line2D([], [], color='k')], handlelength=1, loc='upper left', frameon=False, labelspacing=0.03)
+        add_SNR_contour_legend(axs[1, 1])
+    else:
+        axs[1, 1].legend(labels=['CDF'], handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='upper left', frameon=False)
     fig.align_labels()
 
     fig.canvas.draw()
