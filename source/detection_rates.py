@@ -20,27 +20,27 @@ def differential_comoving_volume(z):
     """$\frac{\text{d}V}{\text{d}z}(z)$ in B&S2022; 4*pi to convert from Mpc^3 sr^-1 (sr is steradian) to Mpc^3"""
     return  4.*PI*Planck18.differential_comoving_volume(z).value
 
-def merger_rate_bns(z):
-    """$R(z)$ in B&S2022; normalisation of merger rate density $\dot{n}(z)$ in the source frame to values in https://arxiv.org/pdf/2111.03606v2.pdf
+def merger_rate_bns(z, normalisation=GWTC3_MERGER_RATE_BNS):
+    """$R(z)$ in B&S2022; normalisation of merger rate density $\dot{n}(z)$ in the source frame to GWTC3_MERGER_RATE_BNS in https://arxiv.org/pdf/2111.03606v2.pdf.
 1e-9 converts Gpc^-3 to Mpc^-3 to match Planck18, in Fig 2 of Ngetal2021: the ndot_F rate is in Gpc^-3 yr^-1, injections.py cites v1 of an arXiv .pdf"""
-    return GWTC3_MERGER_RATE_BNS/injections.bns_md_merger_rate(0)*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z)
+    return normalisation/injections.bns_md_merger_rate(0)*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z)
 
-def merger_rate_bbh(z):
-    """$R(z)$ in B&S2022; normalisation of merger rate density $\dot{n}(z)$ in the source frame to values in https://arxiv.org/pdf/2111.03606v2.pdf
+def merger_rate_bbh(z, normalisation=GWTC3_MERGER_RATE_BBH):
+    """$R(z)$ in B&S2022; normalisation of merger rate density $\dot{n}(z)$ in the source frame to GWTC3_MERGER_RATE_BBH in https://arxiv.org/pdf/2111.03606v2.pdf.
 1e-9 converts Gpc^-3 to Mpc^-3 to match Planck18, in Fig 2 of Ngetal2021: the ndot_F rate is in Gpc^-3 yr^-1, injections.py cites v1 of an arXiv .pdf"""
-    return GWTC3_MERGER_RATE_BBH/injections.mdbn_merger_rate(0)*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
+    return normalisation/injections.mdbn_merger_rate(0)*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
 
-def merger_rate_in_obs_frame(merger_rate, z):
-    """1+z factor of time dilation of merger rate in observer frame z away"""
-    return merger_rate(z)/(1+z)
+def merger_rate_in_obs_frame(merger_rate, z, **kwargs):
+    """1+z factor of time dilation of merger rate in observer frame z away. kwargs, e.g. normalisation, are passed to merger_rate"""
+    return merger_rate(z, **kwargs)/(1+z)
 
-def detection_rate(merger_rate, detection_efficiency, z0, snr_threshold):
-    """$D_R(z, \rho_\ast)$ in B&S2022. quad returns (value, error)"""
-    return quad(lambda z : detection_efficiency(z, snr_threshold)*merger_rate_in_obs_frame(merger_rate, z), 0, z0)[0]  
+def detection_rate(merger_rate, detection_efficiency, z0, snr_threshold, **kwargs):
+    """$D_R(z, \rho_\ast)$ in B&S2022. quad returns (value, error). kwargs, e.g. normalisation, are passed to merger_rate"""
+    return quad(lambda z : detection_efficiency(z, snr_threshold)*merger_rate_in_obs_frame(merger_rate, z, **kwargs), 0, z0)[0]
 
-def detection_rate_limit(merger_rate, z0):
+def detection_rate_limit(merger_rate, z0, **kwargs):
     """$D_R(z, \rho_\ast)|_{\varepsilon=1}$ in B&S2022;i.e. "merger rate" in Fig 2, not R(z) but int R(z)/(1+z), i.e. if perfect efficiency"""
-    return detection_rate(merger_rate, lambda _, __ : 1, z0, None)
+    return detection_rate(merger_rate, lambda _, __ : 1, z0, None, **kwargs)
 
 def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=None, file_name=None, parallel=True):
     """given network and variables, generate injections, benchmark, 
