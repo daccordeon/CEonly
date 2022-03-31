@@ -70,7 +70,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
     if found_files is None or len(found_files) == 0:
         return
-    net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
+    net_labels = [net_label_styler('..'.join(network_spec)) for network_spec in network_spec_list]
     if plot_label is None:
         plot_label = ''.join(tuple('_NET_'+l for l in net_labels))[1:]
     if plot_title is None:

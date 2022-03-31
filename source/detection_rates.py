@@ -387,7 +387,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     even if the absolute detection rate is wildly (1e9) off
     network_spec_list is assumed unique"""
     # finding file names
-    net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
+    net_labels = [net_label_styler('..'.join(network_spec)) for network_spec in network_spec_list]
     if plot_label is None:
         plot_label = f"SCI-CASE_{science_case}{''.join(tuple('_NET_'+l for l in net_labels))}"
     

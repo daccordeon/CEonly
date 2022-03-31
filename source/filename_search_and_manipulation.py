@@ -4,12 +4,16 @@ import numpy as np
 
 from gwbench import network
 
-# assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec
-def net_label_styler(net_label): return net_label.replace('CE2', 'CE').replace('ET_ET1..ET_ET2..ET_ET3', 'ET_E').replace('Voyager', 'Voy')
+def net_label_styler(net_label):
+    """styles net_label to make CE unified and ET/Voyager less verbose. assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec"""
+    return net_label.replace('CE2', 'CE').replace('ET_ET1..ET_ET2..ET_ET3', 'ET_E').replace('Voyager', 'Voy')
 
-def net_spec_styler(net_spec): return repr(net_spec).replace('CE2', 'CE').replace("'ET_ET1', 'ET_ET2', 'ET_ET3'", "'ET_E'").replace('Voyager', 'Voy')
+def net_spec_styler(net_spec):
+    """styles repr(net_spec) given net_spec to make CE unified and ET/Voyager less verbose. assumes ET's declared in order"""
+    return repr(net_spec).replace('CE2', 'CE').replace("'ET_ET1', 'ET_ET2', 'ET_ET3'", "'ET_E'").replace('Voyager', 'Voy')
 
 def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
+    """styles file_name to be human readable across multiple lines, e.g. for titling a plot"""
     intermediate = file.replace('results_', '').replace('.npy', '').replace('NET_', 'network: ').replace('_SCI-CASE_', '\nscience case: ').replace('..', ', ')
     if net_only:
         return intermediate.split('\n')[0]
@@ -22,7 +26,7 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
 def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/', raise_error_if_no_files_found=True):
     """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network; returned list of files do not have data_path prepended"""
     # finding file names
-    net_labels = [net_label_styler(network.Network(network_spec).label) for network_spec in network_spec_list]
+    net_labels = [net_label_styler('..'.join(network_spec)) for network_spec in network_spec_list]
     
     # return files wrt data_path (i.e. exclude the path from glob results); ignore task files
     file_list = [file.replace(data_path, '') for file in glob.glob(data_path + '*') if not "TASK" in file] 
