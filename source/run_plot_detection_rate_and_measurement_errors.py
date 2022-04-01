@@ -54,7 +54,7 @@ elif plot_index == 1:
     if net_dict == BS2022_SIX:
         linestyles_from_BS2022 = True
         # additionally, for more direct comparison, use B&S2022's xlim_list which is a hard coded option in measurement_errors.py 
-        collate_measurement_errs_CDFs_of_networks(network_set, science_case, plot_label=plot_label+'_XLIMS_preset', plot_title=plot_title+', XLIMS: preset to B&S2022', full_legend=False, print_progress=False, show_fig=False, normalise_count=True, xlim_list='B&S2022', threshold_by_SNR=True, CDFmin=ymin_CDF, data_path=data_path, num_bins=40, linestyles_from_BS2022=linestyles_from_BS2022)
+        collate_measurement_errs_CDFs_of_networks(network_set, science_case, plot_label=plot_label+'_XLIMS_preset', plot_title=plot_title+', XLIMS: preset to B&S2022', full_legend=False, print_progress=False, show_fig=False, normalise_count=True, xlim_list='B&S2022', threshold_by_SNR=True, CDFmin=ymin_CDF, data_path=data_path, num_bins=40, linestyles_from_BS2022=linestyles_from_BS2022, contour=False)
     else:
         linestyles_from_BS2022 = False
-    collate_measurement_errs_CDFs_of_networks(network_set, science_case, plot_label=plot_label, plot_title=plot_title, full_legend=False, print_progress=False, show_fig=False, normalise_count=True, xlim_list=None, threshold_by_SNR=True, CDFmin=ymin_CDF, data_path=data_path, num_bins=40, linestyles_from_BS2022=linestyles_from_BS2022)
+    collate_measurement_errs_CDFs_of_networks(network_set, science_case, plot_label=plot_label, plot_title=plot_title, full_legend=False, print_progress=False, show_fig=False, normalise_count=True, xlim_list=None, threshold_by_SNR=True, CDFmin=ymin_CDF, data_path=data_path, num_bins=40, linestyles_from_BS2022=linestyles_from_BS2022, contour=False)

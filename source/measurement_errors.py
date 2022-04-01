@@ -4,6 +4,7 @@ from constants import *
 from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
 from filename_search_and_manipulation import *
 from useful_plotting_functions import *
+from cosmological_redshift_resample import resample_redshift_cosmologically_from_results
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
@@ -85,6 +86,8 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         # redshift (z), integrated SNR (rho), measurement errors (logMc, logDL, eta, iota), 90% credible sky area
         # errs: fractional chirp mass, fractional luminosity distance, symmetric mass ratio, inclination angle
         results = np.load(data_path + file)
+        # re-sampling uniform results using a cosmological model
+        results = resample_redshift_cosmologically_from_results(results)
                 
         if full_legend:
             legend_label = file_name_to_multiline_readable(file, two_rows_only=True)

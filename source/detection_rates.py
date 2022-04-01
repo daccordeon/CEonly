@@ -385,7 +385,8 @@ def collate_eff_detrate_vs_redshift(axs, zavg_efflo_effhi, det_eff_fits, det_rat
 def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/', parallel=True):
     """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
     even if the absolute detection rate is wildly (1e9) off
-    network_spec_list is assumed unique"""
+    network_spec_list is assumed unique.
+    uses uniformly sampled results in redshift to have good resolution along detection rate curve"""
     # finding file names
     net_labels = [net_label_styler('..'.join(network_spec)) for network_spec in network_spec_list]
     if plot_label is None:

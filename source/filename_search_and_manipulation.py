@@ -14,6 +14,9 @@ def net_spec_styler(net_spec):
 
 def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
     """styles file_name to be human readable across multiple lines, e.g. for titling a plot"""
+    # remove path if present
+    if '/' in file:
+        file = file.split('/')[-1]
     intermediate = file.replace('results_', '').replace('.npy', '').replace('NET_', 'network: ').replace('_SCI-CASE_', '\nscience case: ').replace('..', ', ')
     if net_only:
         return intermediate.split('\n')[0]
