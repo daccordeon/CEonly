@@ -1,4 +1,6 @@
-"""James Gardner, March 2022"""
+"""James Gardner, April 2022"""
+# to-do: update imports post-refactoring detection_rates.py
+from merger_and_detection_rates import *
 from useful_functions import *
 from constants import *
 from networks import DICT_NETSPEC_TO_COLOUR
@@ -11,38 +13,11 @@ from gwbench.basic_relations import f_isco_Msolar
 from scipy.stats import gmean
 from scipy.optimize import curve_fit
 from scipy.integrate import quad
-from astropy.cosmology import Planck18
-from tqdm.notebook import tqdm
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
+from scipy.stats import loguniform
 
-def differential_comoving_volume(z):
-    """$\frac{\text{d}V}{\text{d}z}(z)$ in B&S2022; 4*pi to convert from Mpc^3 sr^-1 (sr is steradian) to Mpc^3"""
-    return  4.*PI*Planck18.differential_comoving_volume(z).value
-
-def merger_rate_bns(z, normalisation=GWTC3_MERGER_RATE_BNS):
-    """$R(z)$ in B&S2022; normalisation of merger rate density $\dot{n}(z)$ in the source frame to GWTC3_MERGER_RATE_BNS in https://arxiv.org/pdf/2111.03606v2.pdf.
-1e-9 converts Gpc^-3 to Mpc^-3 to match Planck18, in Fig 2 of Ngetal2021: the ndot_F rate is in Gpc^-3 yr^-1, injections.py cites v1 of an arXiv .pdf"""
-    return normalisation/injections.bns_md_merger_rate(0)*1e-9*injections.bns_md_merger_rate(z)*differential_comoving_volume(z)
-
-def merger_rate_bbh(z, normalisation=GWTC3_MERGER_RATE_BBH):
-    """$R(z)$ in B&S2022; normalisation of merger rate density $\dot{n}(z)$ in the source frame to GWTC3_MERGER_RATE_BBH in https://arxiv.org/pdf/2111.03606v2.pdf.
-1e-9 converts Gpc^-3 to Mpc^-3 to match Planck18, in Fig 2 of Ngetal2021: the ndot_F rate is in Gpc^-3 yr^-1, injections.py cites v1 of an arXiv .pdf"""
-    return normalisation/injections.mdbn_merger_rate(0)*1e-9*injections.mdbn_merger_rate(z)*differential_comoving_volume(z)
-
-def merger_rate_in_obs_frame(merger_rate, z, **kwargs):
-    """1+z factor of time dilation of merger rate in observer frame z away. kwargs, e.g. normalisation, are passed to merger_rate"""
-    return merger_rate(z, **kwargs)/(1+z)
-
-def detection_rate(merger_rate, detection_efficiency, z0, snr_threshold, **kwargs):
-    """$D_R(z, \rho_\ast)$ in B&S2022. quad returns (value, error). kwargs, e.g. normalisation, are passed to merger_rate"""
-    return quad(lambda z : detection_efficiency(z, snr_threshold)*merger_rate_in_obs_frame(merger_rate, z, **kwargs), 0, z0)[0]
-
-def detection_rate_limit(merger_rate, z0, **kwargs):
-    """$D_R(z, \rho_\ast)|_{\varepsilon=1}$ in B&S2022;i.e. "merger rate" in Fig 2, not R(z) but int R(z)/(1+z), i.e. if perfect efficiency"""
-    return detection_rate(merger_rate, lambda _, __ : 1, z0, None, **kwargs)
-
-def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=None, file_name=None, parallel=True):
+def save_benchmark_from_generated_injections(net, science_case, tecs, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=None, file_name=None, parallel=True):
     """given network and variables, generate injections, benchmark, 
     and save results (snr, errors in logM logDL eta iota, sky area) as .npy
     to-do: tidy up number of arguments"""
@@ -51,9 +26,18 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_
     inj_data = np.empty((len(redshift_bins)*num_injs, 14))
     for i, (zmin, zmax, seed) in enumerate(redshift_bins):
         cosmo_dict = dict(sampler='uniform', zmin=zmin, zmax=zmax)
-        # transposed array to get [[Mc0, eta0, ..., z0], [Mc1, eta1, ..., z1], ...]
-        # [Mc, eta, chi1x, chi1y, chi1z, chi2x, chi2y, chi2z, DL, iota, ra, dec, psi, z]    
-        inj_data[i*num_injs:(i+1)*num_injs] = np.array(injections.injections_CBC_params_redshift(cosmo_dict, mass_dict, spin_dict, redshifted, num_injs=num_injs, seed=seed)).transpose()
+        # transposed array to get [[Mc0, eta0, ..., z0], [Mc1, eta1, ..., z1], ...] from [Mc, eta, chi1x, chi1y, chi1z, chi2x, chi2y, chi2z, DL, iota, ra, dec, psi, z]    
+        injection_params = np.array(injections.injections_CBC_params_redshift(cosmo_dict, mass_dict, spin_dict, redshifted, num_injs=num_injs, seed=seed))
+        # changing z to logarithmically uniformly sampled, DL and the redshifted Mc change accordingly
+        # seed is no longer used, to-do: would have to apply an appropriate transform to numpy random's uniform
+        z_vec = loguniform.rvs(zmin, zmax, size=num_injs)
+        DL_vec = Planck18.luminosity_distance(z_vec).value
+        if redshifted:
+            # undo existing shift from z's, then apply new shift to Mc
+            injection_params[0] = injection_params[0]*(1. + z_vec)/(1. + injection_params[13])
+        injection_params[8] = DL_vec
+        injection_params[13] = z_vec
+        inj_data[i*num_injs:(i+1)*num_injs] = injection_params.transpose()
 
     def calculate_benchmark_from_injection(inj):
         """given a 14-array of [Mc, eta, chi1x, chi1y, chi1z, chi2x, chi2y, chi2z, DL, iota, ra, dec, psi, z],
@@ -63,18 +47,33 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_
         * fractional Mc and DL and absolute eta and iota errors,
         * 90% sky area.
         sigma_log(Mc) = sigma_Mc/Mc is fractional error in Mc and similarly for DL, sigma_eta is absolute,
-        while |sigma_cos(iota)| = |sigma_iota*sin(iota)| --> error in iota requires rescaling from output"""
+        while |sigma_cos(iota)| = |sigma_iota*sin(iota)| --> error in iota requires rescaling from output.
+        if something goes wrong with the injection, then (z, *np.full(6, np.nan)) will be returned"""
         varied_keys = ['Mc', 'eta', 'chi1x', 'chi1y', 'chi1z', 'chi2x', 'chi2y', 'chi2z', 'DL', 'iota', 'ra', 'dec', 'psi', 'z']
         varied_params = dict(zip(varied_keys, inj))
         z = varied_params.pop('z')
         Mc, eta, iota = varied_params['Mc'], varied_params['eta'], varied_params['iota']
-
+        output_if_injection_fails = (z, *np.full(6, np.nan))
+        
         Mtot = Mc/eta**0.6
-        #fisco = (6**1.5*PI*Mtot)**-1 # missing some number of Msun, c=1, G=1 factors
-        fisco = f_isco_Msolar(Mtot) #4.4/Mtot*1e3 # Hz # from https://arxiv.org/pdf/2011.05145.pdf
+        # fisco_obs = (6**1.5*PI*(1+z)*Mtot)**-1 # with the mass redshifted by (1+z) in the observer frame (not clear in B&S2022), missing some number of Msun, c=1, G=1 factors
+        fisco_obs = f_isco_Msolar((1 + z)*Mtot) #4.4/Mtot*1e3 # Hz # from https://arxiv.org/pdf/2011.05145.pdf
         # chosing fmax in 11 <= coeff_fisco*fisco <= 1024, truncating to boundary values, NB: B&S2022 doesn't include the lower bound which must be included to avoid an IndexError with the automatically truncated fmin from the V+ and aLIGO curves stored in gwbench that start at 10 Hz, this can occur for Mtot > 3520 Msun with massive BBH mergers although those masses are at least an order of magnitude beyond any observed so far
-        fmax_bounds = (11, 1024) # lower bound can be anything greater than 10 + 1/16, 11 is round
-        fmin, fmax = 5., float(max(min(coeff_fisco*fisco, fmax_bounds[1]), fmax_bounds[0])) # to stop f being too small
+        fmin, fmax = 5., coeff_fisco*fisco_obs
+        # lower bound on fmax can be anything greater than f_lowest_allowed_by_PSD + 1/16     
+        # from hardcoded PSDs, if aLIGO or V+ (everything else), then threshold fmax >= 11 (6) Hz; fmax is $f_U$ in B&S2022
+        are_aLIGO_or_Vplus_used_bool = ('aLIGO' in tecs) or ('V+' in tecs)
+        if are_aLIGO_or_Vplus_used_bool:
+            fmax_bounds = (11, 1024)
+        else:
+            fmax_bounds = (6, 1024)
+        fmax = float(max(min(fmax, fmax_bounds[1]), fmax_bounds[0]))            
+        # if BBH, then discard the injection by returning NaNs if fmax < 12 Hz (7 Hz) for aLIGO or V+ (everything else)
+        if science_case == 'BBH':
+            if are_aLIGO_or_Vplus_used_bool and (fmax < 12):
+                return output_if_injection_fails
+            elif (not are_aLIGO_or_Vplus_used_bool) and (fmax < 7):
+                return output_if_injection_fails
         # df linearly transitions from 1/16 (fine from B&S2022) to 10 (coarse to save computation time) Hz
         df = (fmax-fmax_bounds[0])/(fmax_bounds[1]-fmax_bounds[0])*10+(fmax_bounds[1]-fmax)/(fmax_bounds[1]-fmax_bounds[0])*1/16
         f = np.arange(fmin, fmax, df)
@@ -92,8 +91,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_
             return (z, net_copy.snr, net_copy.errs['log_Mc'], net_copy.errs['log_DL'], net_copy.errs['eta'],
                     abs_err_iota, net_copy.errs['sky_area_90'])
         else:
-            # to-do: check if CE only is still ill-conditioned
-            return (z, *np.full(6, np.nan))
+            return output_if_injection_fails
 
     # calculate results: z, snr, errs (logMc, logDL, eta, iota), sky area
     # p_umap is unordered in redshift for greater speed (check)
@@ -327,13 +325,16 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         numerical_over_symbolic_derivs = True
         numerical_deriv_settings = dict(step=1e-9, method='central', order=2, n=1) # default
 
+    # detector technologies, necessary to know because gwbench has different frequency ranges for the PSDs
+    tecs = [detector.tec for detector in net.detectors]
+        
     # ------------------------------------------------
     # generate results or skip if previously generated successfully (i.e. not ill-conditioned)
     if data_path is None:
         data_path = 'data_redshift_snr_errs_sky-area/'
     
     if not os.path.isfile(data_path+file_name):
-        save_benchmark_from_generated_injections(net, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=data_path, file_name=file_name, parallel=parallel)
+        save_benchmark_from_generated_injections(net, science_case, tecs, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=data_path, file_name=file_name, parallel=parallel)
     else:
         if (not generate_fig) & print_progress:
             print('Results already exist; figure not (re)generated.')
@@ -354,112 +355,3 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         # ------------------------------------------------
         # plotting
         plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zmin_plot, zmax_plot, file_tag, human_file_tag, show_fig=show_fig, print_progress=print_progress, parallel=parallel)
-
-def collate_eff_detrate_vs_redshift(axs, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zaxis_plot, colours=None, label=None, parallel=True):
-    """collate plots to replicate Fig 2 in B&S2022, adds curves to existing axs.
-    use case: collate different networks with data generated/saved using detection_rate_for_network_and_waveform
-    defaults to using the same colour"""
-    if colours is None:
-        colours = [None, None] # list is mutable, None is not
-
-    # efficiency vs redshift
-    # re-ordered plots to re-order legend
-    line_lo, = axs[0].semilogx(zaxis_plot, det_eff_fits[0](zaxis_plot), color=colours[0], label=label)
-    if colours[1] is None:
-        colours[1] = line_lo.get_color()    
-    line_hi, = axs[0].semilogx(zaxis_plot, det_eff_fits[1](zaxis_plot), color=colours[1], linestyle='--')    
-    axs[0].plot(zavg_efflo_effhi[:,0], zavg_efflo_effhi[:,1], 'o', color=line_lo.get_color(), label=fr'$\rho$ > {SNR_THRESHOLD_LO}')
-    axs[0].plot(zavg_efflo_effhi[:,0], zavg_efflo_effhi[:,2], 's', color=line_hi.get_color(), label=fr'$\rho$ > {SNR_THRESHOLD_HI}')
-
-    # explicitly setting legend
-#     plt.plot(np.linspace(1, 1000, 10), np.arange(10), 'o-', label='test')
-#     plt.plot(np.linspace(1, 1000, 10), np.arange(10), 's--', label='test2')
-#     plt.legend()
-    
-    # detection rate vs redshift
-    # merger rate depends on star formation rate and the delay between formation and merger
-    # use display_progress_bar in parallel_map to restore old p_map usage
-    axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=10),  zaxis_plot, parallel=parallel), color=line_lo.get_color())
-    axs[1].loglog(zaxis_plot, parallel_map(lambda z : det_rate(z, snr_threshold=100), zaxis_plot, parallel=parallel), color=line_hi.get_color(), linestyle='--')
-
-def compare_detection_rate_of_networks_from_saved_results(network_spec_list, science_case, save_fig=True, show_fig=True, plot_label=None, full_legend=False, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/', parallel=True):
-    """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
-    even if the absolute detection rate is wildly (1e9) off
-    network_spec_list is assumed unique.
-    uses uniformly sampled results in redshift to have good resolution along detection rate curve"""
-    # finding file names
-    net_labels = [net_label_styler('..'.join(network_spec)) for network_spec in network_spec_list]
-    if plot_label is None:
-        plot_label = f"SCI-CASE_{science_case}{''.join(tuple('_NET_'+l for l in net_labels))}"
-    
-    found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
-    if found_files is None or len(found_files) == 0:
-        return
-
-    # load file and add results to plot
-    plt.rcParams.update({'font.size': 14})
-    fig, axs = plt.subplots(2, 1, sharex=True, figsize=(6, 8), gridspec_kw={'wspace':0, 'hspace':0.05})
-    zaxis_plot = np.geomspace(1e-2, 50, 100)
-    
-    axs[0].axhline(0, color='grey', linewidth=0.5)
-    axs[0].axhline(1, color='grey', linewidth=0.5)
-    axs[0].set_ylim((0-0.05, 1+0.05))
-    axs[0].set_ylabel(r'detection efficiency, $\varepsilon$') 
-    axs[1].set_ylim((1e-1, 6e5)) # to match B&S2022 Fig 2    
-    axs[1].set_ylabel(r'detection rate, $D_R$ / $\mathrm{yr}^{-1}$')  
-    fig.align_ylabels()
-    axs[-1].set_xscale('log')
-    axs[-1].set_xlim((zaxis_plot[0], zaxis_plot[-1]))
-    axs[-1].xaxis.set_minor_locator(plt.LogLocator(base=10.0, subs=0.1*np.arange(1, 10), numticks=10))
-    axs[-1].xaxis.set_minor_formatter(plt.NullFormatter())
-    axs[-1].set_xlabel('redshift, z')
-
-    colours_used = []
-    for i, file in enumerate(found_files):
-        results = np.load(data_path + file)
-        with HiddenPrints():
-            zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, _, _ = \
-                calculate_detection_rate_from_results(results, science_case, print_reach=False)    
-        # to not repeatedly plot merger rate
-        if i == 0:
-            axs[1].loglog(zaxis_plot, parallel_map(det_rate_limit, zaxis_plot, parallel=parallel), color='black', linewidth=3, label=f'{science_case} merger rate')
-#             print(f'maximum detection rate at z={zaxis_plot[-1]} is {det_rate_limit(zaxis_plot[-1])}')
-        
-        if full_legend:
-            label = file_name_to_multiline_readable(file, two_rows_only=True)
-        else:
-            label = file_name_to_multiline_readable(file, net_only=True)
-            
-        # net_spec is stylised from net_label, this is reflected in the keys of DICT_NETSPEC_TO_COLOUR
-        net_spec = file.replace('NET_', '_SCI-CASE_').split('_SCI-CASE_')[1].split('..')
-        
-        if repr(net_spec) in DICT_NETSPEC_TO_COLOUR.keys():
-            colour = DICT_NETSPEC_TO_COLOUR[repr(net_spec)]
-            # avoid duplicating colours in plot
-            if colour in colours_used:
-                colour = None
-            else:
-                colours_used.append(colour)
-        else:
-            colour = None
-
-        collate_eff_detrate_vs_redshift(axs, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zaxis_plot, label=label, colours=[colour, colour], parallel=parallel)
-
-    handles, labels = axs[0].get_legend_handles_labels()
-    # updating handles
-    new_handles = list(np.array([[
-        mlines.Line2D([], [], visible=False),
-        mlines.Line2D([], [], marker='o', linestyle='-', color=handle.get_c()),
-        mlines.Line2D([], [], marker='s', linestyle='--', color=handle.get_c())] for handle in handles[::3]]).flatten())
-    axs[0].legend(handles=new_handles, labels=labels, handlelength=2, bbox_to_anchor=(1.04,1), loc="upper left")
-    axs[1].legend(handlelength=2, loc="upper left")
-    
-    fig.canvas.draw()
-    force_log_grid(axs[0], log_axis='x')
-    force_log_grid(axs[-1], log_axis='both')    
-    
-    if save_fig:
-        fig.savefig(f'plots/collated_eff_rate_vs_z/collated_eff_rate_vs_z_{plot_label}.pdf', bbox_inches='tight')
-    if show_fig:
-        plt.show(fig)
-    plt.close(fig)

@@ -59,7 +59,7 @@ def find_files_given_networks(network_spec_list, science_case, specific_wf=None,
         found_files = np.append(found_files, matches[list(set(unique_wf_index_list))]) #could flatten matches here
     found_files = found_files.flatten()
     if len(found_files) == 0:
-        message = f'No files found for network {network_spec_list} and science case {science_case}'
+        message = f'No files found in {data_path} for network {network_spec_list} and science case {science_case}'
         if specific_wf is not None: message += f'with waveform {specific_wf}'
         if raise_error_if_no_files_found:
             raise ValueError(message)

@@ -1,4 +1,4 @@
-"""James Gardner, March 2022"""
+"""James Gardner, April 2022"""
 from useful_functions import *
 from constants import *
 from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
@@ -20,8 +20,8 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
         if threshold_by_SNR and (i != 0):
             data_lo = data[results_reordered[0] > SNR_THRESHOLD_LO]
             data_hi = data[results_reordered[0] > SNR_THRESHOLD_HI]
-            # to-do: fix contour issue as loud sources should have lower errors 
-            #if i == 1: print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
+            # to-do: fix contour issue as loud sources should have lower errors, inspection shows that this is correct using the data so the code must be wrong, maybe try removing the re-ordering of results?
+            if i == 1: print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
             if len(data_hi) == 0:
                 data_hi_empty = True
         if (not (threshold_by_SNR and (i != 0))) or (not contour):
@@ -66,7 +66,7 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
                 axs[1, i].plot(data_hi, cdf_hi, color=colour, linestyle=linestyle, zorder=2, label=label)
                 axs[1, i].fill(np.append(data_hi, data_lo[::-1]), np.append(cdf_hi, cdf_lo[::-1]), color=colour, alpha=0.1)
 
-def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/', linestyles_from_BS2022=False, contour=False):
+def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/', linestyles_from_BS2022=False, contour=False, parallel=False):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
     found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
     if found_files is None or len(found_files) == 0:
@@ -87,7 +87,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         # errs: fractional chirp mass, fractional luminosity distance, symmetric mass ratio, inclination angle
         results = np.load(data_path + file)
         # re-sampling uniform results using a cosmological model
-        results = resample_redshift_cosmologically_from_results(results)
+        results = resample_redshift_cosmologically_from_results(results, science_case, parallel=parallel)
                 
         if full_legend:
             legend_label = file_name_to_multiline_readable(file, two_rows_only=True)
@@ -112,7 +112,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         else:
             linestyle = None
         
-        # re-order results columns to have sky-area second
+        # re-order results columns to have sky-area second, to-do: check that this works as intended and isn't causing the contour issue
         results_reordered = [results.transpose()[i] for i in (1, -1, 2, 4, 3, 5)]
         add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, legend_label, normalise_count=normalise_count, threshold_by_SNR=threshold_by_SNR, contour=contour) 
         

@@ -1,7 +1,7 @@
 #!/bin/env/python3
 """James Gardner, March 2022
 script for a single task's worth of injections for a given task id (to determine the network), science case, and number of injections per redshift bin"""
-from detection_rates import detection_rate_for_network_and_waveform
+from calculate_injections import detection_rate_for_network_and_waveform
 from merge_npy_files import merge_all_task_npy_files
 from filename_search_and_manipulation import net_spec_styler
 from networks import NET_LIST

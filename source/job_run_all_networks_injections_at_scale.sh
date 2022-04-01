@@ -20,7 +20,7 @@ NUM_NETWORKS=34
 NUM_SCS=${#SCIENCE_CASES[*]} # length of SCIENCE_CASES
 let "NUM_FILES = $NUM_NETWORKS*$NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF*2" # final factor of two is from farnarkle1/2 + sstar
 # whether to automatically merge all the task files
-MERGE_BOOL=0
+MERGE_BOOL=1
 # determine network in python script from task id
 let "NETWORK_INDEX = ($SLURM_ARRAY_TASK_ID - 1)/($NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF)" # bash '/' rounds down
 let "SCIENCE_CASE_INDEX = (($SLURM_ARRAY_TASK_ID - 1) % ($NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF))/$NUM_TASKS_PER_NETWORK_SC_WF"
