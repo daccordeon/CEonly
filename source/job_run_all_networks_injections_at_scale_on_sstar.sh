@@ -19,8 +19,8 @@ NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000)
 NUM_NETWORKS=34
 NUM_SCS=${#SCIENCE_CASES[*]} # length of SCIENCE_CASES
 let "NUM_FILES = $NUM_NETWORKS*$NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF*2" # final factor of two is from farnarkle1/2 + sstar
-# whether to automatically merge all the task files
-MERGE_BOOL=1
+# whether to automatically merge all the task files, turned off because of out-of-memory error and not wanting to request more memory for every task, manually call "python3 merge_npy_files.py" after completion of all jobs
+MERGE_BOOL=0
 # determine network in python script from task id
 let "NETWORK_INDEX = ($SLURM_ARRAY_TASK_ID - 1)/($NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF)" # bash '/' rounds down
 let "SCIENCE_CASE_INDEX = (($SLURM_ARRAY_TASK_ID - 1) % ($NUM_SCS*$NUM_TASKS_PER_NETWORK_SC_WF))/$NUM_TASKS_PER_NETWORK_SC_WF"

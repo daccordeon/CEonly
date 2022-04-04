@@ -12,14 +12,20 @@ def merge_npy_files(output_filename, input_files=None, pattern=None, path='./', 
     """finds all .npy files matching pattern in path, saves a merged .npy at output_filename, or just mergers those given as input_files"""
     # https://stackoverflow.com/questions/44164917/concatenating-numpy-arrays-from-a-directory
     if input_files is None:
-        input_files = sorted(glob.glob(path+pattern)) # sorted to make debugging printout easier to read 
+        input_files = sorted(glob.glob(path + pattern)) # sorted to make debugging printout easier to read 
     arrays = []
     for input_file in input_files:
         arrays.append(np.load(input_file))
+    # try to merge and if fails then don't delete input files
+    try:
+        merged_array = np.concatenate(arrays)
+        np.save(path + output_filename, merged_array)
+    except:
+        raise ValueError('Something went wrong when concatenating arrays, check memory allocation.')
+    else:
         if delete_input_files:
-            os.remove(input_file)
-    merged_array = np.concatenate(arrays)
-    np.save(path+output_filename, merged_array)
+            for input_file in input_files:
+                os.remove(input_file)        
 
 def merge_all_task_npy_files(path='data_redshift_snr_errs_sky-area/', pattern='results_NET_*_SCI-CASE_*_WF_*_INJS-PER-ZBIN_*_TASK_*.npy', delete_input_files=False):
     """find all .npy outputs from each task from job_run_all_networks_injections.sh and merge them together to have one .npy file per network+sc+wf combination"""

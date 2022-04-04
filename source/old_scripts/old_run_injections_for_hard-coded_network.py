@@ -1,10 +1,10 @@
 #!/bin/env/python3
 """James Gardner, March 2022
 script for a single task's worth of injections for a hard-coded network, science case, and waveform"""
-import sys
-from gwbench import network
-from detection_rates import detection_rate_for_network_and_waveform
+from calculate_injections import detection_rate_for_network_and_waveform
 from filename_search_and_manipulation import net_label_styler
+
+import sys
 
 # suppress warnings
 from warnings import filterwarnings
@@ -23,7 +23,9 @@ else:
 # the slowest network in the set?
 # network_spec = ['A+_H', 'A+_L', 'K+_K', 'A+_I', 'ET_ET1', 'ET_ET2', 'ET_ET3']
 # one of the missing networks from the first 30k run, chosen for having many detectors
-network_spec = ['V+_V', 'K+_K', 'Voyager-CBO_H', 'Voyager-CBO_L', 'Voyager-CBO_I', 'CE2-40-CBO_S']
+# network_spec = ['V+_V', 'K+_K', 'Voyager-CBO_H', 'Voyager-CBO_L', 'Voyager-CBO_I', 'CE2-40-CBO_S']
+# hotfix to replace data lost due to a out-of-memory error
+network_spec = ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I', 'CE2-20-CBO_S']
 
 if science_case == 'BNS':
     #wf_model_name, wf_other_var_dic = 'lal_bns', dict(approximant='IMRPhenomD_NRTidalv2')
