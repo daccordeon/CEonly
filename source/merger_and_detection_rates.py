@@ -1,21 +1,9 @@
 """James Gardner, April 2022"""
-# to-do: update imports post-refactoring detection_rates.py
-from useful_functions import *
-from constants import *
-from networks import DICT_NETSPEC_TO_COLOUR
-from basic_benchmarking import *
-from filename_search_and_manipulation import *
-from useful_plotting_functions import force_log_grid
+from constants import PI, GWTC3_MERGER_RATE_BNS, GWTC3_MERGER_RATE_BBH
 
-from gwbench.basic_relations import f_isco_Msolar
-
-from scipy.stats import gmean
-from scipy.optimize import curve_fit
 from scipy.integrate import quad
 from astropy.cosmology import Planck18
-# from tqdm.notebook import tqdm
-from scipy.optimize import fsolve
-import matplotlib.lines as mlines   
+from gwbench import injections
 
 def differential_comoving_volume(z):
     """$\frac{\text{d}V}{\text{d}z}(z)$ in B&S2022; 4*pi to convert from Mpc^3 sr^-1 (sr is steradian) to Mpc^3"""

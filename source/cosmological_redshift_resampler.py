@@ -5,8 +5,11 @@ The units of $R(z)$ are $\frac{[\text{count}]}{\text{year}\, [\text{redshift}]}$
 Instead of $p_i = \frac{R_i}{\sum_j R_j}$, therefore, I use $q_i = \frac{R_i \Delta z_i}{\sum_j R_j \Delta z_j} \approx \frac{R_i \Delta z_i}{\int R(z) \text{d}z}$ where $\Delta z_i$ is the width of the bin as the probability of selecting the index $i$ of each bin. For a ten-year observation period $\tau=10$, I draw $\tau \int R(z) \text{d}z$ samples from the probability distribution which means that the expected number of samples in each bin is $\frac{\tau R_i \Delta z_i \int R(z) \text{d}z}{\sum_j R_j \Delta z_j}\approx \tau R_i \Delta z_i\approx \tau\int_{z_0}^{z_0+\Delta z} R(z) \text{d}z$ as it should be (instead of $\frac{\tau R_i \int R(z) \text{d}z}{\sum_j R_j}$).
 
 Plotting $\tau R_i \Delta z_i$ against $z$ is *not* the same as plotting $\tau R(z)$ against $z$ since, as the width of each bin decreases, $\tau R_i \Delta z_i \rightarrow 0$. For example, for a uniform merger rate, splitting a bin in half means that there are now two bins next to each other with half the initial number of sources. On a plot, however, it just appears that the number of sources decreased since the split bins look the same."""
-from calculate_injections import *
+from merger_and_detection_rates import *
+from useful_functions import flatten_list, parallel_map
 
+import numpy as np
+from scipy.stats import gmean
 from scipy.stats import rv_discrete
 
 def cosmological_redshift_sample(science_case, zmin=2e-2, zmax=50, num_subzbin=150, norm_tag='GWTC3', observation_time_in_years=10, parallel=True):

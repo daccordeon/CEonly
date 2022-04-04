@@ -4,7 +4,7 @@ from constants import *
 from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
 from filename_search_and_manipulation import *
 from useful_plotting_functions import *
-from cosmological_redshift_resample import resample_redshift_cosmologically_from_results
+from cosmological_redshift_resampler import resample_redshift_cosmologically_from_results
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
@@ -21,7 +21,7 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
             data_lo = data[results_reordered[0] > SNR_THRESHOLD_LO]
             data_hi = data[results_reordered[0] > SNR_THRESHOLD_HI]
             # to-do: fix contour issue as loud sources should have lower errors, inspection shows that this is correct using the data so the code must be wrong, maybe try removing the re-ordering of results?
-            if i == 1: print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
+#             if i == 1: print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
             if len(data_hi) == 0:
                 data_hi_empty = True
         if (not (threshold_by_SNR and (i != 0))) or (not contour):

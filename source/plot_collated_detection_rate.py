@@ -1,19 +1,13 @@
 """James Gardner, April 2022"""   
-# to-do: update imports post-refactoring detection_rates.py
-from calculate_injections import *
-from useful_functions import *
-from constants import *
+from calculate_injections import calculate_detection_rate_from_results
+from useful_functions import HiddenPrints, parallel_map
+from constants import SNR_THRESHOLD_LO, SNR_THRESHOLD_HI
 from networks import DICT_NETSPEC_TO_COLOUR
-from basic_benchmarking import *
-from filename_search_and_manipulation import *
+from filename_search_and_manipulation import net_label_styler, file_name_to_multiline_readable, find_files_given_networks
 from useful_plotting_functions import force_log_grid
 
-from gwbench.basic_relations import f_isco_Msolar
-
-from scipy.stats import gmean
-from scipy.optimize import curve_fit
-from scipy.integrate import quad
-from scipy.optimize import fsolve
+import numpy as np
+import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
 def collate_eff_detrate_vs_redshift(axs, zavg_efflo_effhi, det_eff_fits, det_rate_limit, det_rate, zaxis_plot, colours=None, label=None, parallel=True):

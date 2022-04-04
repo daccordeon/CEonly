@@ -58,3 +58,8 @@ def parallel_map(fn, xarr, display_progress_bar=False, unordered=False, num_cpus
                     return list(pool.map(_global_copy_of_fn, xarr))
     else:
         return list(map(fn, xarr))
+
+def logarithmically_uniform_sample(low, high, num_samples, seed=None):
+    """generates a number of samples (num_samples) in (low, high) such that they are uniformly distributed when viewed on a logarithmic scale, done by uniformly sampling the log-transform variable
+    credit: https://stackoverflow.com/a/43977980"""
+    return np.exp(np.random.default_rng(seed).uniform(low=np.log(low), high=np.log(high), size=num_samples))

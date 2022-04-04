@@ -1,23 +1,19 @@
 """James Gardner, April 2022"""
-# to-do: update imports post-refactoring detection_rates.py
-from merger_and_detection_rates import *
-from useful_functions import *
-from constants import *
-from networks import DICT_NETSPEC_TO_COLOUR
-from basic_benchmarking import *
-from filename_search_and_manipulation import *
+from basic_benchmarking import * # also loads numpy and gwbench's network and injections modules
+from merger_and_detection_rates import * # also loads Plank18
+from useful_functions import without_rows_w_nan, sigmoid_3parameter, parallel_map, logarithmically_uniform_sample
+from constants import SNR_THRESHOLD_LO, SNR_THRESHOLD_HI
+from filename_search_and_manipulation import net_label_styler
 from useful_plotting_functions import force_log_grid
 
 from gwbench.basic_relations import f_isco_Msolar
 
 from scipy.stats import gmean
 from scipy.optimize import curve_fit
-from scipy.integrate import quad
 from scipy.optimize import fsolve
 import matplotlib.lines as mlines   
-from scipy.stats import loguniform
 
-def save_benchmark_from_generated_injections(net, science_case, tecs, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=None, file_name=None, parallel=True):
+def save_benchmark_from_generated_injections(net, science_case, tecs, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=None, file_name=None, parallel=True, log_uniformly_sampled_redshift=True):
     """given network and variables, generate injections, benchmark, 
     and save results (snr, errors in logM logDL eta iota, sky area) as .npy
     to-do: tidy up number of arguments"""
@@ -30,13 +26,17 @@ def save_benchmark_from_generated_injections(net, science_case, tecs, redshift_b
         injection_params = np.array(injections.injections_CBC_params_redshift(cosmo_dict, mass_dict, spin_dict, redshifted, num_injs=num_injs, seed=seed))
         # changing z to logarithmically uniformly sampled, DL and the redshifted Mc change accordingly
         # seed is no longer used, to-do: would have to apply an appropriate transform to numpy random's uniform
-        z_vec = loguniform.rvs(zmin, zmax, size=num_injs)
-        DL_vec = Planck18.luminosity_distance(z_vec).value
-        if redshifted:
-            # undo existing shift from z's, then apply new shift to Mc
-            injection_params[0] = injection_params[0]*(1. + z_vec)/(1. + injection_params[13])
-        injection_params[8] = DL_vec
-        injection_params[13] = z_vec
+        if log_uniformly_sampled_redshift:
+            # produces numerical transverse artefacts in population 
+#             from scipy.stats import loguniform; z_vec = loguniform.rvs(zmin, zmax, size=num_injs)
+            # to-do: see if numpy method does not produce artefacts
+            z_vec = logarithmically_uniform_sample(zmin, zmax, num_injs, seed=seed)
+            DL_vec = Planck18.luminosity_distance(z_vec).value
+            if redshifted:
+                # undo existing shift from z's, then apply new shift to Mc
+                injection_params[0] = injection_params[0]*(1. + z_vec)/(1. + injection_params[13])
+            injection_params[8] = DL_vec
+            injection_params[13] = z_vec
         inj_data[i*num_injs:(i+1)*num_injs] = injection_params.transpose()
 
     def calculate_benchmark_from_injection(inj):
@@ -104,7 +104,7 @@ def save_benchmark_from_generated_injections(net, science_case, tecs, redshift_b
         data_path = 'data_redshift_snr_errs_sky-area/'
     if file_name is None:
         file_name = f'results_{file_tag}.npy'
-    np.save(data_path+file_name, results)  
+    np.save(data_path + file_name, results)  
 
 def calculate_detection_rate_from_results(results, science_case, print_reach=True):
     """calculting efficiency and detection rate for plotting from results"""
@@ -196,7 +196,7 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi, de
 
     # SNR vs redshift
     # use integrated SNR rho from standard benchmarking, not sure if B&S2022 use matched filter
-    axs[0].loglog(results[:,0], results[:,1], '.')
+    axs[0].loglog(results[:,0], results[:,1], ',')
     axs[0].axhspan(0, SNR_THRESHOLD_LO, alpha=0.5,  color='lightgrey')
     axs[0].axhspan(0, SNR_THRESHOLD_HI, alpha=0.25, color='lightgrey')
     axs[0].set_ylabel(r'integrated SNR, $\rho$')
