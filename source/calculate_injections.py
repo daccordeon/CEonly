@@ -16,7 +16,7 @@ import matplotlib.lines as mlines
 def save_benchmark_from_generated_injections(net, science_case, tecs, redshift_bins, num_injs, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, file_tag, data_path=None, file_name=None, parallel=True, log_uniformly_sampled_redshift=True):
     """given network and variables, generate injections, benchmark, 
     and save results (snr, errors in logM logDL eta iota, sky area) as .npy
-    to-do: tidy up number of arguments"""
+    to-do: tidy up number of arguments, e.g. into kwargs for network, kwargs for benchmarking"""
     # injection and benchmarking
     # concatenate injection data from different bins
     inj_data = np.empty((len(redshift_bins)*num_injs, 14))
@@ -25,7 +25,6 @@ def save_benchmark_from_generated_injections(net, science_case, tecs, redshift_b
         # transposed array to get [[Mc0, eta0, ..., z0], [Mc1, eta1, ..., z1], ...] from [Mc, eta, chi1x, chi1y, chi1z, chi2x, chi2y, chi2z, DL, iota, ra, dec, psi, z]    
         injection_params = np.array(injections.injections_CBC_params_redshift(cosmo_dict, mass_dict, spin_dict, redshifted, num_injs=num_injs, seed=seed))
         # changing z to logarithmically uniformly sampled, DL and the redshifted Mc change accordingly
-        # seed is no longer used, to-do: would have to apply an appropriate transform to numpy random's uniform
         if log_uniformly_sampled_redshift:
             # produces numerical transverse artefacts in population 
 #             from scipy.stats import loguniform; z_vec = loguniform.rvs(zmin, zmax, size=num_injs)
@@ -75,7 +74,7 @@ def save_benchmark_from_generated_injections(net, science_case, tecs, redshift_b
             elif (not are_aLIGO_or_Vplus_used_bool) and (fmax < 7):
                 return output_if_injection_fails
         # df linearly transitions from 1/16 (fine from B&S2022) to 10 (coarse to save computation time) Hz
-        df = (fmax-fmax_bounds[0])/(fmax_bounds[1]-fmax_bounds[0])*10+(fmax_bounds[1]-fmax)/(fmax_bounds[1]-fmax_bounds[0])*1/16
+        df = (fmax - fmax_bounds[0])/(fmax_bounds[1] - fmax_bounds[0])*10 + (fmax_bounds[1] - fmax)/(fmax_bounds[1] - fmax_bounds[0])*1/16
         f = np.arange(fmin, fmax, df)
         
         # net_copy is automatically deleted once out of scope (is copying necessary with Pool()?)
@@ -243,7 +242,7 @@ def plot_snr_eff_detrate_vs_redshift(results, science_case, zavg_efflo_effhi, de
         plt.show(fig)
     plt.close(fig)
     
-def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path=None, file_name=None, parallel=True):
+def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path=None, file_name=None, parallel=True, use_BS2022_seeds=False):
     """initialises network, benchmarks against injections, calculates efficiency and detection rate, plots.
     use case: Replicating Borhanian and Sathya 2022 (B&S2022) injections and detection rates"""
     # initialisation
@@ -255,7 +254,7 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         # injection settings - source
         mass_dict = dict(dist='gaussian', mean=1.35, sigma=0.15, mmin=1, mmax=2)
         spin_dict = dict(geom='cartesian', dim=1, chi_lo=-0.05, chi_hi=0.05)
-        # zmin, zmax, seed (use same seeds to replicate results)
+        # redshift_bins = ((zmin, zmax, seed), ...) (use same seeds from B&S2022 to replicate results)
         # typo in AppA that starts at 0 rather than 0.02 (in main text)?
         redshift_bins = ((0.02, 0.5, 7669), (0.5, 1, 3103), (1, 2, 4431), (2, 4, 5526), (4, 10, 7035), (10, 50, 2785))
         coeff_fisco = 4 # fmax = 4*fisco for BNS, 8*fisco for BBH
@@ -278,7 +277,10 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
         coeff_fisco = 8
     else:
         raise ValueError('Science case not recognised.')
-
+    # when embarrassingly parallelising, each task (e.g. out of 30) should not have the same seeds when they generate their (e.g. 1000) injections
+    if not use_BS2022_seeds:
+        redshift_bins = tuple((zbin[0], zbin[1], None) for zbin in redshift_bins)
+        
     base_params = {
         'tc':    0,
         'phic':  0,

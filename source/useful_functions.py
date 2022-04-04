@@ -62,4 +62,5 @@ def parallel_map(fn, xarr, display_progress_bar=False, unordered=False, num_cpus
 def logarithmically_uniform_sample(low, high, num_samples, seed=None):
     """generates a number of samples (num_samples) in (low, high) such that they are uniformly distributed when viewed on a logarithmic scale, done by uniformly sampling the log-transform variable
     credit: https://stackoverflow.com/a/43977980"""
+    # to-do: update seeding to the best practice described here: https://towardsdatascience.com/stop-using-numpy-random-seed-581a9972805f
     return np.exp(np.random.default_rng(seed).uniform(low=np.log(low), high=np.log(high), size=num_samples))
