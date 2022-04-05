@@ -7,7 +7,7 @@ from results_class import InjectionResults
 
 from gwbench.basic_relations import f_isco_Msolar
 
-def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=None, file_name=None, parallel=True, log_uniformly_sampled_redshift=True):
+def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=None, file_name=None, parallel=True, log_uniformly_sampled_redshift=False):
     """given an extended network (with attributes: science_case, tecs, num_injs, file_tag) and variables, generate injections, benchmark, and save results (snr, errors in logM logDL eta iota, sky area) as .npy.
     to-do: tidy up number of arguments, e.g. into kwargs for network, kwargs for benchmarking"""
     # injection and benchmarking
@@ -21,7 +21,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
         if log_uniformly_sampled_redshift:
             # produces numerical transverse artefacts in population 
 #             from scipy.stats import loguniform; z_vec = loguniform.rvs(zmin, zmax, size=net.num_injs)
-            # to-do: see if numpy method does not produce artefacts
+            # to-do: see if numpy method does not produce artefacts, it does still show a floor in SNR and most other variables beyond z=30, why this bug?
             z_vec = logarithmically_uniform_sample(zmin, zmax, net.num_injs, seed=seed)
             DL_vec = Planck18.luminosity_distance(z_vec).value
             if redshifted:
@@ -99,7 +99,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
         file_name = net.file_name
     np.save(data_path + file_name, results)   
     
-def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/', file_name=None, parallel=True, use_BS2022_seeds=False):
+def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/', file_name=None, parallel=True, use_BS2022_seeds=False, log_uniformly_sampled_redshift=False):
     """initialises network, benchmarks against injections, calculates efficiency and detection rate, plots.
     use case: Replicating Borhanian and Sathya 2022 (B&S2022) injections and detection rates"""
     # initialisation
@@ -176,7 +176,7 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     # ------------------------------------------------
     # generate results or skip if previously generated successfully (i.e. not ill-conditioned)   
     if not net.results_file_exists:
-        save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=net.data_path, file_name=net.file_name, parallel=parallel)
+        save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=net.data_path, file_name=net.file_name, parallel=parallel, log_uniformly_sampled_redshift=log_uniformly_sampled_redshift)
     else:
         if (not generate_fig) & print_progress:
             print('Results already exist; figure not (re)generated.')

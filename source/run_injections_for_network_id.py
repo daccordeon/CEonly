@@ -1,7 +1,7 @@
 #!/bin/env/python3
 """James Gardner, March 2022
 script for a single task's worth of injections for a given task id (to determine the network), science case, and number of injections per redshift bin"""
-from calculate_injections_and_results_class import detection_rate_for_network_and_waveform
+from calculate_injections import detection_rate_for_network_and_waveform
 from merge_npy_files import merge_all_task_npy_files
 from networks import NET_LIST
 
@@ -35,7 +35,7 @@ file_name = f'SLURM_TASK_{task_id}'
 # generate and save injections in a separate file, don't parallelise individual tasks
 data_path = '/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/'
 # --- for data production ---
-detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs_per_zbin_per_task, generate_fig=False, show_fig=False, print_progress=False, print_reach=False, data_path=data_path, file_name=file_name, parallel=False, use_BS2022_seeds=False)
+detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs_per_zbin_per_task, generate_fig=False, show_fig=False, print_progress=False, print_reach=False, data_path=data_path, file_name=file_name, parallel=False, use_BS2022_seeds=False, log_uniformly_sampled_redshift=False)
 # --- for testing job script ---
 # from filename_search_and_manipulation import network_spec_styler
 # print(f'task_id={task_id}, network_spec={network_spec}, science_case={science_case}, wf_model_name={wf_model_name}, wf_other_var_dic={wf_other_var_dic}, num_injs_per_zbin_per_task={num_injs_per_zbin_per_task}, file_name={file_name}')
