@@ -64,3 +64,8 @@ def logarithmically_uniform_sample(low, high, num_samples, seed=None):
     credit: https://stackoverflow.com/a/43977980"""
     # to-do: update seeding to the best practice described here: https://towardsdatascience.com/stop-using-numpy-random-seed-581a9972805f
     return np.exp(np.random.default_rng(seed).uniform(low=np.log(low), high=np.log(high), size=num_samples))
+
+def insert_at_pattern(initial, insert, pattern):
+    """given three strings, returns a copy of initial with insert inserted at the first matching pattern"""
+    insert_index = initial.find(pattern)
+    return initial[:insert_index] + insert + initial[insert_index:]

@@ -1,4 +1,5 @@
 """James Gardner, April 2022"""
+from results_class import InjectionResults
 from useful_functions import *
 from constants import *
 from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
@@ -10,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
 def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, label, normalise_count=True, threshold_by_SNR=True, contour=True):
-    """add PDFs wrt dlog(x) and CDFs on log-log scale to axs.
+    """takes array of results re-sampled and re-ordered, add PDFs wrt dlog(x) and CDFs on log-log scale to axs.
     the bool contour controls whether to display contours on the CDFs between SNR > 100 (detected well) and SNR > 10 (detected) curves"""
     for i, data in enumerate(results_reordered):
         # using low SNR threshold as cut-off for all non-SNR quantities, this might leave few sources remaining (e.g. for HLVKI+)
@@ -66,7 +67,7 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
                 axs[1, i].plot(data_hi, cdf_hi, color=colour, linestyle=linestyle, zorder=2, label=label)
                 axs[1, i].fill(np.append(data_hi, data_lo[::-1]), np.append(cdf_hi, cdf_lo[::-1]), color=colour, alpha=0.1)
 
-def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='data_redshift_snr_errs_sky-area/', linestyles_from_BS2022=False, contour=False, parallel=False):
+def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, specific_wf=None, num_bins=20, save_fig=True, show_fig=True, plot_label=None, full_legend=False, print_progress=True, xlim_list=None, normalise_count=True, threshold_by_SNR=True, plot_title=None, CDFmin=None, data_path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/', linestyles_from_BS2022=False, contour=False, parallel=False):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
     found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
     if found_files is None or len(found_files) == 0:
@@ -85,20 +86,17 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     for i, file in enumerate(found_files):
         # redshift (z), integrated SNR (rho), measurement errors (logMc, logDL, eta, iota), 90% credible sky area
         # errs: fractional chirp mass, fractional luminosity distance, symmetric mass ratio, inclination angle
-        results = np.load(data_path + file)
+        results = InjectionResults(data_path + file)
         # re-sampling uniform results using a cosmological model
-        results = resample_redshift_cosmologically_from_results(results, science_case, parallel=parallel)
+        resampled_results = resample_redshift_cosmologically_from_results(results, parallel=parallel)
                 
         if full_legend:
             legend_label = file_name_to_multiline_readable(file, two_rows_only=True)
         else:
             legend_label = file_name_to_multiline_readable(file, net_only=True)
-            
-        # net_spec is stylised from net_label
-        net_spec = file.replace('NET_', '_SCI-CASE_').split('_SCI-CASE_')[1].split('..')
 
-        if repr(net_spec) in DICT_NETSPEC_TO_COLOUR.keys():
-            colour = DICT_NETSPEC_TO_COLOUR[repr(net_spec)]
+        if repr(results.network_spec) in DICT_NETSPEC_TO_COLOUR.keys():
+            colour = DICT_NETSPEC_TO_COLOUR[repr(results.network_spec)]
             # avoid duplicating colours in plot
             if colour in colours_used:
                 colour = None
@@ -108,12 +106,12 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
             colour = None    
             
         if linestyles_from_BS2022:
-            linestyle = BS2022_SIX['linestyles'][[net_spec_styler(net) for net in BS2022_SIX['nets']].index(str(net_spec))]
+            linestyle = BS2022_SIX['linestyles'][[network_spec_styler(net) for net in BS2022_SIX['nets']].index(str(results.network_spec))]
         else:
             linestyle = None
         
         # re-order results columns to have sky-area second, to-do: check that this works as intended and isn't causing the contour issue
-        results_reordered = [results.transpose()[i] for i in (1, -1, 2, 4, 3, 5)]
+        results_reordered = [resampled_results.transpose()[i] for i in (1, -1, 2, 4, 3, 5)]
         add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, legend_label, normalise_count=normalise_count, threshold_by_SNR=threshold_by_SNR, contour=contour) 
         
     quantity_short_labels = (r'SNR, $\rho$', r'$\Omega_{90}$ / $\mathrm{deg}^2$', r'$\Delta\mathcal{M}/\mathcal{M}$', r'$\Delta\eta$', r'$\Delta D_L/D_L$', r'$\Delta\iota$')

@@ -1,9 +1,8 @@
 #!/bin/env/python3
 """James Gardner, March 2022
 script for a single task's worth of injections for a given task id (to determine the network), science case, and number of injections per redshift bin"""
-from calculate_injections import detection_rate_for_network_and_waveform
+from calculate_injections_and_results_class import detection_rate_for_network_and_waveform
 from merge_npy_files import merge_all_task_npy_files
-from filename_search_and_manipulation import net_spec_styler
 from networks import NET_LIST
 
 import sys
@@ -38,11 +37,12 @@ data_path = '/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-a
 # --- for data production ---
 detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs_per_zbin_per_task, generate_fig=False, show_fig=False, print_progress=False, print_reach=False, data_path=data_path, file_name=file_name, parallel=False, use_BS2022_seeds=False)
 # --- for testing job script ---
+# from filename_search_and_manipulation import network_spec_styler
 # print(f'task_id={task_id}, network_spec={network_spec}, science_case={science_case}, wf_model_name={wf_model_name}, wf_other_var_dic={wf_other_var_dic}, num_injs_per_zbin_per_task={num_injs_per_zbin_per_task}, file_name={file_name}')
 # if wf_other_var_dic is not None:
-#     file_tag = f'NET_{net_spec_styler(network_spec)}_SCI-CASE_{science_case}_WF_{wf_model_name}_{wf_other_var_dic["approximant"]}_INJS-PER-ZBIN_{num_injs_per_zbin_per_task}'
+#     file_tag = f'NET_{network_spec_styler(network_spec)}_SCI-CASE_{science_case}_WF_{wf_model_name}_{wf_other_var_dic["approximant"]}_INJS-PER-ZBIN_{num_injs_per_zbin_per_task}'
 # else:
-#     file_tag = f'NET_{net_spec_styler(network_spec)}_SCI-CASE_{science_case}_WF_{wf_model_name}_INJS-PER-ZBIN_{num_injs_per_zbin_per_task}'
+#     file_tag = f'NET_{network_spec_styler(network_spec)}_SCI-CASE_{science_case}_WF_{wf_model_name}_INJS-PER-ZBIN_{num_injs_per_zbin_per_task}'
 # with open(f'results_{file_tag}_TASK_{task_id}.txt', 'w') as file:
 #     file.write(f'task_id={task_id}, network_spec={network_spec}, science_case={science_case}, wf_model_name={wf_model_name}, wf_other_var_dic={wf_other_var_dic}, num_injs_per_zbin_per_task={num_injs_per_zbin_per_task}, file_name={file_name}')
 

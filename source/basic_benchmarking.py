@@ -15,8 +15,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 # from scipy.stats import gmean
         
-def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_string,
-                                locs, use_rot, output_path=None, print_progress=True):
+def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_string, locs, use_rot, output_path=None, print_progress=True):
     """generate symbolic derivatives, from generate_lambdified_functions.py from S. Borhanian 2020
     use network's wf_model_name, wf_other_var_dic, deriv_symbs_string, and use_rot
     will print 'Done.' when finished unless all files already exist in which it will print as such
@@ -27,10 +26,10 @@ def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_s
     # print('deriv_symbs_string = \'{}\''.format(deriv_symbs_string))
     # print('use_rot = %i'%use_rot)"""
     # skip if derivatives already exist
-    file_names = ['par_deriv_WFM_'+wf_model_name+'_VAR_'+deriv_symbs_string.replace(' ', '_')+'_DET_'+key+'.dat' for key in locs]
-    file_names.append('par_deriv_WFM_'+wf_model_name+'_VAR_'+deriv_symbs_string.replace(' ra', '').replace(' dec', '').replace(' psi', '').replace(' ', '_')+'_DET_'+'pl_cr'+'.dat')
+    file_names = ['par_deriv_WFM_' + wf_model_name + '_VAR_' + deriv_symbs_string.replace(' ', '_') + '_DET_' + key + '.dat' for key in locs]
+    file_names.append('par_deriv_WFM_' + wf_model_name + '_VAR_' + deriv_symbs_string.replace(' ra', '').replace(' dec', '').replace(' psi', '').replace(' ', '_') + '_DET_' + 'pl_cr' + '.dat')
     path = 'lambdified_functions/'
-    file_names_existing = [file_name for file_name in file_names if os.path.isfile(path+file_name)]
+    file_names_existing = [file_name for file_name in file_names if os.path.isfile(path + file_name)]
     if len(file_names_existing) < len(file_names):
         # if a file doesn't exist, generate them all again
         # to-do: make this more efficient and just generate the missing files, or, do it in parallel
@@ -42,9 +41,7 @@ def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_s
     elif print_progress:
         print('All lambdified derivatives already exist.')
         
-def basic_network_benchmarking(net, numerical_over_symbolic_derivs=True, only_net=True,
-                               numerical_deriv_settings=dict(step=1e-9, method='central', order=2, n=1),
-                               hide_prints=True):
+def basic_network_benchmarking(net, numerical_over_symbolic_derivs=True, only_net=True, numerical_deriv_settings=dict(step=1e-9, method='central', order=2, n=1), hide_prints=True):
     """computes network SNR, measurement errors, and sky area using gwbench FIM analysis
     no return, saves results natively in network (net.snr, net.errs)
     assumes that network is already set up, with waveform set etc."""

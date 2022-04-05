@@ -1,16 +1,38 @@
-"""James Gardner, March 2022"""
+"""James Gardner, April 2022"""
 import glob
 import numpy as np
 
-from gwbench import network
+def net_label_to_network_spec(net_label):
+    """converts net_label to network_spec as in gwbench's network.py"""
+    return net_label.split('..')
+
+def network_spec_to_net_label(network_spec):
+    """converts network_spec to net_label as in gwbench's network.py"""
+    return '..'.join(network_spec)
 
 def net_label_styler(net_label):
     """styles net_label to make CE unified and ET/Voyager less verbose. assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec"""
     return net_label.replace('CE2', 'CE').replace('ET_ET1..ET_ET2..ET_ET3', 'ET_E').replace('Voyager', 'Voy')
 
-def net_spec_styler(net_spec):
-    """styles repr(net_spec) given net_spec to make CE unified and ET/Voyager less verbose. assumes ET's declared in order"""
-    return repr(net_spec).replace('CE2', 'CE').replace("'ET_ET1', 'ET_ET2', 'ET_ET3'", "'ET_E'").replace('Voyager', 'Voy')
+def network_spec_styler(network_spec):
+    """styles repr(network_spec) given network_spec to make CE unified and ET/Voyager less verbose. assumes ET's declared in order"""
+    return repr(network_spec).replace('CE2', 'CE').replace("'ET_ET1', 'ET_ET2', 'ET_ET3'", "'ET_E'").replace('Voyager', 'Voy')
+
+def filename_to_netspec_sc_wf_injs(filename):
+    """takes a results_*.npy filename without path, returns network_spec, science_case, wf_model_name, wf_other_var_dic['approximant'], num_injs"""
+    if '_TASK_' in filename:
+        filename = filename[:filename.find('_TASK_')] + '.npy'
+    net_label, science_case, wf_str, num_injs = filename.replace('_SCI-CASE_', '_NET_').replace('_WF_', '_NET_').replace('_INJS-PER-ZBIN_', '_NET_').split('_NET_')
+    network_spec = net_label_to_network_spec(net_label)
+    # to-do: update wf_str to more distinctly separate approximant, currently searching for IMR...
+    if '_IMR' in wf_str:
+        approximant_index = wf_str.find('_IMR')
+        # + 1 to cut out _ before IMR
+        wf_model_name, wf_other_var_dic = wf_str[:approximant_index], wf_str[approximant_index + 1:] 
+    else:
+        wf_model_name, wf_other_var_dic = wf_str, None
+    num_injs = int(num_injs)
+    return network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs
 
 def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
     """styles file_name to be human readable across multiple lines, e.g. for titling a plot"""
@@ -26,10 +48,10 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
         else:
             return intermediate.replace('_WF_', '\nwaveform: ').replace('_INJS-PER-ZBIN_', "\ninjections per bin: ")
 
-def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True, data_path='data_redshift_snr_errs_sky-area/', raise_error_if_no_files_found=True):
+def find_files_given_networks(network_spec_list, science_case, specific_wf=None, print_progress=True, data_path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/', raise_error_if_no_files_found=True):
     """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network; returned list of files do not have data_path prepended"""
     # finding file names
-    net_labels = [net_label_styler('..'.join(network_spec)) for network_spec in network_spec_list]
+    net_labels = [net_label_styler(network_spec_to_net_label(network_spec)) for network_spec in network_spec_list]
     
     # return files wrt data_path (i.e. exclude the path from glob results); ignore task files
     file_list = [file.replace(data_path, '') for file in glob.glob(data_path + '*') if not "TASK" in file] 

@@ -1,7 +1,7 @@
 """James Gardner, March 2022
 using colours from https://flatuicolors.com/palette/us"""
 from useful_functions import flatten_list
-from filename_search_and_manipulation import net_spec_styler
+from filename_search_and_manipulation import network_spec_styler
 
 # colours and linestyles pulled from B&S2022
 BS2022_SIX = dict(nets=[
@@ -94,9 +94,9 @@ NET_DICT_LIST = [
     NEMOLF_AND_2G
 ]
 NET_LIST = flatten_list([net_dict['nets'] for net_dict in NET_DICT_LIST])
-# look-up table: given net_spec return colour, will override if same net_spec used twice
+# look-up table: given network_spec return colour, will override if same network_spec used twice
 DICT_NETSPEC_TO_COLOUR = dict()
 for net_dict in NET_DICT_LIST:
-    for net_spec in net_dict['nets']:
-        # using net_spec's recovered from net_label in filename after applying net_label_styler
-        DICT_NETSPEC_TO_COLOUR[net_spec_styler(net_spec)] = net_dict['colours'][net_dict['nets'].index(net_spec)]
+    for network_spec in net_dict['nets']:
+        # using network_spec's recovered from net_label in filename after applying net_label_styler
+        DICT_NETSPEC_TO_COLOUR[network_spec_styler(network_spec)] = net_dict['colours'][net_dict['nets'].index(network_spec)]

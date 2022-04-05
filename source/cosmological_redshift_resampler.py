@@ -47,14 +47,14 @@ def cosmological_redshift_sample(science_case, zmin=2e-2, zmax=50, num_subzbin=1
 
     return subzbin, subzbin_num_samples
 
-def resample_redshift_cosmologically_from_results(results, science_case, print_progress=False, print_samples_with_replacement=False, **kwargs):
-    """following B&S2022 Section 4A, use a cosmological model of the observed merger rate to uniformly sample n_i times from the saved results data in the subzbin with index i where n_i is determined cosmologically and, ultimately, phenomenologically.
+def resample_redshift_cosmologically_from_results(results, print_progress=False, print_samples_with_replacement=False, **kwargs):
+    """given an InjectionResults instance, following B&S2022 Section 4A, use a cosmological model of the observed merger rate to uniformly sample n_i times from the saved results data in the subzbin with index i where n_i is determined cosmologically and, ultimately, phenomenologically. returns the resampled results.results
     sampling without replacement is used unless there are insufficient injections, then replacement is used.
     if there aren't injections in a requested bin, then that bin is skipped
     kwargs are passed to cosmological_redshift_sample."""
-    subzbin, subzbin_num_samples = cosmological_redshift_sample(science_case, **kwargs)
+    subzbin, subzbin_num_samples = cosmological_redshift_sample(results.science_case, **kwargs)
     
-    results_zsorted = results[results[:, 0].argsort()]
+    results_zsorted = results.results[results.redshift.argsort()]
     ind_left_end_in_res = np.searchsorted(results_zsorted[:, 0], [zbin[0] for zbin in subzbin], side='left')
     ind_right_end_in_res = np.searchsorted(results_zsorted[:, 0], [zbin[1] for zbin in subzbin], side='left')
     # subzbin endpoints in terms of indicies of results sorted by redshift

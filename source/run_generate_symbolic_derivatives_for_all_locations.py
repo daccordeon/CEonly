@@ -12,4 +12,3 @@ if __name__ == "__main__":
     use_rot = 1
         
     generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_string, locs, use_rot, print_progress=False)
-
