@@ -2,14 +2,6 @@
 import glob
 import numpy as np
 
-def net_label_to_network_spec(net_label):
-    """converts net_label to network_spec as in gwbench's network.py"""
-    return net_label.split('..')
-
-def network_spec_to_net_label(network_spec):
-    """converts network_spec to net_label as in gwbench's network.py"""
-    return '..'.join(network_spec)
-
 def net_label_styler(net_label):
     """styles net_label to make CE unified and ET/Voyager less verbose. assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec"""
     return net_label.replace('CE2', 'CE').replace('ET_ET1..ET_ET2..ET_ET3', 'ET_E').replace('Voyager', 'Voy')
@@ -17,6 +9,22 @@ def net_label_styler(net_label):
 def network_spec_styler(network_spec):
     """styles repr(network_spec) given network_spec to make CE unified and ET/Voyager less verbose. assumes ET's declared in order"""
     return repr(network_spec).replace('CE2', 'CE').replace("'ET_ET1', 'ET_ET2', 'ET_ET3'", "'ET_E'").replace('Voyager', 'Voy')
+
+def net_label_to_network_spec(net_label, styled=False):
+    """converts net_label to network_spec as in gwbench's network.py"""
+    network_spec = net_label.split('..')
+    if styled:
+        return network_spec_styler(network_spec)
+    else:
+        return network_spec
+    
+def network_spec_to_net_label(network_spec, styled=False):
+    """converts network_spec to net_label as in gwbench's network.py"""
+    net_label = '..'.join(network_spec)
+    if styled:
+        return net_label_styler(net_label)
+    else:
+        return net_label
 
 def filename_to_netspec_sc_wf_injs(filename):
     """takes a results_*.npy filename without path, returns network_spec, science_case, wf_model_name, wf_other_var_dic['approximant'], num_injs"""

@@ -1,12 +1,13 @@
 """James Gardner, April 2022"""
 from results_class import InjectionResults
-from useful_functions import *
-from constants import *
+from constants import SNR_THRESHOLD_LO, SNR_THRESHOLD_HI, TOTAL_SKY_AREA_SQR_DEG, EM_FOLLOWUP_SKY_AREA_SQR_DEG
 from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
-from filename_search_and_manipulation import *
-from useful_plotting_functions import *
+from filename_search_and_manipulation import find_files_given_networks, network_spec_to_net_label, file_name_to_multiline_readable, network_spec_styler
+from useful_plotting_functions import add_SNR_contour_legend, force_log_grid
+from networks import DICT_NETSPEC_TO_COLOUR, BS2022_SIX
 from cosmological_redshift_resampler import resample_redshift_cosmologically_from_results
 
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
@@ -72,7 +73,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     found_files = find_files_given_networks(network_spec_list, science_case, specific_wf=specific_wf, print_progress=print_progress, data_path=data_path, raise_error_if_no_files_found=False)
     if found_files is None or len(found_files) == 0:
         return
-    net_labels = [net_label_styler('..'.join(network_spec)) for network_spec in network_spec_list]
+    net_labels = [network_spec_to_net_label(network_spec, styled=True) for network_spec in network_spec_list]
     if plot_label is None:
         plot_label = ''.join(tuple('_NET_'+l for l in net_labels))[1:]
     if plot_title is None:

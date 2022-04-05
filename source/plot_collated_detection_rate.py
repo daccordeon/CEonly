@@ -43,7 +43,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
     network_spec_list is assumed unique.
     uses uniformly sampled results in redshift to have good resolution along detection rate curve"""
     # finding file names
-    net_labels = [net_label_styler(network_spec_to_net_label(network_spec)) for network_spec in network_spec_list]
+    net_labels = [network_spec_to_net_label(network_spec, styled=True) for network_spec in network_spec_list]
     if plot_label is None:
         plot_label = f"SCI-CASE_{science_case}{''.join(tuple('_NET_' + l for l in net_labels))}"
     
