@@ -10,24 +10,29 @@ from cosmological_redshift_resampler import resample_redshift_cosmologically_fro
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
+from copy import deepcopy
 
-def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, label, normalise_count=True, threshold_by_SNR=True, contour=True):
-    """takes array of results re-sampled and re-ordered, add PDFs wrt dlog(x) and CDFs on log-log scale to axs.
+def add_measurement_errs_CDFs_to_axs(axs, resampled_results, num_bins, colour, linestyle, label, normalise_count=True, threshold_by_SNR=True, contour=True):
+    """takes array of results from file cosmologically re-sampled, add PDFs wrt dlog(x) and CDFs on log-log scale to axs.
     the bool contour controls whether to display contours on the CDFs between SNR > 100 (detected well) and SNR > 10 (detected) curves"""
+    # re-order results columns and transpose: [snr, sky-area, err_logMc, err_eta, err_logDL, err_iota]
+    results_reordered = resampled_results.transpose()[(1, 6, 2, 4, 3, 5), :]
+    snr = results_reordered[0]
+    
     for i, data in enumerate(results_reordered):
         # using low SNR threshold as cut-off for all non-SNR quantities, this might leave few sources remaining (e.g. for HLVKI+)
-        # to-do: rewrite lo and hi to reduce repetition; handle data_hi being empty 
-        # add legend for contour like Kuns+2020
+        # to-do: rewrite lo and hi to reduce repetition
         data_hi_empty = False
         if threshold_by_SNR and (i != 0):
-            data_lo = data[results_reordered[0] > SNR_THRESHOLD_LO]
-            data_hi = data[results_reordered[0] > SNR_THRESHOLD_HI]
+            data_lo = data[snr > SNR_THRESHOLD_LO]
+            data_hi = data[snr > SNR_THRESHOLD_HI]
             # to-do: fix contour issue as loud sources should have lower errors, inspection shows that this is correct using the data so the code must be wrong, maybe try removing the re-ordering of results?
 #             if i == 1: print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
             if len(data_hi) == 0:
                 data_hi_empty = True
         if (not (threshold_by_SNR and (i != 0))) or (not contour):
-            data_lo = data
+            # to avoid errors by sorting data in place and then filtering by the snr array determined pre-sort 
+            data_lo = deepcopy(data)
             data_hi_empty = True
 
         data_lo.sort()
@@ -40,7 +45,8 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
         if normalise_count:
             # normalise wrt dlog(x), i.e. to the height rather than the actual integrated area of each column
             weights_lo = np.full(len(data_lo), 1/len(data_lo))
-            if not data_hi_empty: weights_hi = np.full(len(data_hi), 1/len(data_hi))
+            # use lo normalisation to see the portion of the curve above the threshold, means that hi curve isn't normalised but this is okay
+            if not data_hi_empty: weights_hi = np.full(len(data_hi), 1/len(data_lo))
         else:
             weights_lo = None
             if not data_hi_empty: weights_hi = None
@@ -51,8 +57,7 @@ def add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, l
             linewidth_lo, label_lo = None, label
 
         if not data_hi_empty:
-            # trying with weights_lo, not normalised but check if it is the tail
-            axs[0, i].hist(data_hi, weights=np.full(len(data_hi), 1/len(data_lo)), histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label)
+            axs[0, i].hist(data_hi, weights=weights_hi, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label)
         axs[0, i].hist(data_lo, weights=weights_lo, histtype='step', bins=log_bins, color=colour, linestyle=linestyle, label=label_lo, linewidth=linewidth_lo)
         
         cdf_lo = np.arange(len(data_lo))/len(data_lo)    
@@ -80,14 +85,14 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         plot_title = plot_label
 
     plt.rcParams.update({'font.size': 14})
-    fig, axs = plt.subplots(2, 6, sharex='col', sharey='row', figsize=(20, 6), gridspec_kw=dict(wspace=0.1, hspace=0.1))
+    fig, axs = plt.subplots(2, 6, sharex='col', sharey='row', figsize=(20, 3.75), gridspec_kw=dict(wspace=0.05, hspace=0.15))
     
     # same colours manipulation as compare_networks_from_saved_results
     colours_used = []
     for i, file in enumerate(found_files):
         # redshift (z), integrated SNR (rho), measurement errors (logMc, logDL, eta, iota), 90% credible sky area
         # errs: fractional chirp mass, fractional luminosity distance, symmetric mass ratio, inclination angle
-        results = InjectionResults(data_path + file)
+        results = InjectionResults(file, data_path=data_path)
         # re-sampling uniform results using a cosmological model
         resampled_results = resample_redshift_cosmologically_from_results(results, parallel=parallel)
                 
@@ -107,13 +112,11 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
             colour = None    
             
         if linestyles_from_BS2022:
-            linestyle = BS2022_SIX['linestyles'][[network_spec_styler(net) for net in BS2022_SIX['nets']].index(str(results.network_spec))]
+            linestyle = BS2022_SIX['linestyles'][[network_spec_styler(net) for net in BS2022_SIX['nets']].index(repr(results.network_spec))]
         else:
             linestyle = None
-        
-        # re-order results columns to have sky-area second, to-do: check that this works as intended and isn't causing the contour issue
-        results_reordered = [resampled_results.transpose()[i] for i in (1, -1, 2, 4, 3, 5)]
-        add_measurement_errs_CDFs_to_axs(axs, results_reordered, num_bins, colour, linestyle, legend_label, normalise_count=normalise_count, threshold_by_SNR=threshold_by_SNR, contour=contour) 
+
+        add_measurement_errs_CDFs_to_axs(axs, resampled_results, num_bins, colour, linestyle, legend_label, normalise_count=normalise_count, threshold_by_SNR=threshold_by_SNR, contour=contour) 
         
     quantity_short_labels = (r'SNR, $\rho$', r'$\Omega_{90}$ / $\mathrm{deg}^2$', r'$\Delta\mathcal{M}/\mathcal{M}$', r'$\Delta\eta$', r'$\Delta D_L/D_L$', r'$\Delta\iota$')
 
@@ -146,7 +149,7 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
         
     # hist handles are boxes, want lines and so borrow from 1, 1 to avoid dotted
     handles, _ = axs[1, 0].get_legend_handles_labels()
-    axs[0, 0].legend(handles=handles, handlelength=1.5, bbox_to_anchor=(0, -1.35), loc="upper left")
+    axs[0, 0].legend(handles=handles, handlelength=1.5, bbox_to_anchor=(0, -1.55), loc="upper left")
     title = r'collated PDFs wrt $\mathrm{d}\log(x)$ and CDFs'+f'\n{plot_title}'
     if threshold_by_SNR:
         title = title.replace('\n', f', non-SNR quantities thresholded by SNR > {SNR_THRESHOLD_LO}\n')
@@ -156,16 +159,16 @@ def collate_measurement_errs_CDFs_of_networks(network_spec_list, science_case, s
     if normalise_count:
         axs[0, 0].set(ylabel='normalised\ncount wrt height')
     else:
-        axs[0, 0].set(ylabel='count')
+        axs[0, 0].set(ylabel='count in bin')
     if CDFmin == 'B&S2022':
         CDFmin = 1e-4
-    axs[1, 0].set(ylabel='CDF', ylim=(CDFmin, 1e0+1))
-    axs[1, 0].legend(labels=['1-CDF'], handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='lower left', frameon=False)
+    axs[1, 0].set(ylabel='CDF', ylim=(CDFmin, 1 + 0.1))
+    axs[1, 0].legend(labels=['1-CDF'], handles=[mlines.Line2D([], [], color='k')], handlelength=0.5, loc='lower left', frameon=False)
     if contour:
         axs[0, 1].legend(labels=[f'SNR>{SNR_THRESHOLD_LO}', f'SNR>{SNR_THRESHOLD_HI}'], handles=[mlines.Line2D([], [], color='k', linewidth=0.5), mlines.Line2D([], [], color='k')], handlelength=1, loc='upper left', frameon=False, labelspacing=0.03)
         add_SNR_contour_legend(axs[1, 1])
     else:
-        axs[1, 1].legend(labels=['CDF'], handles=[mlines.Line2D([], [], color='k')], handlelength=1, loc='upper left', frameon=False)
+        axs[1, 1].legend(labels=['CDF'], handles=[mlines.Line2D([], [], color='k')], handlelength=0.5, loc='upper left', frameon=False)
     fig.align_labels()
 
     fig.canvas.draw()

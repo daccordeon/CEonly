@@ -30,13 +30,14 @@ def filename_to_netspec_sc_wf_injs(filename):
     """takes a results_*.npy filename without path, returns network_spec, science_case, wf_model_name, wf_other_var_dic['approximant'], num_injs"""
     if '_TASK_' in filename:
         filename = filename[:filename.find('_TASK_')] + '.npy'
-    net_label, science_case, wf_str, num_injs = filename.replace('_SCI-CASE_', '_NET_').replace('_WF_', '_NET_').replace('_INJS-PER-ZBIN_', '_NET_').split('_NET_')
+    # [1:-1] to cut out 'results' and '.npy'
+    net_label, science_case, wf_str, num_injs = filename.replace('_SCI-CASE_', '_NET_').replace('_WF_', '_NET_').replace('_INJS-PER-ZBIN_', '_NET_').replace('.npy', '_NET_').split('_NET_')[1:-1]
     network_spec = net_label_to_network_spec(net_label)
     # to-do: update wf_str to more distinctly separate approximant, currently searching for IMR...
     if '_IMR' in wf_str:
         approximant_index = wf_str.find('_IMR')
         # + 1 to cut out _ before IMR
-        wf_model_name, wf_other_var_dic = wf_str[:approximant_index], wf_str[approximant_index + 1:] 
+        wf_model_name, wf_other_var_dic = wf_str[:approximant_index], dict(approximant=wf_str[approximant_index + 1:]) 
     else:
         wf_model_name, wf_other_var_dic = wf_str, None
     num_injs = int(num_injs)

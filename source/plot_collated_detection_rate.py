@@ -71,7 +71,7 @@ def compare_detection_rate_of_networks_from_saved_results(network_spec_list, sci
 
     colours_used = []
     for i, file in enumerate(found_files):
-        results = InjectionResults(data_path + file)
+        results = InjectionResults(file, data_path=data_path)
         with HiddenPrints():
             results.calculate_and_set_detection_rate(print_reach=False)    
         # to not repeatedly plot merger rate

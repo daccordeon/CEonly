@@ -32,4 +32,4 @@ TASK_ID_OFFSET=0
 let "TASK_ID = $SLURM_ARRAY_TASK_ID + $TASK_ID_OFFSET"
 
 # arguments: task_id, network_id, science_case, num_injs_per_zbin_per_task
-srun python3 -u /fred/oz209/jgardner/CEonlyPony/source/run_injections_for_network_id.py $TASK_ID $NETWORK_INDEX $SCIENCE_CASE $NUM_INJS_PER_ZBIN_PER_TASK $NUM_FILES $MERGE_BOOL
+srun python3 /fred/oz209/jgardner/CEonlyPony/source/run_injections_for_network_id.py $TASK_ID $NETWORK_INDEX $SCIENCE_CASE $NUM_INJS_PER_ZBIN_PER_TASK $NUM_FILES $MERGE_BOOL

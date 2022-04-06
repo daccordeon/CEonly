@@ -15,7 +15,7 @@ import matplotlib.lines as mlines
 
 class InjectionResults(object):
     """class for results processing, besides the results array at results.results has attributes for common things like finding the science case, network_spec, and label. methods for calculating and plotting detection rate."""
-    def __init__(self, filename, data_path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/'):
+    def __init__(self, file_name, data_path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/'):
         self.file_name, self.data_path = file_name, data_path
         self.file_name_with_path = self.data_path + self.file_name
         self.results = np.load(self.file_name_with_path)

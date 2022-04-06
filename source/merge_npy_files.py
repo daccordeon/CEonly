@@ -27,7 +27,7 @@ def merge_npy_files(output_filename, input_files=None, pattern=None, path='./', 
             for input_file in input_files:
                 os.remove(input_file)        
 
-def merge_all_task_npy_files(path='data_redshift_snr_errs_sky-area/', pattern='results_NET_*_SCI-CASE_*_WF_*_INJS-PER-ZBIN_*_TASK_*.npy', delete_input_files=False):
+def merge_all_task_npy_files(path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/', pattern='results_NET_*_SCI-CASE_*_WF_*_INJS-PER-ZBIN_*_TASK_*.npy', delete_input_files=False):
     """find all .npy outputs from each task from job_run_all_networks_injections.sh and merge them together to have one .npy file per network+sc+wf combination"""
     task_files = sorted(glob.glob(path + pattern)) # sorted to make debugging printout easier to read 
     # split into separate network+sc+wf combinations

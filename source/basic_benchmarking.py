@@ -5,15 +5,8 @@ from useful_functions import *
 from gwbench import network
 from gwbench import wf_class as wfc
 from gwbench import detector_response_derivatives as drd
-from gwbench import injections
 
 import os
-import numpy as np
-# from p_tqdm import p_map
-from p_tqdm import p_umap
-from copy import deepcopy
-import matplotlib.pyplot as plt
-# from scipy.stats import gmean
         
 def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_string, locs, use_rot, output_path=None, print_progress=True):
     """generate symbolic derivatives, from generate_lambdified_functions.py from S. Borhanian 2020
@@ -41,7 +34,7 @@ def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_s
     elif print_progress:
         print('All lambdified derivatives already exist.')
         
-def basic_network_benchmarking(net, numerical_over_symbolic_derivs=True, only_net=True, numerical_deriv_settings=dict(step=1e-9, method='central', order=2, n=1), hide_prints=True):
+def basic_network_benchmarking(net, only_net=True, numerical_over_symbolic_derivs=True, numerical_deriv_settings=dict(step=1e-9, method='central', order=2, n=1), hide_prints=True):
     """computes network SNR, measurement errors, and sky area using gwbench FIM analysis
     no return, saves results natively in network (net.snr, net.errs)
     assumes that network is already set up, with waveform set etc."""

@@ -1,11 +1,14 @@
 """James Gardner, April 2022
 generates and saves injections results as .npy"""
-from basic_benchmarking import * # also loads numpy and gwbench's injection module
+from basic_benchmarking import *
 from useful_functions import without_rows_w_nan, parallel_map, logarithmically_uniform_sample
 from network_subclass import NetworkExtended
 from results_class import InjectionResults
 
-from gwbench.basic_relations import f_isco_Msolar
+import numpy as np
+from gwbench import injections
+from gwbench.basic_relations import f_isco_Msolar, m1_m2_of_Mc_eta
+from copy import deepcopy
 
 def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=None, file_name=None, parallel=True, log_uniformly_sampled_redshift=False):
     """given an extended network (with attributes: science_case, tecs, num_injs, file_tag) and variables, generate injections, benchmark, and save results (snr, errors in logM logDL eta iota, sky area) as .npy.
@@ -15,7 +18,6 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
     inj_data = np.empty((len(redshift_bins)*net.num_injs, 14))
     for i, (zmin, zmax, seed) in enumerate(redshift_bins):
         cosmo_dict = dict(sampler='uniform', zmin=zmin, zmax=zmax)
-        # transposed array to get [[Mc0, eta0, ..., z0], [Mc1, eta1, ..., z1], ...] from [Mc, eta, chi1x, chi1y, chi1z, chi2x, chi2y, chi2z, DL, iota, ra, dec, psi, z]    
         injection_params = np.array(injections.injections_CBC_params_redshift(cosmo_dict, mass_dict, spin_dict, redshifted, num_injs=net.num_injs, seed=seed))
         # changing z to logarithmically uniformly sampled, DL and the redshifted Mc change accordingly
         if log_uniformly_sampled_redshift:
@@ -29,6 +31,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
                 injection_params[0] = injection_params[0]*(1. + z_vec)/(1. + injection_params[13])
             injection_params[8] = DL_vec
             injection_params[13] = z_vec
+        # transposed array to get [[Mc0, eta0, ..., z0], [Mc1, eta1, ..., z1], ...] from [Mc, eta, chi1x, chi1y, chi1z, chi2x, chi2y, chi2z, DL, iota, ra, dec, psi, z]                
         inj_data[i*net.num_injs:(i + 1)*net.num_injs] = injection_params.transpose()
 
     def calculate_benchmark_from_injection(inj):
@@ -45,39 +48,54 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
         varied_keys = ['Mc', 'eta', 'chi1x', 'chi1y', 'chi1z', 'chi2x', 'chi2y', 'chi2z', 'DL', 'iota', 'ra', 'dec', 'psi', 'z']
         varied_params = dict(zip(varied_keys, inj))
         z = varied_params.pop('z')
-        Mc, eta, iota = varied_params['Mc'], varied_params['eta'], varied_params['iota']
         output_if_injection_fails = (z, *np.full(6, np.nan))
+        inj_params = dict(**base_params, **varied_params)
+        Mc, eta, iota = inj_params['Mc'], inj_params['eta'], inj_params['iota']
+        # m1 and m2 are redshifted if Mc already has been. this is somehow insufficient to avoid: XLAL Error - XLALSimIMRPhenomHMGethlmModes (LALSimIMRPhenomHM.c:1193): m1 must be positive.
+        m1, m2 = m1_m2_of_Mc_eta(Mc, eta)
+        if (m1 <= 0) or (m2 <= 0):
+            print(f'domain error: m1, m2, Mc, eta = {m1, m2, Mc, eta}, redshifted = {redshifted}')
+            return output_if_injection_fails        
         
         Mtot = Mc/eta**0.6
-        # fisco_obs = (6**1.5*PI*(1+z)*Mtot)**-1 # with the mass redshifted by (1+z) in the observer frame (not clear in B&S2022), missing some number of Msun, c=1, G=1 factors
-        fisco_obs = f_isco_Msolar((1 + z)*Mtot) #4.4/Mtot*1e3 # Hz # from https://arxiv.org/pdf/2011.05145.pdf
+        # fisco_obs = (6**1.5*PI*(1+z)*Mtot_source)**-1 # with the mass redshifted by (1+z) in the observer frame, missing some number of Msun, c=1, G=1 factors
+        if redshifted:
+            fisco_obs = f_isco_Msolar(Mtot) #4.4/Mtot*1e3 # Hz # from https://arxiv.org/pdf/2011.05145.pdf
+        else:
+            fisco_obs = f_isco_Msolar((1. + z)*Mtot)
         # chosing fmax in 11 <= coeff_fisco*fisco <= 1024, truncating to boundary values, NB: B&S2022 doesn't include the lower bound which must be included to avoid an IndexError with the automatically truncated fmin from the V+ and aLIGO curves stored in gwbench that start at 10 Hz, this can occur for Mtot > 3520 Msun with massive BBH mergers although those masses are at least an order of magnitude beyond any observed so far
         fmin, fmax = 5., coeff_fisco*fisco_obs
         # lower bound on fmax can be anything greater than f_lowest_allowed_by_PSD + 1/16     
         # from hardcoded PSDs, if aLIGO or V+ (everything else), then threshold fmax >= 11 (6) Hz; fmax is $f_U$ in B&S2022
-        are_aLIGO_or_Vplus_used_bool = ('aLIGO' in net.tecs) or ('V+' in net.tecs)
-        if are_aLIGO_or_Vplus_used_bool:
+        aLIGO_or_Vplus_used = ('aLIGO' in net.tecs) or ('V+' in net.tecs)
+        if aLIGO_or_Vplus_used:
             fmax_bounds = (11, 1024)
         else:
             fmax_bounds = (6, 1024)
         fmax = float(max(min(fmax, fmax_bounds[1]), fmax_bounds[0]))            
         # if BBH, then discard the injection by returning NaNs if fmax < 12 Hz (7 Hz) for aLIGO or V+ (everything else)
         if net.science_case == 'BBH':
-            if are_aLIGO_or_Vplus_used_bool and (fmax < 12):
+            if aLIGO_or_Vplus_used and (fmax < 12):
                 return output_if_injection_fails
-            elif (not are_aLIGO_or_Vplus_used_bool) and (fmax < 7):
+            elif (not aLIGO_or_Vplus_used) and (fmax < 7):
                 return output_if_injection_fails
-        # df linearly transitions from 1/16 (fine from B&S2022) to 10 (coarse to save computation time) Hz
+        # df linearly transitions from 1/16 Hz (fine from B&S2022) to 10 Hz (coarse to save computation time)
         df = (fmax - fmax_bounds[0])/(fmax_bounds[1] - fmax_bounds[0])*10 + (fmax_bounds[1] - fmax)/(fmax_bounds[1] - fmax_bounds[0])*1/16
         f = np.arange(fmin, fmax, df)
         
         # net_copy is automatically deleted once out of scope (is copying necessary with Pool()?)
         net_copy = deepcopy(net)
-        inj_params = dict(**base_params, **varied_params)
         net_copy.set_net_vars(f=f, inj_params=inj_params, deriv_symbs_string=deriv_symbs_string, conv_cos=conv_cos, conv_log=conv_log, use_rot=use_rot)
-
-        basic_network_benchmarking(net_copy, numerical_over_symbolic_derivs=numerical_over_symbolic_derivs, only_net=only_net, numerical_deriv_settings=numerical_deriv_settings, hide_prints=True)
-
+        
+        debug = True
+        try:
+            basic_network_benchmarking(net_copy, only_net=only_net, numerical_over_symbolic_derivs=numerical_over_symbolic_derivs, numerical_deriv_settings=numerical_deriv_settings, hide_prints=True) 
+        except Exception as exception:
+            if debug:
+                print(f'- - -\n{net_copy.file_tag}\nfrequency array: {f}\ninjection parameters: {inj_params}\n m1, m2 = {m1, m2}\n---> encouters the following exception\n{exception}\n- - -')
+                net_copy.print_network()
+            return output_if_injection_fails
+            
         if net_copy.wc_fisher:
             # convert sigma_cos(iota) into sigma_iota
             abs_err_iota = abs(net_copy.errs['cos_iota']/np.sin(iota))
@@ -88,11 +106,11 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
 
     # calculate results: z, snr, errs (logMc, logDL, eta, iota), sky area
     # p_umap is unordered in redshift for greater speed (check)
-    results = np.array(parallel_map(calculate_benchmark_from_injection, inj_data, num_cpus=os.cpu_count() - 1, unordered=True, parallel=parallel))
+    results = np.array(parallel_map(calculate_benchmark_from_injection, inj_data, parallel=parallel, num_cpus=os.cpu_count() - 1, unordered=True))
     # filter out NaNs
     results = without_rows_w_nan(results)
     if len(results) == 0:
-        raise ValueError('All calculated values are NaN, FIM is ill-conditioned.')
+        raise ValueError('All calculated values are NaN, FIM is always ill-conditioned.')
     if data_path is None:
         data_path = net.data_path
     if file_name is None:
@@ -104,7 +122,7 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     use case: Replicating Borhanian and Sathya 2022 (B&S2022) injections and detection rates"""
     # initialisation
     locs = [x.split('_')[-1] for x in network_spec]
-    net = NetworkExtended(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, data_path=data_path)
+    net = NetworkExtended(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, data_path=data_path, file_name=file_name)
     net.set_wf_vars(wf_model_name=net.wf_model_name, wf_other_var_dic=net.wf_other_var_dic)
     
     if net.science_case == 'BNS':
@@ -155,13 +173,12 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     conv_cos = ('dec', 'iota')
     conv_log = ('Mc', 'DL', 'lam_t')
 
-    # network settings: whether to include Earth's rotation and individual detector calculations
+    # network settings: whether to include Earth's rotation and skip individual detector calculations
     use_rot = 1
     only_net = 1
 
-    # injection settings - other: number of injections per redshift bin (over 6 bins)
-    # to-do: refactor file_tag generation
-    redshifted = 1 # whether sample masses already redshifted wrt z
+    # whether the sample masses get redshifted by the injections module, if enabled then Mc is (1+z)Mc, same with Mtot, and therefore f_isco is already in the observer frame
+    redshifted = 1
      
     if print_progress: print('Network initialised.')
     # use symbolic derivatives if able
@@ -184,7 +201,7 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
             return
 
     if generate_fig:
-        results = InjectionResults(net.file_name_with_path)
+        results = InjectionResults(net.file_name, data_path=net.data_path)
         if print_progress: print('Results found and loaded.')
 
         # ------------------------------------------------
