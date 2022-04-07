@@ -26,7 +26,6 @@ def add_measurement_errs_CDFs_to_axs(axs, resampled_results, num_bins, colour, l
         if threshold_by_SNR and (i != 0):
             data_lo = data[snr > SNR_THRESHOLD_LO]
             data_hi = data[snr > SNR_THRESHOLD_HI]
-            # to-do: fix contour issue as loud sources should have lower errors, inspection shows that this is correct using the data so the code must be wrong, maybe try removing the re-ordering of results?
 #             if i == 1: print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
             if len(data_hi) == 0:
                 data_hi_empty = True

@@ -37,14 +37,15 @@ def generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_s
 def basic_network_benchmarking(net, only_net=True, numerical_over_symbolic_derivs=True, numerical_deriv_settings=dict(step=1e-9, method='central', order=2, n=1), hide_prints=True):
     """computes network SNR, measurement errors, and sky area using gwbench FIM analysis
     no return, saves results natively in network (net.snr, net.errs)
-    assumes that network is already set up, with waveform set etc."""
+    assumes that network is already set up, with waveform set etc.
+    ensure that step size in numerical_deriv_settings is sufficiently small, e.g. to not step out of bounds above eta = 0.25"""
     if hide_prints:
         entry_class = HiddenPrints
     else:
         entry_class = PassEnterExit
     with entry_class():
         # compute the WF polarizations and their derivatives
-        net.calc_wf_polarizations()
+        #net.calc_wf_polarizations() # automatically done by calc_wf_polarizations_derivs_...
         if numerical_over_symbolic_derivs:
             # --- numerical differentiation ---
             net.calc_wf_polarizations_derivs_num(**numerical_deriv_settings)

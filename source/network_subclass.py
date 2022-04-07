@@ -32,6 +32,8 @@ class NetworkExtended(network.Network):
             self.file_name = f'results_{self.file_tag}.npy'
         elif 'SLURM_TASK_' in file_name:
             self.file_name = f'results_{self.file_tag}_TASK_{file_name.split("SLURM_TASK_")[1]}.npy'
+        else:
+            self.file_name = file_name
         self.data_path = data_path
         self.file_name_with_path = self.data_path + self.file_name
         self.results_file_exists = os.path.isfile(self.file_name_with_path)

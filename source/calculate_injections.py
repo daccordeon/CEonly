@@ -10,7 +10,7 @@ from gwbench import injections
 from gwbench.basic_relations import f_isco_Msolar, m1_m2_of_Mc_eta
 from copy import deepcopy
 
-def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=None, file_name=None, parallel=True, log_uniformly_sampled_redshift=False):
+def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=None, file_name=None, parallel=True, log_uniformly_sampled_redshift=False, debug=False):
     """given an extended network (with attributes: science_case, tecs, num_injs, file_tag) and variables, generate injections, benchmark, and save results (snr, errors in logM logDL eta iota, sky area) as .npy.
     to-do: tidy up number of arguments, e.g. into kwargs for network, kwargs for benchmarking"""
     # injection and benchmarking
@@ -87,13 +87,21 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
         net_copy = deepcopy(net)
         net_copy.set_net_vars(f=f, inj_params=inj_params, deriv_symbs_string=deriv_symbs_string, conv_cos=conv_cos, conv_log=conv_log, use_rot=use_rot)
         
-        debug = True
+        # check whether numerical derivative step size is sufficiently small, e.g. to avoid stepping above the maximum eta = 0.25. to-do: expand this beyond just checking eta
+        eta_max = 0.25 # https://en.wikipedia.org/wiki/Chirp_mass#Definition_from_component_masses
+        # 10 times the step size is made up, a priori only one step is necessary but let's be safe
+        numerical_deriv_settings['step'] = min(numerical_deriv_settings['step'], (eta_max - eta)/10)
+        
         try:
-            basic_network_benchmarking(net_copy, only_net=only_net, numerical_over_symbolic_derivs=numerical_over_symbolic_derivs, numerical_deriv_settings=numerical_deriv_settings, hide_prints=True) 
+            if debug:
+                print(f'- - - start of try\n{net_copy.file_tag}\nfrequency array: fmin, fmax, numf {f.min(), f.max(), len(f)}\ninjection parameters: {inj_params}\n m1, m2, z = {m1, m2, z}\nnumerical derivatives: {numerical_over_symbolic_derivs}, settings: {numerical_deriv_settings}\n- - -')
+#                 net_copy.print_network()
+            basic_network_benchmarking(net_copy, only_net=only_net, numerical_over_symbolic_derivs=numerical_over_symbolic_derivs, numerical_deriv_settings=numerical_deriv_settings, hide_prints=not debug) 
+        # to-do: fix except doesn't hide the XLAL domain error appearing in stderr, why?
         except Exception as exception:
             if debug:
-                print(f'- - -\n{net_copy.file_tag}\nfrequency array: {f}\ninjection parameters: {inj_params}\n m1, m2 = {m1, m2}\n---> encouters the following exception\n{exception}\n- - -')
-                net_copy.print_network()
+                print(f'- - - start of except\nencoutered the following exception\n{exception}\n{net_copy.file_tag}\nfrequency array: fmin, fmax, numf {f.min(), f.max(), len(f)}\ninjection parameters: {inj_params}\n m1, m2, z = {m1, m2, z}\n- - -')
+#                 net_copy.print_network()
             return output_if_injection_fails
             
         if net_copy.wc_fisher:
@@ -104,8 +112,23 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
         else:
             return output_if_injection_fails
 
+    # to debug the m1 not positive error, run benchmarking on an example manually set injection that caused the error
+    if debug:
+        inj_params_0 = {'tc': 0, 'phic': 0, 'gmst0': 0, 'lam_t': 0, 'delta_lam_t': 0, 'Mc': 36.8961995945702, 'eta': 0.24999999971132456, 'chi1x': 0.0, 'chi1y': 0.0, 'chi1z': -0.6247270178511705, 'chi2x': 0.0, 'chi2y': 0.0, 'chi2z': -0.5040153883672852, 'DL': 18307.104606936435, 'iota': 1.5462538548397908, 'ra': 0.43589493176425087, 'dec': -0.5996889691768754, 'psi': 5.178693418461606}
+        # from astropy.cosmology import z_at_value
+        # from astropy.units import Mpc
+        # print(z_at_value(Planck18.luminosity_distance, 18307.104606936435*Mpc)) # DL in Mpc
+        # print(z_at_value(lambda z : Planck18.luminosity_distance(z).value, 18307.104606936435))
+        z0 = 2.2426190042153844
+        inj_0 = list(map(inj_params_0.get, ['Mc', 'eta', 'chi1x', 'chi1y', 'chi1z', 'chi2x', 'chi2y', 'chi2z', 'DL', 'iota', 'ra', 'dec', 'psi']))
+        inj_0.append(z0)
+        print(f'- - - calling calculate_benchmark_from_injection\nspecified injection : [Mc, eta, chi1x, chi1y, chi1z, chi2x, chi2y, chi2z, DL, iota, ra, dec, psi, z]\n{inj_0}\n- - -')
+        result_0 = calculate_benchmark_from_injection(inj_0)
+        print(f'- - - calculate_benchmark_from_injection finished\nresult: {result_0}\n- - -')
+        return
+    
     # calculate results: z, snr, errs (logMc, logDL, eta, iota), sky area
-    # p_umap is unordered in redshift for greater speed (check)
+    # p_umap is unordered in redshift for greater speed (check)    
     results = np.array(parallel_map(calculate_benchmark_from_injection, inj_data, parallel=parallel, num_cpus=os.cpu_count() - 1, unordered=True))
     # filter out NaNs
     results = without_rows_w_nan(results)
@@ -117,7 +140,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
         file_name = net.file_name
     np.save(data_path + file_name, results)   
     
-def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/', file_name=None, parallel=True, use_BS2022_seeds=False, log_uniformly_sampled_redshift=False):
+def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs, generate_fig=True, show_fig=True, print_progress=True, print_reach=True, data_path='/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/', file_name=None, parallel=True, use_BS2022_seeds=False, log_uniformly_sampled_redshift=False, debug=False):
     """initialises network, benchmarks against injections, calculates efficiency and detection rate, plots.
     use case: Replicating Borhanian and Sathya 2022 (B&S2022) injections and detection rates"""
     # initialisation
@@ -193,7 +216,7 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
     # ------------------------------------------------
     # generate results or skip if previously generated successfully (i.e. not ill-conditioned)   
     if not net.results_file_exists:
-        save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=net.data_path, file_name=net.file_name, parallel=parallel, log_uniformly_sampled_redshift=log_uniformly_sampled_redshift)
+        save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin_dict, redshifted, base_params, deriv_symbs_string, coeff_fisco, conv_cos, conv_log, use_rot, only_net, numerical_over_symbolic_derivs, numerical_deriv_settings, data_path=net.data_path, file_name=net.file_name, parallel=parallel, log_uniformly_sampled_redshift=log_uniformly_sampled_redshift, debug=debug)
     else:
         if (not generate_fig) & print_progress:
             print('Results already exist; figure not (re)generated.')

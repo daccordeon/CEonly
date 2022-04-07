@@ -5,7 +5,7 @@
 #SBATCH --error=stderr_job_run_all_injections_at_scale_on_sstar.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=36:00:00 # HH:MM:SS, sstar cores are 4/3 times slower than skylake (farnarkle) cores --> 12 hr, extending to 36 hr since the 30 HLKI+E BBH tasks are missing and haven't profiled the memory usage 
+#SBATCH --time=24:00:00 # HH:MM:SS, sstar cores are 4/3 times slower than skylake (farnarkle) cores --> 12 hr, extending to 24 after timeouts
 #SBATCH --mem-per-cpu=200 # MB, determined from mprof (175 MB, 50 min for BNS, 7 hr for BBH)
 #
 #SBATCH --array=1-2040 # number of independent jobs, 34 networks, 2 science cases, some number of tasks each set below, watch out for MaxArraySize=2048 and the maximum concurrent jobs of 1000 in /apps/slurm/etc/slurm.config
