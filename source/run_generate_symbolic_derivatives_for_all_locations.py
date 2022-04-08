@@ -6,9 +6,16 @@ slurm gets upset when multiple tasks try to create the derivatives if there aren
 from basic_benchmarking import *
 
 if __name__ == "__main__":
-    wf_model_name, wf_other_var_dic = 'tf2_tidal', None
-    deriv_symbs_string = 'Mc eta DL tc phic iota ra dec psi'
-    locs = ['H', 'L', 'V', 'K', 'I', 'ET1', 'ET2', 'ET3', 'C', 'N', 'S']
+    wf_model_name, wf_other_var_dic = "tf2_tidal", None
+    deriv_symbs_string = "Mc eta DL tc phic iota ra dec psi"
+    locs = ["H", "L", "V", "K", "I", "ET1", "ET2", "ET3", "C", "N", "S"]
     use_rot = 1
-        
-    generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_string, locs, use_rot, print_progress=False)
+
+    generate_symbolic_derivatives(
+        wf_model_name,
+        wf_other_var_dic,
+        deriv_symbs_string,
+        locs,
+        use_rot,
+        print_progress=False,
+    )

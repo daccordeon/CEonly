@@ -12,7 +12,7 @@ GWTC3_MERGER_RATE_BNS, GWTC3_MERGER_RATE_BBH = 105.5, 23.9
 GWTC2_MERGER_RATE_BNS, GWTC2_MERGER_RATE_BBH = 320, 23
 
 # sky areas, https://en.wikipedia.org/wiki/Square_degree
-TOTAL_SKY_AREA_SQR_DEG = 129600/PI
-MOON_SKY_AREA_SQR_DEG = PI*(0.5/2)**2 # varies with distance from Earth
+TOTAL_SKY_AREA_SQR_DEG = 129600 / PI
+MOON_SKY_AREA_SQR_DEG = PI * (0.5 / 2) ** 2  # varies with distance from Earth
 # from Rana, check decadal predictions for ZTF
 EM_FOLLOWUP_SKY_AREA_SQR_DEG = 10
