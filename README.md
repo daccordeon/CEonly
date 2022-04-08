@@ -7,9 +7,10 @@ Current build found [here](https://github.com/daccordeon/CEonlyPony).
 
 ---
 - Contact for any technical enquiries at <james.gardner@anu.edu.au>.
+- See explanation of code in the README.md inside source/
 
 Requirements:
--
+- see requirements.txt
 
 ---
 file structure
