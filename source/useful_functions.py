@@ -35,11 +35,10 @@ def flatten_list(x):
     return [z for y in x for z in y]
 
 def parallel_map(fn, xarr, display_progress_bar=False, unordered=False, num_cpus=os.cpu_count(), parallel=True):
-    """fn is a function to apply to elements in iterable xarr,
-    display_progress_bar is a bool about whether to use tqdm;
-    returns a list.
-    direct substitution doesn't work because pool.map and p_map work differently,
-    e.g. the latter can take lambdas"""
+    """fn is a function to apply to elements in iterable xarr, display_progress_bar is a bool about whether to use tqdm;
+    returns a list of fn applied to xarr.
+    fn cannot be pickled if it contains inner functions or calls to lambdas, to-do: change to dill to allow this?
+    direct substitution doesn't work because pool.map and p_map work differently, e.g. the latter can take fn as a lambda itself (but still no internal functions or lambda calls)."""
     if parallel:
         if display_progress_bar:
             if unordered:

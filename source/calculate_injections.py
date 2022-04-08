@@ -53,7 +53,7 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
         Mc, eta, iota = inj_params['Mc'], inj_params['eta'], inj_params['iota']
         # m1 and m2 are redshifted if Mc already has been. this is somehow insufficient to avoid: XLAL Error - XLALSimIMRPhenomHMGethlmModes (LALSimIMRPhenomHM.c:1193): m1 must be positive.
         m1, m2 = m1_m2_of_Mc_eta(Mc, eta)
-        if (m1 <= 0) or (m2 <= 0):
+        if (m1 <= 0) or (m2 <= 0) or (Mc <= 0) or (eta > 0.25):
             print(f'domain error: m1, m2, Mc, eta = {m1, m2, Mc, eta}, redshifted = {redshifted}')
             return output_if_injection_fails        
         
@@ -88,9 +88,10 @@ def save_benchmark_from_generated_injections(net, redshift_bins, mass_dict, spin
         net_copy.set_net_vars(f=f, inj_params=inj_params, deriv_symbs_string=deriv_symbs_string, conv_cos=conv_cos, conv_log=conv_log, use_rot=use_rot)
         
         # check whether numerical derivative step size is sufficiently small, e.g. to avoid stepping above the maximum eta = 0.25. to-do: expand this beyond just checking eta
-        eta_max = 0.25 # https://en.wikipedia.org/wiki/Chirp_mass#Definition_from_component_masses
-        # 10 times the step size is made up, a priori only one step is necessary but let's be safe
-        numerical_deriv_settings['step'] = min(numerical_deriv_settings['step'], (eta_max - eta)/10)
+        if numerical_over_symbolic_derivs:
+            eta_max = 0.25 # https://en.wikipedia.org/wiki/Chirp_mass#Definition_from_component_masses
+            # 10 times the step size is made up, a priori only one step is necessary but let's be safe
+            numerical_deriv_settings['step'] = min(numerical_deriv_settings['step'], (eta_max - eta)/10)
         
         try:
             if debug:
@@ -205,7 +206,7 @@ def detection_rate_for_network_and_waveform(network_spec, science_case, wf_model
      
     if print_progress: print('Network initialised.')
     # use symbolic derivatives if able
-    if (wf_model_name == 'tf2') | (wf_model_name == 'tf2_tidal'):
+    if (wf_model_name == 'tf2') or (wf_model_name == 'tf2_tidal'):
         numerical_over_symbolic_derivs = False    
         generate_symbolic_derivatives(wf_model_name, wf_other_var_dic, deriv_symbs_string, locs, use_rot, print_progress=print_progress)
         numerical_deriv_settings = None
