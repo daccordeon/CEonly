@@ -38,7 +38,7 @@ def sigmoid_3parameter(z, a, b, c):
 
 
 def flatten_list(x):
-    """x = [y, ...], y = [z, ...]"""
+    """x = [y, ...], y = [z, ...]. to-do: remove bug that it affects strings"""
     return [z for y in x for z in y]
 
 

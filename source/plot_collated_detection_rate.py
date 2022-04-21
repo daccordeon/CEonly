@@ -179,7 +179,7 @@ def compare_detection_rate_of_networks_from_saved_results(
             colour = None
 
         if debug:
-            print('- - -\n', plot_label)
+            print("- - -\n", plot_label)
         collate_eff_detrate_vs_redshift(
             axs,
             results,

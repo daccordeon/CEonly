@@ -16,8 +16,8 @@ if len(sys.argv[1:]) == 2:
     task_id, num_injs_per_zbin_per_task = (
         int(arg) for arg in sys.argv[1:]
     )  # first argv is the script's name
-    science_case = "BBH"
-#     science_case = 'BNS'
+    #     science_case = "BBH"
+    science_case = "BNS"
 else:
     task_id, num_injs_per_zbin_per_task, science_case = (
         int(sys.argv[1]),
@@ -35,8 +35,10 @@ network_spec = ["A+_H", "A+_L", "V+_V", "K+_K", "A+_I"]
 # network_spec = ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I', 'CE2-20-CBO_S']
 
 if science_case == "BNS":
-    # wf_model_name, wf_other_var_dic = 'lal_bns', dict(approximant='IMRPhenomD_NRTidalv2')
-    wf_model_name, wf_other_var_dic = "tf2_tidal", None
+    wf_model_name, wf_other_var_dic = "lal_bns", dict(
+        approximant="IMRPhenomD_NRTidalv2"
+    )
+#     wf_model_name, wf_other_var_dic = "tf2_tidal", None
 elif science_case == "BBH":
     wf_model_name, wf_other_var_dic = "lal_bbh", dict(approximant="IMRPhenomHM")
 else:
@@ -60,7 +62,7 @@ detection_rate_for_network_and_waveform(
     print_reach=False,
     data_path=data_path,
     file_name=file_name,
-    parallel=False,
+    parallel=True,
     use_BS2022_seeds=False,
     log_uniformly_sampled_redshift=False,
 )

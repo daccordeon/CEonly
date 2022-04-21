@@ -170,7 +170,7 @@ class InjectionResults(object):
         # to-do: do this using global?
         self.det_rate_limit = det_rate_limit
         self.det_rate = det_rate
-        
+
     def plot_detection_rate(
         self, show_fig=True, print_progress=True, parallel=True, recursed=False
     ):
@@ -311,6 +311,8 @@ class InjectionResults(object):
     def print_results(self):
         """prints out summary of results
         to-do: summarise results, currently just prints column headings and results"""
-        print(r"results.results contains seven (7) columns: redshift $z$, integrated SNR $\rho$, measurement errors *(fractional chirp mass $\log{\mathcal{M}_c}$, fractional luminosity distance $\log{D_L}$, symmetric mass ratio $\eta$, inclination angle $\iota$), 90%-credible sky area $\Omega_{90}$")
+        print(
+            r"results.results contains seven (7) columns: redshift $z$, integrated SNR $\rho$, measurement errors *(fractional chirp mass $\log{\mathcal{M}_c}$, fractional luminosity distance $\log{D_L}$, symmetric mass ratio $\eta$, inclination angle $\iota$), 90%-credible sky area $\Omega_{90}$"
+        )
         for attribute, value in vars(self).items():
             print(f"{attribute}: {value}")

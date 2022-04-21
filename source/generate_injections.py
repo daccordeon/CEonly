@@ -7,6 +7,14 @@ import numpy as np
 import glob
 
 
+def injection_file_name(science_case, num_injs_per_redshift_bin, task_id=None):
+    """returns the file name for the injection data, can also add a task_id"""
+    file_name = f"injections_SCI-CASE_{science_case}_NUM-INJS-PER-ZBIN_{num_injs_per_redshift_bin}.npy"
+    if task_id is not None:
+        file_name = file_name.replace(".npy", f"_TASK_{task_id}.npy")
+    return file_name
+
+
 def filter_bool_for_injection(inj, redshifted, coeff_fisco, science_case, debug=False):
     """for a given injection, filter it out if (1) the masses are negative or (2) the fISCOobs is too low, print the reason. This is a little pointless because the network specific filtering still remains to be done for fISCOobs"""
     varied_keys = [
@@ -102,7 +110,7 @@ def generate_injections(
             f"dropped {(inj_data_len_0 - len(inj_data))/inj_data_len_0:.2%} of injections for {science_case}"
         )
 
-    inj_file_name = f"injections_SCI-CASE_{science_case}_NUM-INJS-PER-ZBIN_{num_injs_per_redshift_bin}.npy"
+    inj_file_name = injection_file_name(science_case, num_injs_per_redshift_bin)
     np.save(inj_data_path + inj_file_name, inj_data)
 
 
@@ -164,6 +172,12 @@ def chop_injections_data_for_processing(
     tasks_per_sc = job_array_size // num_science_cases
     for j, file in enumerate(files):
         # absolute path included
+        science_case, num_injs_per_redshift_bin = (
+            file.replace("_NUM-INJS-PER-ZBIN_", "_SCI-CASE_")
+            .replace(".npy", "_SCI-CASE_")
+            .split("_SCI-CASE_")[1:3]
+        )
+        num_injs_per_redshift_bin = int(num_injs_per_redshift_bin)
         inj_data = np.load(file)
         injs_per_task = len(inj_data) // tasks_per_sc
         chop_inds = [
@@ -172,7 +186,10 @@ def chop_injections_data_for_processing(
         # extend last task to cover any remainder after // above
         chop_inds[-1] = (chop_inds[-1][0], -1)
         for i in range(tasks_per_sc):
-            task_file_name = file.replace(".npy", f"_TASK_{j*tasks_per_sc + i + 1}.npy")
+            task_id = j * tasks_per_sc + i + 1
+            task_file_name = injection_file_name(
+                science_case, num_injs_per_redshift_bin, task_id=task_id
+            )
             np.save(task_file_name, inj_data[chop_inds[i][0] : chop_inds[i][1]])
 
 

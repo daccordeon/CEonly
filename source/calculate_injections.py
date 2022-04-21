@@ -133,8 +133,10 @@ def save_benchmark_from_generated_injections(
         # if BBH, then discard the injection by returning NaNs if fmax < 12 Hz (7 Hz) for aLIGO or V+ (everything else)
         if net.science_case == "BBH":
             if aLIGO_or_Vplus_used and (fmax < 12):
+                #                 print(f'injection rejected for fmax: {fmax}')
                 return output_if_injection_fails
             elif (not aLIGO_or_Vplus_used) and (fmax < 7):
+                #                 print(f'injection rejected for fmax: {fmax}')
                 return output_if_injection_fails
         # df linearly transitions from 1/16 Hz (fine from B&S2022) to 10 Hz (coarse to save computation time)
         df = (fmax - fmax_bounds[0]) / (fmax_bounds[1] - fmax_bounds[0]) * 10 + (
@@ -196,6 +198,7 @@ def save_benchmark_from_generated_injections(
                 net_copy.errs["sky_area_90"],
             )
         else:
+            #             print('debug 2: ill-conditioned FIM')
             return output_if_injection_fails
 
     # to debug the m1 not positive error, run benchmarking on an example manually set injection that caused the error
@@ -267,6 +270,7 @@ def save_benchmark_from_generated_injections(
         )
     )
     # filter out NaNs
+    #     print(f'debug 1: {results.shape}')
     results = without_rows_w_nan(results)
     if len(results) == 0:
         raise ValueError(

@@ -43,7 +43,7 @@ def add_measurement_errs_CDFs_to_axs(
     # re-order results columns and transpose: [snr, sky-area, err_logMc, err_eta, err_logDL, err_iota]
     results_reordered = resampled_results.transpose()[(1, 6, 2, 4, 3, 5), :]
     snr = results_reordered[0]
-    different_linestyle = '--' if linestyle != '--' else '-'
+    different_linestyle = "--" if linestyle != "--" else "-"
 
     for i, data in enumerate(results_reordered):
         # using low SNR threshold as cut-off for all non-SNR quantities, this might leave few sources remaining (e.g. for HLVKI+)
@@ -55,8 +55,12 @@ def add_measurement_errs_CDFs_to_axs(
             data_mid = data[snr > SNR_THRESHOLD_MID]
             data_hi = data[snr > SNR_THRESHOLD_HI]
             if debug and (i == 1):
-                print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
-                print(f'number of sources with SNR > {SNR_THRESHOLD_MID}: {len(data_mid)} which is {len(data_mid)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
+                print(
+                    f"number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}"
+                )
+                print(
+                    f"number of sources with SNR > {SNR_THRESHOLD_MID}: {len(data_mid)} which is {len(data_mid)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}"
+                )
             if len(data_mid) == 0:
                 data_mid_empty = True
             if len(data_hi) == 0:
@@ -68,7 +72,9 @@ def add_measurement_errs_CDFs_to_axs(
             else:
                 data_lo = data[snr > SNR_THRESHOLD_LO]
                 if debug and (i == 1):
-                    print(f'number of sources with SNR > {SNR_THRESHOLD_LO}: {len(data_lo)} which is {len(data_lo)/len(data):.1%} of all injections, for {label}')
+                    print(
+                        f"number of sources with SNR > {SNR_THRESHOLD_LO}: {len(data_lo)} which is {len(data_lo)/len(data):.1%} of all injections, for {label}"
+                    )
             data_mid_empty = True
             data_hi_empty = True
 
@@ -250,7 +256,7 @@ def collate_measurement_errs_CDFs_of_networks(
             linestyle = None
 
         if debug and (i == 0):
-            print('- - -\n', plot_label)
+            print("- - -\n", plot_label)
         add_measurement_errs_CDFs_to_axs(
             axs,
             resampled_results,
