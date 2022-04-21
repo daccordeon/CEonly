@@ -89,13 +89,14 @@ def basic_network_benchmarking(
     with entry_class():
         # compute the WF polarizations and their derivatives
         # net.calc_wf_polarizations() # automatically done by calc_wf_polarizations_derivs_...
-        if numerical_over_symbolic_derivs:
-            # --- numerical differentiation ---
-            net.calc_wf_polarizations_derivs_num(**numerical_deriv_settings)
-        else:
-            # --- symbolic differentiation ---
-            net.load_wf_polarizations_derivs_sym()
-            net.calc_wf_polarizations_derivs_sym()
+        # Ssohrab says that this is not required if det response derivs are taken
+#         if numerical_over_symbolic_derivs:
+#             # --- numerical differentiation ---
+#             net.calc_wf_polarizations_derivs_num(**numerical_deriv_settings)
+#         else:
+#             # --- symbolic differentiation ---
+#             net.load_wf_polarizations_derivs_sym()
+#             net.calc_wf_polarizations_derivs_sym()
 
         # setup antenna patterns, location phase factors, and PSDs
         net.setup_ant_pat_lpf_psds()

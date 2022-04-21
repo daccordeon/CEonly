@@ -5,16 +5,16 @@
 #SBATCH --error=stderr_job_run_all_injections_at_scale.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=08:00:00 # HH:MM:SS
-#SBATCH --mem-per-cpu=200 # MB, determined from mprof (175 MB, 50 min for BNS, 7 hr for BBH)
+#SBATCH --time=80:00:00 # HH:MM:SS, 8 hr
+#SBATCH --mem-per-cpu=500 # MB, determined from mprof (175 MB, 50 min for BNS, 7 hr for BBH), 200 mb
 #
 #SBATCH --array=1-2040 # number of independent jobs, 34 networks, 2 science cases, some number of tasks each set below, watch out for MaxArraySize=2048 and the maximum concurrent jobs of 1000 in /apps/slurm/etc/slurm.config
 
 # tasks should go: net1-BNS, net1-BNS, net1-BBH, net1-BBH, net2-BNS, ...
 # use task index to select a network and a science case (the latter of which uniquely determines a waveform)
-NUM_TASKS_PER_NETWORK_SC_WF=30 # need to manually update number of tasks in array, to-do: automate this
+NUM_TASKS_PER_NETWORK_SC_WF=30 # 30 need to manually update number of tasks in array, to-do: automate this
 SCIENCE_CASES=('BNS' 'BBH')
-NUM_INJS_PER_ZBIN_PER_TASK_LIST=(1000 1000) 
+NUM_INJS_PER_ZBIN_PER_TASK_LIST=(9000 9000) 
 
 NUM_NETWORKS=34
 NUM_SCS=${#SCIENCE_CASES[*]} # length of SCIENCE_CASES

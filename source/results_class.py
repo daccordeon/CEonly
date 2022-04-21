@@ -161,12 +161,16 @@ class InjectionResults(object):
         else:
             raise ValueError("Science case not recognised.")
 
-        def det_rate_limit(self, z0):
+        def det_rate_limit(z0):
             return detection_rate_limit(merger_rate, z0)
 
-        def det_rate(self, z0, snr_threshold):
+        def det_rate(z0, snr_threshold):
             return detection_rate(merger_rate, det_eff, z0, snr_threshold)
 
+        # to-do: do this using global?
+        self.det_rate_limit = det_rate_limit
+        self.det_rate = det_rate
+        
     def plot_detection_rate(
         self, show_fig=True, print_progress=True, parallel=True, recursed=False
     ):
@@ -307,7 +311,6 @@ class InjectionResults(object):
     def print_results(self):
         """prints out summary of results
         to-do: summarise results, currently just prints column headings and results"""
-        print(
-            r"seven (7) columns: redshift $z$, integrated SNR $\rho$, measurement errors *(fractional chirp mass $\log{\mathcal{M}_c}$, fractional luminosity distance $\log{D_L}$, symmetric mass ratio $\eta$, inclination angle $\iota$), 90%-credible sky area $\Omega_{90}$",
-            self.results,
-        )
+        print(r"results.results contains seven (7) columns: redshift $z$, integrated SNR $\rho$, measurement errors *(fractional chirp mass $\log{\mathcal{M}_c}$, fractional luminosity distance $\log{D_L}$, symmetric mass ratio $\eta$, inclination angle $\iota$), 90%-credible sky area $\Omega_{90}$")
+        for attribute, value in vars(self).items():
+            print(f"{attribute}: {value}")

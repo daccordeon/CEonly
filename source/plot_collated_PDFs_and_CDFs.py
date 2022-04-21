@@ -3,6 +3,7 @@ from results_class import InjectionResults
 from constants import (
     SNR_THRESHOLD_LO,
     SNR_THRESHOLD_HI,
+    SNR_THRESHOLD_MID,
     TOTAL_SKY_AREA_SQR_DEG,
     EM_FOLLOWUP_SKY_AREA_SQR_DEG,
 )
@@ -35,31 +36,47 @@ def add_measurement_errs_CDFs_to_axs(
     normalise_count=True,
     threshold_by_SNR=True,
     contour=True,
+    debug=False,
 ):
     """takes array of results from file cosmologically re-sampled, add PDFs wrt dlog(x) and CDFs on log-log scale to axs.
     the bool contour controls whether to display contours on the CDFs between SNR > 100 (detected well) and SNR > 10 (detected) curves"""
     # re-order results columns and transpose: [snr, sky-area, err_logMc, err_eta, err_logDL, err_iota]
     results_reordered = resampled_results.transpose()[(1, 6, 2, 4, 3, 5), :]
     snr = results_reordered[0]
+    different_linestyle = '--' if linestyle != '--' else '-'
 
     for i, data in enumerate(results_reordered):
         # using low SNR threshold as cut-off for all non-SNR quantities, this might leave few sources remaining (e.g. for HLVKI+)
-        # to-do: rewrite lo and hi to reduce repetition
+        # to-do: rewrite lo, mid, and hi to reduce repetition
+        data_mid_empty = False
         data_hi_empty = False
-        if threshold_by_SNR and (i != 0):
+        if threshold_by_SNR and (i != 0) and contour:
             data_lo = data[snr > SNR_THRESHOLD_LO]
+            data_mid = data[snr > SNR_THRESHOLD_MID]
             data_hi = data[snr > SNR_THRESHOLD_HI]
-            #             if i == 1: print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
+            if debug and (i == 1):
+                print(f'number of sources with SNR > {SNR_THRESHOLD_HI}: {len(data_hi)} which is {len(data_hi)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
+                print(f'number of sources with SNR > {SNR_THRESHOLD_MID}: {len(data_mid)} which is {len(data_mid)/len(data_lo):.1%} of those with SNR > {SNR_THRESHOLD_LO}, for {label}')
+            if len(data_mid) == 0:
+                data_mid_empty = True
             if len(data_hi) == 0:
                 data_hi_empty = True
-        if (not (threshold_by_SNR and (i != 0))) or (not contour):
-            # to avoid errors by sorting data in place and then filtering by the snr array determined pre-sort
-            data_lo = deepcopy(data)
+        else:
+            # deepcopy to avoid errors by sorting data in place and then filtering by the snr array determined pre-sort, redundant without sorting in place
+            if i == 0 or not threshold_by_SNR:
+                data_lo = deepcopy(data)
+            else:
+                data_lo = data[snr > SNR_THRESHOLD_LO]
+                if debug and (i == 1):
+                    print(f'number of sources with SNR > {SNR_THRESHOLD_LO}: {len(data_lo)} which is {len(data_lo)/len(data):.1%} of all injections, for {label}')
+            data_mid_empty = True
             data_hi_empty = True
 
-        data_lo.sort()
+        # don't sort in place, e.g. data_lo.sort(), since it can re-order data itself if data_lo was the whole column
+        data_lo = np.sort(data_lo)
+        # to-do: update bins in clever way to be consistent between all present (note that data_hi not empty implies the same about data_mid), if rewriting code to work with lo, mid, and hi then I may as well write it to be general between any list of snr thresholds to be able to change between different densities of plots
         if not data_hi_empty:
-            data_hi.sort()
+            data_hi = np.sort(data_hi)
             log_bins = np.geomspace(
                 min(data_lo.min(), data_hi.min()),
                 max(data_lo.max(), data_hi.max()),
@@ -165,6 +182,7 @@ def collate_measurement_errs_CDFs_of_networks(
     linestyles_from_BS2022=False,
     contour=False,
     parallel=False,
+    debug=False,
 ):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
     found_files = find_files_given_networks(
@@ -192,7 +210,7 @@ def collate_measurement_errs_CDFs_of_networks(
         6,
         sharex="col",
         sharey="row",
-        figsize=(20, 3.75),
+        figsize=(26, 4.875),
         gridspec_kw=dict(wspace=0.05, hspace=0.15),
     )
 
@@ -202,7 +220,7 @@ def collate_measurement_errs_CDFs_of_networks(
         # redshift (z), integrated SNR (rho), measurement errors (logMc, logDL, eta, iota), 90% credible sky area
         # errs: fractional chirp mass, fractional luminosity distance, symmetric mass ratio, inclination angle
         results = InjectionResults(file, data_path=data_path)
-        # re-sampling uniform results using a cosmological model
+        # re-sampling uniform results using a cosmological model, defaults to using a 10-year observation time
         resampled_results = resample_redshift_cosmologically_from_results(
             results, parallel=parallel
         )
@@ -231,6 +249,8 @@ def collate_measurement_errs_CDFs_of_networks(
         else:
             linestyle = None
 
+        if debug and (i == 0):
+            print('- - -\n', plot_label)
         add_measurement_errs_CDFs_to_axs(
             axs,
             resampled_results,
@@ -241,6 +261,7 @@ def collate_measurement_errs_CDFs_of_networks(
             normalise_count=normalise_count,
             threshold_by_SNR=threshold_by_SNR,
             contour=contour,
+            debug=debug,
         )
 
     quantity_short_labels = (
@@ -354,6 +375,7 @@ def collate_measurement_errs_CDFs_of_networks(
     for ax in axs[0]:
         force_log_grid(ax, log_axis="x")
     for ax in axs[1]:
+        ax.yaxis.set_tick_params(labelsize=10)
         force_log_grid(ax, log_axis="both")
 
     if save_fig:

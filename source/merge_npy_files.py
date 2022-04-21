@@ -2,7 +2,7 @@
 """James Gardner, March 2022"""
 import numpy as np
 import glob
-import os
+import os, sys
 
 
 def file_tag_from_task_file(file):
@@ -71,4 +71,9 @@ def merge_all_task_npy_files(
 
 
 if __name__ == "__main__":
-    merge_all_task_npy_files(delete_input_files=True)
+    # to-do: add progress bar, parallelise merging
+    if len(sys.argv[1:]) == 1:
+        delete_input_files = int(sys.argv[1])
+    else:
+        delete_input_files = 1
+    merge_all_task_npy_files(delete_input_files=delete_input_files)

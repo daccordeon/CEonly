@@ -7,6 +7,7 @@ from filename_search_and_manipulation import (
     net_label_styler,
     net_label_to_network_spec,
     network_spec_to_net_label,
+    filename_to_netspec_sc_wf_injs,
     file_name_to_multiline_readable,
     find_files_given_networks,
 )
@@ -94,6 +95,7 @@ def compare_detection_rate_of_networks_from_saved_results(
     print_progress=True,
     data_path="/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/",
     parallel=True,
+    debug=False,
 ):
     """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
     even if the absolute detection rate is wildly (1e9) off
@@ -176,6 +178,8 @@ def compare_detection_rate_of_networks_from_saved_results(
         else:
             colour = None
 
+        if debug:
+            print('- - -\n', plot_label)
         collate_eff_detrate_vs_redshift(
             axs,
             results,

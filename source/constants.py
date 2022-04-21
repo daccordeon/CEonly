@@ -2,7 +2,9 @@
 from numpy import pi as PI
 
 # low (for detection) and high (for high fidelity) SNR thresholds
+# middle threshold to better show contour between lo and hi, to-do: relate this to literature?
 SNR_THRESHOLD_LO = 10
+SNR_THRESHOLD_MID = 30
 SNR_THRESHOLD_HI = 100
 
 # merger rates from Section IV-A in https://arxiv.org/abs/2111.03634v2.pdf
