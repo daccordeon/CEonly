@@ -6,7 +6,7 @@
 #
 #SBATCH --ntasks=1
 #SBATCH --time=08:00:00 # HH:MM:SS
-#SBATCH --mem-per-cpu=500 # MB, determined from mprof
+#SBATCH --mem-per-cpu=200 # MB, determined from mprof
 #
 #SBATCH --array=1-2048 
 

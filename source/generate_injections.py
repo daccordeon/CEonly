@@ -2,9 +2,20 @@
 generates injection data to later be piped to a results function, saves as .npy
 based on old calculate_injections.py"""
 from gwbench import injections
-from gwbench.basic_relations import f_isco_Msolar, m1_m2_of_Mc_eta
+from gwbench.basic_relations import f_isco_Msolar, m1_m2_of_Mc_eta, M_of_Mc_eta
 import numpy as np
 import glob
+
+
+def fisco_obs_from_Mc_eta(Mc, eta, redshifted=True, z=None):
+    """fisco_obs = (6**1.5*PI*(1+z)*Mtot_source)**-1 # with the mass redshifted by (1+z) in the observer frame, missing some number of Msun, c=1, G=1 factors"""
+    Mtot = M_of_Mc_eta(Mc, eta)  # Mc / eta**0.6
+    if redshifted:
+        return f_isco_Msolar(Mtot)
+    else:
+        if z is None:
+            raise ValueError("redshifted is False, provide z value to redshift now")
+        return f_isco_Msolar((1.0 + z) * Mtot)
 
 
 def injection_file_name(science_case, num_injs_per_redshift_bin, task_id=None):
@@ -15,7 +26,9 @@ def injection_file_name(science_case, num_injs_per_redshift_bin, task_id=None):
     return file_name
 
 
-def filter_bool_for_injection(inj, redshifted, coeff_fisco, science_case, debug=False):
+def filter_bool_for_injection(
+    inj, redshifted, coeff_fisco, science_case, debug=False, aLIGO_or_Vplus_used=False
+):
     """for a given injection, filter it out if (1) the masses are negative or (2) the fISCOobs is too low, print the reason. This is a little pointless because the network specific filtering still remains to be done for fISCOobs"""
     varied_keys = [
         "Mc",
@@ -34,7 +47,7 @@ def filter_bool_for_injection(inj, redshifted, coeff_fisco, science_case, debug=
         "z",
     ]
     varied_params = dict(zip(varied_keys, inj))
-    Mc, eta = varied_params["Mc"], varied_params["eta"]
+    Mc, eta, z = varied_params["Mc"], varied_params["eta"], varied_params["z"]
     # m1 and m2 are redshifted if Mc already has been. This error message is never seen, is just here for a legacy sanity check
     m1, m2 = m1_m2_of_Mc_eta(Mc, eta)
     if (m1 <= 0) or (m2 <= 0) or (Mc <= 0) or (eta > 0.25):
@@ -44,20 +57,16 @@ def filter_bool_for_injection(inj, redshifted, coeff_fisco, science_case, debug=
             )
         return False
 
-    Mtot = Mc / eta**0.6
-    # fisco_obs = (6**1.5*PI*(1+z)*Mtot_source)**-1 # with the mass redshifted by (1+z) in the observer frame, missing some number of Msun, c=1, G=1 factors
-    if redshifted:
-        # 4.4/Mtot*1e3 # Hz # from https://arxiv.org/pdf/2011.05145.pdf
-        fisco_obs = f_isco_Msolar(Mtot)
-    else:
-        fisco_obs = f_isco_Msolar((1.0 + z) * Mtot)
+    fisco_obs = fisco_obs_from_Mc_eta(Mc, eta, redshifted=redshifted, z=z)
     # chosing fmax in 11 <= coeff_fisco*fisco <= 1024, truncating to boundary values, NB: B&S2022 doesn't include the lower bound which must be included to avoid an IndexError with the automatically truncated fmin from the V+ and aLIGO curves stored in gwbench that start at 10 Hz, this can occur for Mtot > 3520 Msun with massive BBH mergers although those masses are at least an order of magnitude beyond any observed so far
     fmax = coeff_fisco * fisco_obs
     # if BBH, then discard the injection by returning NaNs if fmax < 12 Hz (7 Hz) for aLIGO or V+ (everything else)
-    if (science_case == "BBH") and (fmax < 7):
+    if (science_case == "BBH") and (
+        (fmax < 7) or (aLIGO_or_Vplus_used and (fmax < 12))
+    ):
         if debug:
             print(
-                f"rejecting BBH injection for high redshifted masses: {fmax, Mtot, redshifted}"
+                f"rejecting BBH injection for high redshifted masses: {fmax, fisco_obs, redshifted}"
             )
         return False
     return True
