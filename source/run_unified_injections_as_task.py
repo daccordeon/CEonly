@@ -55,6 +55,7 @@ def settings_from_task_id(
 # --- user inputs
 task_id = int(sys.argv[1])
 # ignore single detector network that is ill-conditioned (sky localisation really poor?) for BNS
+# to-do: update mprof if more networks used
 # network_specs = [net_spec for net_spec in NET_LIST if net_spec != ['CE2-40-CBO_C']]
 network_specs = BS2022_SIX["nets"]
 # 1464 is the maximum injs_per_task except for the last task, how many of those (counting from the start of the file) do we use?
@@ -66,15 +67,14 @@ debug = False
 results_file_name = f"SLURM_TASK_{task_id}"
 injection_file_name, wf_dict, num_injs_per_redshift_bin = settings_from_task_id(task_id)
 misc_settings_dict = dict(use_rot=1, only_net=1, redshifted=1, num_cores=None)
-unique_locs = list(
-    set(
-        [
-            det_spec.split("_")[-1]
-            for network_spec in network_specs
-            for det_spec in network_spec
-        ]
-    )
+tecs, locs = zip(
+    *[
+        det_spec.split("_")
+        for network_spec in network_specs
+        for det_spec in network_spec
+    ]
 )
+unique_tecs, unique_locs = list(set(tecs)), list(set(locs))
 
 # sym_derivs = numerical_over_symbolic_derivs
 deriv_dict = dict(
@@ -85,6 +85,7 @@ deriv_dict = dict(
         "DL",
         "lam_t",
     ),  # no error if lam_t not present since gwbench uses ``key in conv_log:''
+    unique_tecs=unique_tecs,
     unique_locs=unique_locs,
 )
 deriv_dict["numerical_over_symbolic_derivs"] = wf_dict["numerical_over_symbolic_derivs"]

@@ -52,8 +52,9 @@ def multi_network_results_for_injection(
     z = varied_params.pop("z")
     inj_params = dict(**base_params, **varied_params)
 
-    aLIGO_or_Vplus_used = ("aLIGO" in deriv_dict["unique_locs"]) or (
-        "V+" in deriv_dict["unique_locs"]
+    # subtlety, if V+ (or aLIGO) is present in any network, then f is truncated for V+ for all networks (since f is shared below). to-do: figure out how common this is
+    aLIGO_or_Vplus_used = ("aLIGO" in deriv_dict["unique_tecs"]) or (
+        "V+" in deriv_dict["unique_tecs"]
     )
     if not filter_bool_for_injection(
         inj,

@@ -25,3 +25,4 @@ boris_guide_to_jupyter.txt
 source/job_run_injections.sh
 source/mprof_run_injections.sh
 source/run_injections.py
+source/old_code/merger_rates_for_mallika.py

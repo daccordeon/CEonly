@@ -5,8 +5,8 @@
 #SBATCH --error=stderr_job_unified_injections_all_networks.txt
 #
 #SBATCH --ntasks=1
-#SBATCH --time=08:00:00 # HH:MM:SS
-#SBATCH --mem-per-cpu=200 # MB, determined from mprof
+#SBATCH --time=04:00:00 # HH:MM:SS
+#SBATCH --mem-per-cpu=250 # MB, determined from mprof (3.5 hr, 160 MB is likely enough)
 #
 #SBATCH --array=1-2048 
 
