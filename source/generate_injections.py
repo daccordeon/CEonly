@@ -20,7 +20,7 @@ def fisco_obs_from_Mc_eta(Mc, eta, redshifted=True, z=None):
 
 def injection_file_name(science_case, num_injs_per_redshift_bin, task_id=None):
     """returns the file name for the injection data, can also add a task_id"""
-    file_name = f"injections_SCI-CASE_{science_case}_NUM-INJS-PER-ZBIN_{num_injs_per_redshift_bin}.npy"
+    file_name = f"injections_SCI-CASE_{science_case}_INJS-PER-ZBIN_{num_injs_per_redshift_bin}.npy"
     if task_id is not None:
         file_name = file_name.replace(".npy", f"_TASK_{task_id}.npy")
     return file_name
@@ -182,7 +182,7 @@ def chop_injections_data_for_processing(
     for j, file in enumerate(files):
         # absolute path included
         science_case, num_injs_per_redshift_bin = (
-            file.replace("_NUM-INJS-PER-ZBIN_", "_SCI-CASE_")
+            file.replace("_INJS-PER-ZBIN_", "_SCI-CASE_")
             .replace(".npy", "_SCI-CASE_")
             .split("_SCI-CASE_")[1:3]
         )

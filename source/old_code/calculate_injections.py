@@ -8,6 +8,7 @@ from useful_functions import (
 )
 from network_subclass import NetworkExtended
 from results_class import InjectionResults
+from generate_symbolic_derivatives import generate_symbolic_derivatives
 
 import numpy as np
 from gwbench import injections

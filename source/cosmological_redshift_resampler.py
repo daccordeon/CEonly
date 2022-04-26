@@ -21,6 +21,7 @@ def cosmological_redshift_sample(
     norm_tag="GWTC3",
     observation_time_in_years=10,
     parallel=True,
+    seed=None,
 ):
     """return the redshift sub-bins with index i and count n_i of the mergers within determined cosmologically in the observers frame.
     merger rate (R(z) in B&S2022) is in [count]/yr/[redshift] so multiply by the number of years and integrate against z to get the actual count.
@@ -66,7 +67,7 @@ def cosmological_redshift_sample(
     # "the desired [total, cosmological] number" of mergers over 10 years, integrating the merger rate in the *source* frame over the redshift range
     num_draws = int(observation_time_in_years * quad(merger_rate, zmin, zmax)[0])
     drawn_indicies = rv_discrete(
-        values=(range(num_subzbin), subzbin_weighted_probs)
+        values=(range(num_subzbin), subzbin_weighted_probs), seed=seed
     ).rvs(size=num_draws)
     # n_i in B&S2022: sample i with probability p_i "up to the desired [total, cosmological] number" of mergers over 10 years
     subzbin_num_samples = np.array(

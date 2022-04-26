@@ -136,14 +136,20 @@ def multi_network_results_for_injection(
             net.calc_sky_area_90(only_net=misc_settings_dict["only_net"])
 
             # to-do: if using gwbench 0.7, still introduce a limit on net.cond_num based on machine precision errors that mpmath is blind to
+            # if the FIM is zero, then the condition number is NaN and matrix is ill-conditioned (according to gwbench). to-do: try catching this by converting warnings to errors following <https://stackoverflow.com/questions/5644836/in-python-how-does-one-catch-warnings-as-if-they-were-exceptions#30368735> --> 54 and 154 converged in a second run
             if not net.wc_fisher:
+                # unified injection rejection so that cosmological resampling can be uniform across networks, this now means that the number of injections is equal to that of the weakest network in the set but leads to a better comparison
                 if debug:
                     print(
-                        f"Rejected injection for {network_spec} (but not whole multi network) because of ill-conditioned FIM"
+                        f"Rejected injection for {network_spec} and, therefore, all networks in the multi-network because of ill-conditioned FIM ({net.fisher}) with condition number ({net.cond_num}) greater than 1e15"
                     )
-                multi_network_results_dict[repr(network_spec)] = tuple(
-                    np.nan for _ in range(7)
+                return dict(
+                    (repr(network_spec_2), tuple(np.nan for _ in range(7)))
+                    for network_spec_2 in network_specs
                 )
+            #                 multi_network_results_dict[repr(network_spec)] = tuple(
+            #                     np.nan for _ in range(7)
+            #                 )
             else:
                 # convert sigma_cos(iota) into sigma_iota
                 abs_err_iota = abs(net.errs["cos_iota"] / np.sin(inj_params["iota"]))
@@ -164,6 +170,7 @@ def multi_network_results_for_injections_file(
     results_file_name,
     network_specs,
     injections_file,
+    num_injs_per_redshift_bin,
     process_injs_per_task,
     base_params,
     wf_dict,
@@ -188,11 +195,11 @@ def multi_network_results_for_injections_file(
             wf_dict["science_case"],
             wf_dict["wf_model_name"],
             wf_dict["wf_other_var_dic"],
-            process_injs_per_task,
+            num_injs_per_redshift_bin,
             file_name=results_file_name,
             data_path=data_path,
         )
-        # includes path
+        # includes path, injs-per-zbin is num_injs_per_redshift_bin input to generate_injections (e.g. will be 250k)
         results_file_name_list.append(net.file_name_with_path)
         if net.results_file_exists:
             raise Exception("Some results file/s already exist, aborting process.")
@@ -223,6 +230,11 @@ def multi_network_results_for_injections_file(
         )
         results = without_rows_w_nan(results)
         if len(results) == 0:
-            print(network_spec, multi_network_results_dict_list)
-            raise ValueError("All calculated values are NaN.")
+            print(
+                "All calculated values are NaN (might not be this network's fault however). Saving empty array with shape=(0, 7).",
+                results_file_name_list[i],
+                multi_network_results_dict_list,
+            )
+            # now just saving an empty array if all results are NaN, some saved injs have high losses, one could have all failures
+        #             raise ValueError("All calculated values are NaN.")
         np.save(results_file_name_list[i], results)

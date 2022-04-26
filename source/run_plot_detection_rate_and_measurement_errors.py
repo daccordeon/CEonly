@@ -13,8 +13,11 @@ from warnings import filterwarnings
 
 filterwarnings("ignore")
 
-# netDict1-sc1-plot1, netDict1-sc1-plot2, netDict1-sc2-plot1, netDict1-sc2-plot2, netDict2...
+# --- user input
 task_id = int(sys.argv[1])
+seed = 12345
+# ---
+# netDict1-sc1-plot1, netDict1-sc1-plot2, netDict1-sc2-plot1, netDict1-sc2-plot2, netDict2...
 net_dict = NET_DICT_LIST[(task_id - 1) // 4]
 science_case = ("BNS", "BBH")[((task_id - 1) // 2) % 2]
 plot_index = (task_id - 1) % 2
@@ -62,45 +65,36 @@ elif plot_index == 1:
     # --- measurement errors plot ---
     # compare to Fig 3 and 4 in B&S 2022
     # normalises CDF to dlog(value) and thresholds by low SNR level (defaults to 10)
-    ymin_CDF = 1e-4
-    if net_dict == BS2022_SIX:
-        linestyles_from_BS2022 = True
-        # additionally, for more direct comparison, use B&S2022's xlim_list which is a hard coded option in plot_collated_PDFs_and_CDFs.py
-        collate_measurement_errs_CDFs_of_networks(
-            network_set,
-            science_case,
-            plot_label=plot_label + "_XLIMS_preset",
-            plot_title=plot_title + ", XLIMS: preset to B&S2022",
-            full_legend=False,
-            print_progress=False,
-            show_fig=False,
-            normalise_count=True,
-            xlim_list="B&S2022",
-            threshold_by_SNR=True,
-            CDFmin=ymin_CDF,
-            data_path=data_path,
-            num_bins=40,
-            linestyles_from_BS2022=linestyles_from_BS2022,
-            contour=False,
-            parallel=False,
-        )
-    else:
-        linestyles_from_BS2022 = False
-    collate_measurement_errs_CDFs_of_networks(
-        network_set,
-        science_case,
-        plot_label=plot_label,
-        plot_title=plot_title,
+    args = network_set, science_case
+    kwargs = dict(
         full_legend=False,
         print_progress=False,
         show_fig=False,
         normalise_count=True,
-        xlim_list=None,
         threshold_by_SNR=True,
-        CDFmin=ymin_CDF,
+        CDFmin=1e-4,
         data_path=data_path,
         num_bins=40,
-        linestyles_from_BS2022=linestyles_from_BS2022,
         contour=False,
         parallel=False,
+        seed=seed,
     )
+    if net_dict == BS2022_SIX:
+        # additionally, for more direct comparison, use B&S2022's xlim_list which is a hard coded option in plot_collated_PDFs_and_CDFs.py
+        collate_measurement_errs_CDFs_of_networks(
+            *args,
+            plot_label=plot_label + "_XLIMS_preset",
+            plot_title=plot_title + ", XLIMS: preset to B&S2022",
+            xlim_list="B&S2022",
+            linestyles_from_BS2022=True,
+            **kwargs,
+        )
+    else:
+        collate_measurement_errs_CDFs_of_networks(
+            *args,
+            plot_label=plot_label,
+            plot_title=plot_title,
+            xlim_list=None,
+            linestyles_from_BS2022=False,
+            **kwargs,
+        )

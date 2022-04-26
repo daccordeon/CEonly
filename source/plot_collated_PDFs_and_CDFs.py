@@ -189,6 +189,7 @@ def collate_measurement_errs_CDFs_of_networks(
     contour=False,
     parallel=False,
     debug=False,
+    seed=None,
 ):
     """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
     found_files = find_files_given_networks(
@@ -227,8 +228,9 @@ def collate_measurement_errs_CDFs_of_networks(
         # errs: fractional chirp mass, fractional luminosity distance, symmetric mass ratio, inclination angle
         results = InjectionResults(file, data_path=data_path)
         # re-sampling uniform results using a cosmological model, defaults to using a 10-year observation time
+        # to-do: unify cosmological resampling between networks when comparing them, requires saving the same injections from benchmarking (i.e. going with the weakest network's rejections)
         resampled_results = resample_redshift_cosmologically_from_results(
-            results, parallel=parallel
+            results, parallel=parallel, seed=seed
         )
 
         if full_legend:

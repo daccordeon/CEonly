@@ -5,15 +5,19 @@ import glob
 import os, sys
 
 
-def file_tag_from_task_file(file):
+def file_tag_from_task_file(file, cut_num_injs=False):
     """returns file_tag from task output filenames, assumes that path is in file name"""
-    return file.replace("_TASK_", "results_").split("results_")[1]
+    file_tag = file.replace("_TASK_", "results_").split("results_")[1]
+    if cut_num_injs:
+        return file_tag.split("_INJS-PER-ZBIN_")[0]
+    else:
+        return file_tag
 
 
 def merge_npy_files(
     output_filename, input_files=None, pattern=None, path="./", delete_input_files=False
 ):
-    """finds all .npy files matching pattern in path, saves a merged .npy at output_filename, or just mergers those given as input_files"""
+    """finds all .npy files matching pattern in path, saves a merged .npy at output_filename, or just merges those given as input_files"""
     # https://stackoverflow.com/questions/44164917/concatenating-numpy-arrays-from-a-directory
     if input_files is None:
         input_files = sorted(
@@ -24,6 +28,7 @@ def merge_npy_files(
         arrays.append(np.load(input_file))
     # try to merge and if fails then don't delete input files
     try:
+        # concatenate works with empty data arrays as long as they have shape=(0, 7) which is the case for without_rows_w_nan
         merged_array = np.concatenate(arrays)
         np.save(path + output_filename, merged_array)
     except:
@@ -49,19 +54,32 @@ def merge_all_task_npy_files(
     # dict(tag1=[net1-task1, net1-task2], tag2=[net2-task1, net2-task2], ...)
     dict_tag_task_files = dict()
     for file in task_files:
-        file_tag = file_tag_from_task_file(file)
+        # remove num_injs from file_tag to capture the last injection task which contains more injections since 1024 doesn't divide the injections remaining after initial filtering
+        file_tag_net_sc_wf = file_tag_from_task_file(file, cut_num_injs=True)
         # if it is not already in the dict, then find all matches and add them
-        if not file_tag in dict_tag_task_files.keys():
-            dict_tag_task_files[file_tag] = [
-                file for file in task_files if file_tag == file_tag_from_task_file(file)
+        if not file_tag_net_sc_wf in dict_tag_task_files.keys():
+            dict_tag_task_files[file_tag_net_sc_wf] = [
+                file
+                for file in task_files
+                if file_tag_net_sc_wf
+                == file_tag_from_task_file(file, cut_num_injs=True)
             ]
 
-    for file_tag, task_files_same_tag in dict_tag_task_files.items():
-        # calculate total number of injections if all injections had well-conditioned FIMs, subtlety that all assumed to have same initial number of injections
-        total_num_injs_per_zbin = len(task_files_same_tag) * int(
-            file_tag.replace("_TASK_", "_INJS-PER-ZBIN_").split("_INJS-PER-ZBIN_")[1]
+    for file_tag_net_sc_wf, task_files_same_tag in dict_tag_task_files.items():
+        # calculate total number of injections if all injections had well-conditioned FIMs, no longer assuming that all have the same initial number of injections. replace '.npy' to deal with non-task files
+        total_num_injs_per_zbin = sum(
+            [
+                int(
+                    file.replace(".npy", "")
+                    .replace("_TASK_", "_INJS-PER-ZBIN_")
+                    .split("_INJS-PER-ZBIN_")[1]
+                )
+                for file in task_files_same_tag
+            ]
         )
-        output_filename = f'results_{file_tag.split("_INJS-PER-ZBIN_")[0]}_INJS-PER-ZBIN_{total_num_injs_per_zbin}.npy'
+        output_filename = (
+            f"results_{file_tag_net_sc_wf}_INJS-PER-ZBIN_{total_num_injs_per_zbin}.npy"
+        )
         merge_npy_files(
             output_filename,
             input_files=task_files_same_tag,

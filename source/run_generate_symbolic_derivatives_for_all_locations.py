@@ -3,7 +3,7 @@
 generate all symbolic derivatives for tf2_tidal at all standard locations ahead of benchmarking
 slurm gets upset when multiple tasks try to create the derivatives if there aren't any there already"""
 
-from basic_benchmarking import *
+from generate_symbolic_derivatives import generate_symbolic_derivatives
 
 if __name__ == "__main__":
     wf_model_name, wf_other_var_dic = "tf2_tidal", None

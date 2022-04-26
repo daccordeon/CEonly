@@ -2,7 +2,7 @@
 called in a job array by a slurm bash script, runs a pre-generated set of injections through a given set of networks using the multi-network feature of gwbench"""
 from calculate_unified_injections import multi_network_results_for_injections_file
 from networks import NET_LIST, BS2022_SIX
-from basic_benchmarking import generate_symbolic_derivatives
+from generate_symbolic_derivatives import generate_symbolic_derivatives
 
 from lal import GreenwichMeanSiderealTime
 import sys
@@ -22,7 +22,7 @@ def settings_from_task_id(
     # includes absolute path
     file = matches[0]
     science_case, num_injs_per_redshift_bin = (
-        file.replace("_NUM-INJS-PER-ZBIN_", "_SCI-CASE_")
+        file.replace("_INJS-PER-ZBIN_", "_SCI-CASE_")
         .replace("_TASK_", "_SCI-CASE_")
         .replace(".npy", "_SCI-CASE_")
         .split("_SCI-CASE_")[1:3]
@@ -54,7 +54,7 @@ def settings_from_task_id(
 
 # --- user inputs
 task_id = int(sys.argv[1])
-# ignore single detector network that is ill-conditioned (sky localisation really poor?) for BNS
+# ignore single detector network that is ill-conditioned (sky localisation really poor?) for BNS --> more relevant now that injections are rejected uniformly
 # to-do: update mprof if more networks used
 # network_specs = [net_spec for net_spec in NET_LIST if net_spec != ['CE2-40-CBO_C']]
 network_specs = BS2022_SIX["nets"]
@@ -120,6 +120,7 @@ if debug:
         results_file_name,
         network_specs,
         injection_file_name,
+        num_injs_per_redshift_bin,
         process_injs_per_task,
         base_params,
         wf_dict,
@@ -131,6 +132,7 @@ multi_network_results_for_injections_file(
     results_file_name,
     network_specs,
     injection_file_name,
+    num_injs_per_redshift_bin,
     process_injs_per_task,
     base_params,
     wf_dict,

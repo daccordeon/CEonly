@@ -24,8 +24,17 @@ class InjectionResults(object):
     def __init__(
         self,
         file_name,
-        data_path="/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/",
+        data_path=None,
     ):
+        if data_path is None:
+            if "/" in file_name:
+                if "/" == file_name[0]:
+                    data_path = ""
+                else:
+                    data_path = "./"
+            else:
+                data_path = "/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/"
+
         self.file_name, self.data_path = file_name, data_path
         self.file_name_with_path = self.data_path + self.file_name
         self.results = np.load(self.file_name_with_path)
@@ -45,6 +54,7 @@ class InjectionResults(object):
             self.wf_other_var_dic,
             self.num_injs,
         ) = filename_to_netspec_sc_wf_injs(self.file_name)
+        self.remaining_num_injs = self.results.shape[0]
         self.label = network_spec_to_net_label(self.network_spec)
         set_file_tags(self)
 

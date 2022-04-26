@@ -4,6 +4,10 @@ from matplotlib.patches import Rectangle
 from constants import *
 
 
+def plt_global_fontsize(fontsize):
+    plt.rcParams.update({"font.size": fontsize})
+
+
 def force_log_grid(
     ax, log_axis="both", color="gainsboro", preserve_tick_labels=True, **kwargs
 ):
