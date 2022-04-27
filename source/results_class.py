@@ -11,6 +11,7 @@ from useful_plotting_functions import force_log_grid
 from network_subclass import set_file_tags
 
 import numpy as np
+import glob
 import matplotlib.pyplot as plt
 from scipy.stats import gmean
 from scipy.optimize import curve_fit
@@ -21,11 +22,7 @@ import matplotlib.lines as mlines
 class InjectionResults(object):
     """class for results processing, besides the results array at results.results has attributes for common things like finding the science case, network_spec, and label. methods for calculating and plotting detection rate."""
 
-    def __init__(
-        self,
-        file_name,
-        data_path=None,
-    ):
+    def __init__(self, file_name, data_path=None, norm_tag="GWTC3"):
         if data_path is None:
             if "/" in file_name:
                 if "/" == file_name[0]:
@@ -57,6 +54,17 @@ class InjectionResults(object):
         self.remaining_num_injs = self.results.shape[0]
         self.label = network_spec_to_net_label(self.network_spec)
         set_file_tags(self)
+        if "_TASK_" in self.file_name:
+            self.task_id = int(
+                self.file_name.replace(".npy", "_TASK_").split("_TASK_")[1]
+            )
+            self.injections_task_file_name = glob.glob(
+                f"/fred/oz209/jgardner/CEonlyPony/source/injections/*TASK_{self.task_id}.npy"
+            )[0]
+            self.initial_task_num_injs = np.load(self.injections_task_file_name).shape[
+                0
+            ]
+        self.norm_tag = norm_tag
 
     def calculate_and_set_detection_rate(self, print_reach=False):
         """calculate detection rate and auxiliary quantities and set as attributes of self (self.zavg_efflo_effhi, self.det_eff_fits, self.det_rate_limit, self.det_rate, self.zmin_plot, self.zmax_plot).
@@ -164,10 +172,11 @@ class InjectionResults(object):
                 if reach == reach_initial_guess:
                     print("! Reach converged to initial guess, examine local slope.")
 
+        normalisations = merger_rate_normalisations_from_gwtc_norm_tag(self.norm_tag)
         if self.science_case == "BNS":
-            merger_rate = merger_rate_bns
+            merger_rate = lambda z: merger_rate_bns(z, normalisation=normalisations[0])
         elif self.science_case == "BBH":
-            merger_rate = merger_rate_bbh
+            merger_rate = lambda z: merger_rate_bbh(z, normalisation=normalisations[1])
         else:
             raise ValueError("Science case not recognised.")
 
@@ -305,6 +314,7 @@ class InjectionResults(object):
             if show_fig:
                 plt.show(fig)
             plt.close(fig)
+        # to-do: figure out a neater way to do this
         except AttributeError:
             if recursed:
                 raise AttributeError(

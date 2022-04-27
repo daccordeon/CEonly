@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=mprof_inj
-#SBATCH --output=stdout_job_memory_profile_all_science-cases_injections.txt
-#SBATCH --error=stderr_job_memory_profile_all_science-cases_injections.txt
+#SBATCH --output=slurm_output_files/stdout_job_memory_profile_all_science-cases_injections_JOB-ID_%A_TASK-ID_%a.txt
+#SBATCH --error=slurm_output_files/stderr_job_memory_profile_all_science-cases_injections_JOB-ID_%A_TASK-ID_%a.txt
 #
 #SBATCH --ntasks=1
 #SBATCH --time=48:00:00 # HH:MM:SS

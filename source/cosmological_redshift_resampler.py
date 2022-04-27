@@ -27,10 +27,7 @@ def cosmological_redshift_sample(
     merger rate (R(z) in B&S2022) is in [count]/yr/[redshift] so multiply by the number of years and integrate against z to get the actual count.
     for 60k injections per large zbin, 150 samples containing ~2400 injections if uniformly sampled (varying due to randomness and linear sampling)
     to compare to Ssohrab's email use zmin, zmax = 1.7e-3, 50 and num_subzbin=N=75."""
-    if norm_tag == "GWTC3":
-        normalisations = (GWTC3_MERGER_RATE_BNS, GWTC3_MERGER_RATE_BBH)
-    elif norm_tag == "GWTC2":
-        normalisations = (GWTC2_MERGER_RATE_BNS, GWTC2_MERGER_RATE_BBH)
+    normalisations = merger_rate_normalisations_from_gwtc_norm_tag(norm_tag)
 
     subzbin = list(
         zip(

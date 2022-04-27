@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=sstarjobRunAllInjLng # 15 non-whitespace characters long
-#SBATCH --output=stdout_job_run_all_injections_at_scale_on_sstar.txt
-#SBATCH --error=stderr_job_run_all_injections_at_scale_on_sstar.txt
+#SBATCH --output=slurm_output_files/stdout_job_run_all_injections_at_scale_on_sstar_JOB-ID_%A_TASK-ID_%a.txt
+#SBATCH --error=slurm_output_files/stderr_job_run_all_injections_at_scale_on_sstar_JOB-ID_%A_TASK-ID_%a.txt
 #
 #SBATCH --ntasks=1
 #SBATCH --time=24:00:00 # HH:MM:SS, sstar cores are 4/3 times slower than skylake (farnarkle) cores --> 12 hr, extending to 24 after timeouts

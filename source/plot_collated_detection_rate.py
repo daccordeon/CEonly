@@ -96,6 +96,7 @@ def compare_detection_rate_of_networks_from_saved_results(
     data_path="/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/",
     parallel=True,
     debug=False,
+    norm_tag="GWTC3",
 ):
     """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
     even if the absolute detection rate is wildly (1e9) off
@@ -146,7 +147,7 @@ def compare_detection_rate_of_networks_from_saved_results(
 
     colours_used = []
     for i, file in enumerate(found_files):
-        results = InjectionResults(file, data_path=data_path)
+        results = InjectionResults(file, data_path=data_path, norm_tag=norm_tag)
         with HiddenPrints():
             results.calculate_and_set_detection_rate(print_reach=False)
         # to not repeatedly plot merger rate

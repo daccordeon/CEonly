@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=jobUnifiedInjs
-#SBATCH --output=stdout_job_unified_injections_all_networks.txt
-#SBATCH --error=stderr_job_unified_injections_all_networks.txt
+#SBATCH --output=slurm_output_files/stdout_job_unified_injections_all_networks_JOB-ID_%A_TASK-ID_%a.txt
+#SBATCH --error=slurm_output_files/stderr_job_unified_injections_all_networks_JOB-ID_%A_TASK-ID_%a.txt
 #
 #SBATCH --ntasks=1
 #SBATCH --time=04:00:00 # HH:MM:SS

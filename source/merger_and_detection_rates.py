@@ -1,9 +1,25 @@
 """James Gardner, April 2022"""
-from constants import PI, GWTC3_MERGER_RATE_BNS, GWTC3_MERGER_RATE_BBH
+from constants import (
+    PI,
+    GWTC3_MERGER_RATE_BNS,
+    GWTC3_MERGER_RATE_BBH,
+    GWTC2_MERGER_RATE_BNS,
+    GWTC2_MERGER_RATE_BBH,
+)
 
 from scipy.integrate import quad
 from astropy.cosmology import Planck18
 from gwbench import injections
+
+
+def merger_rate_normalisations_from_gwtc_norm_tag(norm_tag="GWTC3"):
+    """returns merger rates (BNS, BBH) normalisation from survey tag"""
+    if norm_tag == "GWTC3":
+        return (GWTC3_MERGER_RATE_BNS, GWTC3_MERGER_RATE_BBH)
+    elif norm_tag == "GWTC2":
+        return (GWTC2_MERGER_RATE_BNS, GWTC2_MERGER_RATE_BBH)
+    else:
+        raise ValueError("Normalisation not recognised.")
 
 
 def differential_comoving_volume(z):

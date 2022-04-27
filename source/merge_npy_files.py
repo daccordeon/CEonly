@@ -67,18 +67,25 @@ def merge_all_task_npy_files(
 
     for file_tag_net_sc_wf, task_files_same_tag in dict_tag_task_files.items():
         # calculate total number of injections if all injections had well-conditioned FIMs, no longer assuming that all have the same initial number of injections. replace '.npy' to deal with non-task files
-        total_num_injs_per_zbin = sum(
-            [
-                int(
-                    file.replace(".npy", "")
-                    .replace("_TASK_", "_INJS-PER-ZBIN_")
-                    .split("_INJS-PER-ZBIN_")[1]
-                )
-                for file in task_files_same_tag
-            ]
+        #         total_num_injs_per_zbin = sum(
+        #             [
+        #                 int(
+        #                     file.replace(".npy", "")
+        #                     .replace("_TASK_", "_INJS-PER-ZBIN_")
+        #                     .split("_INJS-PER-ZBIN_")[1]
+        #                 )
+        #                 for file in task_files_same_tag
+        #             ]
+        #         )
+        # assuming tasks all for the same run of injections
+        input_num_injs = (
+            task_files_same_tag[0]
+            .replace(".npy", "")
+            .replace("_TASK_", "_INJS-PER-ZBIN_")
+            .split("_INJS-PER-ZBIN_")[1]
         )
         output_filename = (
-            f"results_{file_tag_net_sc_wf}_INJS-PER-ZBIN_{total_num_injs_per_zbin}.npy"
+            f"results_{file_tag_net_sc_wf}_INJS-PER-ZBIN_{input_num_injs}.npy"
         )
         merge_npy_files(
             output_filename,
@@ -93,5 +100,5 @@ if __name__ == "__main__":
     if len(sys.argv[1:]) == 1:
         delete_input_files = int(sys.argv[1])
     else:
-        delete_input_files = 1
+        delete_input_files = 0
     merge_all_task_npy_files(delete_input_files=delete_input_files)

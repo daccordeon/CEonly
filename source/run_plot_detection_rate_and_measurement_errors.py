@@ -16,6 +16,7 @@ filterwarnings("ignore")
 # --- user input
 task_id = int(sys.argv[1])
 seed = 12345
+norm_tag = "GWTC2"
 # ---
 # netDict1-sc1-plot1, netDict1-sc1-plot2, netDict1-sc2-plot1, netDict1-sc2-plot2, netDict2...
 net_dict = NET_DICT_LIST[(task_id - 1) // 4]
@@ -60,6 +61,7 @@ if plot_index == 0:
         data_path=data_path,
         print_progress=False,
         parallel=False,
+        norm_tag=norm_tag,
     )
 elif plot_index == 1:
     # --- measurement errors plot ---
@@ -78,6 +80,7 @@ elif plot_index == 1:
         contour=False,
         parallel=False,
         seed=seed,
+        norm_tag=norm_tag,
     )
     if net_dict == BS2022_SIX:
         # additionally, for more direct comparison, use B&S2022's xlim_list which is a hard coded option in plot_collated_PDFs_and_CDFs.py

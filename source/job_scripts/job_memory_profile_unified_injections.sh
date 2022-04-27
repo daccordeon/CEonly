@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=mprofUnifiedInjs
-#SBATCH --output=stdout_job_memory_profile_unified_injections.txt
-#SBATCH --error=stderr_job_memory_profile_unified_injections.txt
+#SBATCH --output=slurm_output_files/stdout_job_memory_profile_unified_injections_JOB-ID_%A_TASK-ID_%a.txt
+#SBATCH --error=slurm_output_files/stderr_job_memory_profile_unified_injections_JOB-ID_%A_TASK-ID_%a.txt
 #
 #SBATCH --ntasks=1
 #SBATCH --time=08:00:00 # HH:MM:SS

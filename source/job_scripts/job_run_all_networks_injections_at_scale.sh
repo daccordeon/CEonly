@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=jobRunAllInjLng # 15 non-whitespace characters long
-#SBATCH --output=stdout_job_run_all_injections_at_scale.txt
-#SBATCH --error=stderr_job_run_all_injections_at_scale.txt
+#SBATCH --output=slurm_output_files/stdout_job_run_all_injections_at_scale_JOB-ID_%A_TASK-ID_%a.txt
+#SBATCH --error=slurm_output_files/stderr_job_run_all_injections_at_scale_JOB-ID_%A_TASK-ID_%a.txt
 #
 #SBATCH --ntasks=1
 #SBATCH --time=80:00:00 # HH:MM:SS, 8 hr

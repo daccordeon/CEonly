@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=plotDRandERRs
-#SBATCH --output=stdout_job_plot_detection_rate_and_measurement_errors.txt
-#SBATCH --error=stderr_job_plot_detection_rate_and_measurement_errors.txt
+#SBATCH --output=slurm_output_files/stdout_job_plot_detection_rate_and_measurement_errors_JOB-ID_%A_TASK-ID_%a.txt
+#SBATCH --error=slurm_output_files/stderr_job_plot_detection_rate_and_measurement_errors_JOB-ID_%A_TASK-ID_%a.txt
 #
 #SBATCH --ntasks=1
 #SBATCH --time=00:05:00 # HH:MM:SS, mprof maximum: 70 s
