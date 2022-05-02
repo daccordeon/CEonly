@@ -1,10 +1,50 @@
-"""James Gardner, April 2022"""
+"""I/O methods to interact with information stored in the filename of data files.
+
+License:
+    BSD 3-Clause License
+
+    Copyright (c) 2022, James Gardner.
+    All rights reserved except for those for the gwbench code which remain reserved
+    by S. Borhanian; the gwbench code is included in this repository for convenience.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+from typing import List, Set, Dict, Tuple, Optional, Union
 import glob
 import numpy as np
 
 
-def net_label_styler(net_label):
-    """styles net_label to make CE unified and ET/Voyager less verbose. assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec"""
+def net_label_styler(net_label: str) -> str:
+    """Returns the stylised net_label to make CE unified and ET/Voyager less verbose.
+
+    Assumes that ET's declared as 'ET_ET1','ET_ET2','ET_ET3' in network_spec.
+
+    Args:
+        net_label: Network label, e.g. 'A+_H..A+_L..V+_V..K+_K..A+_I'.
+    """
     return (
         net_label.replace("CE2", "CE")
         .replace("ET_ET1..ET_ET2..ET_ET3", "ET_E")
@@ -12,8 +52,14 @@ def net_label_styler(net_label):
     )
 
 
-def network_spec_styler(network_spec):
-    """styles repr(network_spec) given network_spec to make CE unified and ET/Voyager less verbose. assumes ET's declared in order"""
+def network_spec_styler(network_spec: List[str]) -> str:
+    """Returns a styled repr(network_spec) to make CE unified and ET/Voyager less verbose.
+
+    Assumes ET's declared in order.
+
+    Args:
+        network_spec: Network specification, e.g. ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'].
+    """
     return (
         repr(network_spec)
         .replace("CE2", "CE")
@@ -22,8 +68,15 @@ def network_spec_styler(network_spec):
     )
 
 
-def net_label_to_network_spec(net_label, styled=False):
-    """converts net_label to network_spec as in gwbench's network.py"""
+def net_label_to_network_spec(
+    net_label: str, styled: bool = False
+) -> Union[List[str], str]:
+    """Returns a converted net_label to network_spec as in gwbench's network.py.
+
+    Args:
+        net_label: Network label.
+        styled: Whether to style and return repr.
+    """
     network_spec = net_label.split("..")
     if styled:
         return network_spec_styler(network_spec)
@@ -31,8 +84,13 @@ def net_label_to_network_spec(net_label, styled=False):
         return network_spec
 
 
-def network_spec_to_net_label(network_spec, styled=False):
-    """converts network_spec to net_label as in gwbench's network.py"""
+def network_spec_to_net_label(network_spec: List[str], styled: bool = False) -> str:
+    """Returns a converted network_spec to net_label as in gwbench's network.py.
+
+    Args:
+        network_spec: Network specification, e.g. ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'].
+        styled: Whether to style.
+    """
     net_label = "..".join(network_spec)
     if styled:
         return net_label_styler(net_label)
@@ -40,8 +98,14 @@ def network_spec_to_net_label(network_spec, styled=False):
         return net_label
 
 
-def filename_to_netspec_sc_wf_injs(filename):
-    """takes a results_*.npy filename without path, returns network_spec, science_case, wf_model_name, wf_other_var_dic['approximant'], num_injs"""
+def filename_to_netspec_sc_wf_injs(
+    filename: str,
+) -> Tuple[List[str], str, str, Dict[str, str], int]:
+    """Returns the network specification, waveform options, and number of injections from a processed results filename.
+
+    Args:
+        filename: A results_*.npy filename without path.
+    """
     if "_TASK_" in filename:
         filename = filename[: filename.find("_TASK_")] + ".npy"
     # [1:-1] to cut out 'results' and '.npy'
@@ -53,7 +117,7 @@ def filename_to_netspec_sc_wf_injs(filename):
         .split("_NET_")[1:-1]
     )
     network_spec = net_label_to_network_spec(net_label)
-    # to-do: update wf_str to more distinctly separate approximant, currently searching for IMR...
+    # TODO: update wf_str to more distinctly separate approximant, currently searching for IMR...
     if "_IMR" in wf_str:
         approximant_index = wf_str.find("_IMR")
         # + 1 to cut out _ before IMR
@@ -66,8 +130,14 @@ def filename_to_netspec_sc_wf_injs(filename):
     return network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs
 
 
-def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
-    """styles file_name to be human readable across multiple lines, e.g. for titling a plot"""
+def file_name_to_multiline_readable(
+    file: str, two_rows_only: bool = False, net_only: bool = False
+) -> str:
+    """Returns a stylised file_name to be human readable across multiple lines, e.g. for titling a plot.
+
+    Args:
+        file: Processed results filename with or without path.
+    """
     # remove path if present
     if "/" in file:
         file = file.split("/")[-1]
@@ -92,14 +162,28 @@ def file_name_to_multiline_readable(file, two_rows_only=False, net_only=False):
 
 
 def find_files_given_networks(
-    network_spec_list,
-    science_case,
-    specific_wf=None,
-    print_progress=True,
-    data_path="/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/",
-    raise_error_if_no_files_found=True,
-):
-    """returns a list of found files that match networks, science case, and specific wf, choosing those files with the greatest num_injs if multiple exist for a given network; returned list of files do not have data_path prepended"""
+    network_spec_list: List[List[str]],
+    science_case: str,
+    specific_wf: Optional[str] = None,
+    print_progress: bool = True,
+    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
+    raise_error_if_no_files_found: bool = True,
+) -> List[str]:
+    """Returns a list of found files that match networks, science case, and specific wf.
+
+    Chooses those files with the greatest num_injs if multiple exist for a given network; returned list of files do not have data_path prepended.
+
+    Args:
+        network_spec_list: Set of networks.
+        science_case: Science case.
+        specific_wf: Specific waveform to match for.
+        print_progress: Whether to print progress.
+        data_path: Processed injections data path.
+        raise_error_if_no_files_found: Whether to raise an error if no matches found.
+
+    Raises:
+        ValueError: If no matches are found.
+    """
     # finding file names
     net_labels = [
         net_label_styler(network_spec_to_net_label(network_spec))

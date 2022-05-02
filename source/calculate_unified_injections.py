@@ -1,6 +1,50 @@
-"""James Gardner, April 2022.
-calculating the same set of injections for a set of networks.
-based on the old calculate_injections and gwbench's multi_network.py example script"""
+"""Calculates the same set of injections for a set of networks.
+
+Based on the old calculate_injections.py and gwbench's multi_network.py example script, this processes the injections (e.g. in raw_injections_data/) in union for each network in a set and saves the results (e.g. in processed_injections_data/). This is faster than the previous implementation if detectors are shared between the networks because the detector responses are only calculated once.
+
+Usage:
+    See the example in run_unified_injections.py.
+
+License:
+    BSD 3-Clause License
+
+    Copyright (c) 2022, James Gardner.
+    All rights reserved except for those for the gwbench code which remain reserved
+    by S. Borhanian; the gwbench code is included in this repository for convenience.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+from typing import List, Set, Dict, Tuple, Optional, Union
+from numpy.typing import NDArray
+import os
+import numpy as np
+
+from gwbench import network
+from gwbench.basic_relations import f_isco_Msolar
+
 from useful_functions import (
     without_rows_w_nan,
     parallel_map,
@@ -10,22 +54,41 @@ from useful_functions import (
 from generate_injections import filter_bool_for_injection, fisco_obs_from_Mc_eta
 from network_subclass import NetworkExtended
 
-import numpy as np
-import os
-from gwbench import network
-from gwbench.basic_relations import f_isco_Msolar
-
 
 def multi_network_results_for_injection(
-    network_specs,
-    inj,
-    base_params,
-    wf_dict,
-    deriv_dict,
-    misc_settings_dict,
-    debug=False,
-):
-    """returns the benchmark as a dict of tuples for a single injection using the inj and base_params and the settings dicts through the networks in network_specs"""
+    network_specs: List[List[str]],
+    inj: NDArray[float],
+    base_params: Dict[str, Union[int, float]],
+    wf_dict: Dict[str, Union[str, Optional[Dict[str, str]], bool, int]],
+    deriv_dict: Dict[
+        str,
+        Union[
+            str,
+            Tuple[str, ...],
+            List[Set[str]],
+            bool,
+            Optional[Dict[str, Union[float, str, int]]],
+        ],
+    ],
+    misc_settings_dict: Dict[str, Optional[int]],
+    debug: bool = False,
+) -> Dict[str, Tuple[float]]:
+    """Returns the benchmark as a dict of tuples for a single injection using the inj and base_params and the settings dicts through the networks in network_specs.
+
+    If a single network fails an injection, then the unified results will save it as a np.nan in all networks so that the universe of injections is the same between each network. TODO: check that this doesn't bias the results away from loud sources that we care about.
+
+    Args:
+        network_specs: Networks to pass to gwbench's multi-network pipeline.
+        inj: Injection parameters for each injection, e.g. chirp mass and luminosity distance.
+        base_params: Common parameters among injections, e.g. time of coalesence.
+        wf_dict: Waveform dictionary of model name and options, also contains the science case string.
+        deriv_dict: Derivative options dictionary.
+        misc_settings_dict: Options for gwbench, e.g. whether to account for Earth's rotation about its axis.
+        debug: Whether to debug.
+
+    Returns:
+        Dict[str, Tuple[float]]: Keys are repr(network_spec). Each value is (redshift, SNR, logMc err, logDL err, eta err, iota err, 90%-credible sky-area in sqr degrees) or a tuple of seven np.nan's if the injection failed in any network.
+    """
     output_if_injection_fails = dict(
         (
             (repr(network_spec), tuple(np.nan for _ in range(7)))
@@ -52,7 +115,7 @@ def multi_network_results_for_injection(
     z = varied_params.pop("z")
     inj_params = dict(**base_params, **varied_params)
 
-    # subtlety, if V+ (or aLIGO) is present in any network, then f is truncated for V+ for all networks (since f is shared below). to-do: figure out how common this is
+    # subtlety, if V+ (or aLIGO) is present in any network, then f is truncated for V+ for all networks (since f is shared below). TODO: figure out how common this is
     aLIGO_or_Vplus_used = ("aLIGO" in deriv_dict["unique_tecs"]) or (
         "V+" in deriv_dict["unique_tecs"]
     )
@@ -135,8 +198,8 @@ def multi_network_results_for_injection(
             # calculate the 90%-credible sky area (in [deg]^2)
             net.calc_sky_area_90(only_net=misc_settings_dict["only_net"])
 
-            # to-do: if using gwbench 0.7, still introduce a limit on net.cond_num based on machine precision errors that mpmath is blind to
-            # if the FIM is zero, then the condition number is NaN and matrix is ill-conditioned (according to gwbench). to-do: try catching this by converting warnings to errors following <https://stackoverflow.com/questions/5644836/in-python-how-does-one-catch-warnings-as-if-they-were-exceptions#30368735> --> 54 and 154 converged in a second run
+            # TODO: if using gwbench 0.7, still introduce a limit on net.cond_num based on machine precision errors that mpmath is blind to
+            # if the FIM is zero, then the condition number is NaN and matrix is ill-conditioned (according to gwbench). TODO: try catching this by converting warnings to errors following <https://stackoverflow.com/questions/5644836/in-python-how-does-one-catch-warnings-as-if-they-were-exceptions#30368735> --> 54 and 154 converged in a second run
             if not net.wc_fisher:
                 # unified injection rejection so that cosmological resampling can be uniform across networks, this now means that the number of injections is equal to that of the weakest network in the set but leads to a better comparison
                 if debug:
@@ -167,20 +230,48 @@ def multi_network_results_for_injection(
 
 
 def multi_network_results_for_injections_file(
-    results_file_name,
-    network_specs,
-    injections_file,
-    num_injs_per_redshift_bin,
-    process_injs_per_task,
-    base_params,
-    wf_dict,
-    deriv_dict,
-    misc_settings_dict,
-    data_path="/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/",
-    debug=False,
-):
-    """benchmarks the first process_injs_per_task number of injections from injections_file + base_params for each of the networks in network_specs for the science_case and other settings in the three dict.'s provided, saves the results as a .npy file in results_file_name at data_path. num_injs_per_redshift_bin is the total number of injections from the injections file across all tasks (used for labelling)."""
-    inj_data = np.load(injections_file)
+    results_file_name: str,
+    network_specs: List[List[str]],
+    injections_file: str,
+    num_injs_per_redshift_bin: int,
+    process_injs_per_task: Optional[int],
+    base_params: Dict[str, Union[int, float]],
+    wf_dict: Dict[str, Union[str, Optional[Dict[str, str]], bool, int]],
+    deriv_dict: Dict[
+        str,
+        Union[
+            str,
+            Tuple[str, ...],
+            List[Set[str]],
+            bool,
+            Optional[Dict[str, Union[float, str, int]]],
+        ],
+    ],
+    misc_settings_dict: Dict[str, Optional[int]],
+    data_path: int = "/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
+    debug: int = False,
+) -> None:
+    """Runs the injections in the given file through the given set of networks and saves them as a .npy file.
+
+    Benchmarks the first process_injs_per_task number of injections from injections_file + base_params for each of the networks in network_specs for the science_case and other settings in the three dict.'s provided, saves the results as a .npy file in results_file_name at data_path in the form (number of surviving injections, 7) with the columns of (redshift, SNR, logMc err, logDL err, eta err, iota err, 90%-credible sky-area in sqr degrees).
+
+    Args:
+        results_file_name: Output .npy filename template for each of the network results. Of the form f"SLURM_TASK_{task_id}" if to be generated automatically later. TODO: check whether this works without the task_id format.
+        network_specs: Set of networks to analyse.
+        injections_file: Input injections filename with path.
+        num_injs_per_redshift_bin: Total number of injections from the injections file across all tasks (used for labelling).
+        process_injs_per_task: Number of injections to process, does all of them if None.
+        base_params: Common parameters among injections, e.g. time of coalesence.
+        wf_dict: Waveform dictionary of model name and options, also contains the science case string.
+        deriv_dict: Derivative options dictionary.
+        misc_settings_dict: Options for gwbench, e.g. whether to account for Earth's rotation about its axis.
+        data_path: Path to the output file.
+        debug: Whether to debug.
+
+    Raises:
+        Exception: If any of the target results files already exist.
+    """
+    inj_data: NDArray[NDArray[float]] = np.load(injections_file)
     if process_injs_per_task is None:
         process_injs_per_task = len(inj_data)
     # only process the first process_injs_per_task of inj_data

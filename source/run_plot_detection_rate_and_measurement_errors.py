@@ -1,6 +1,45 @@
 #!/usr/bin/env python3
-"""James Gardner, March 2022
-generates detection rate vs redshift and CDF sky area and measurement errors etc. plots from saved data given a task array"""
+"""Generates detection rate vs redshift and CDF sky area and measurement errors etc. plots from saved data given a task array.
+
+Long description.
+
+Usage:
+    Describe the typical usage.
+
+License:
+    BSD 3-Clause License
+
+    Copyright (c) 2022, James Gardner.
+    All rights reserved except for those for the gwbench code which remain reserved
+    by S. Borhanian; the gwbench code is included in this repository for convenience.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+from typing import List, Set, Dict, Tuple, Optional, Union
 from networks import *
 from plot_collated_detection_rate import *
 from plot_collated_PDFs_and_CDFs import *
@@ -23,7 +62,7 @@ net_dict = NET_DICT_LIST[(task_id - 1) // 4]
 science_case = ("BNS", "BBH")[((task_id - 1) // 2) % 2]
 plot_index = (task_id - 1) % 2
 
-# to-do: add back functionality to include benchmarks such as HLVKI+ in CE-only plots
+# TODO: add back functionality to include benchmarks such as HLVKI+ in CE-only plots
 network_set = net_dict["nets"]
 network_label = net_dict["label"]
 
@@ -32,7 +71,7 @@ if science_case == "BNS":
     wf_model_name, wf_other_var_dic = (
         "tf2_tidal",
         None,
-    )  # to-do: change to more accurate numerical once gwbench patch released
+    )  # TODO: change to more accurate numerical once gwbench patch released
 elif science_case == "BBH":
     wf_model_name, wf_other_var_dic = "lal_bbh", dict(approximant="IMRPhenomHM")
 else:
@@ -45,7 +84,7 @@ else:
     plot_label = f"NET_{network_label}_SCI-CASE_{science_case}_WF_{wf_model_name}"
     plot_title = f"Networks: {network_label}, science-case: {science_case}, waveform: {wf_model_name}"
 
-data_path = "/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/"
+data_path = "/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/"
 
 # print(network_set, science_case, plot_label, plot_index)
 

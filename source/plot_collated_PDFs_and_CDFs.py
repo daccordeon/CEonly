@@ -1,4 +1,44 @@
-"""James Gardner, April 2022"""
+"""Short one-sentence description.
+
+Long description.
+
+Usage:
+    Describe the typical usage.
+
+License:
+    BSD 3-Clause License
+
+    Copyright (c) 2022, James Gardner.
+    All rights reserved except for those for the gwbench code which remain reserved
+    by S. Borhanian; the gwbench code is included in this repository for convenience.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+from typing import List, Set, Dict, Tuple, Optional, Union
+from numpy.typing import NDArray
 from results_class import InjectionResults
 from constants import (
     SNR_THRESHOLD_LO,
@@ -38,6 +78,17 @@ def add_measurement_errs_CDFs_to_axs(
     contour=True,
     debug=False,
 ):
+    """Short description.
+
+    Args:
+        x: _description_
+
+    Raises:
+        e: _description_
+
+    Returns:
+        _type_: _description_
+    """
     """takes array of results from file cosmologically re-sampled, add PDFs wrt dlog(x) and CDFs on log-log scale to axs.
     the bool contour controls whether to display contours on the CDFs between SNR > 100 (detected well) and SNR > 10 (detected) curves"""
     # re-order results columns and transpose: [snr, sky-area, err_logMc, err_eta, err_logDL, err_iota]
@@ -47,7 +98,7 @@ def add_measurement_errs_CDFs_to_axs(
 
     for i, data in enumerate(results_reordered):
         # using low SNR threshold as cut-off for all non-SNR quantities, this might leave few sources remaining (e.g. for HLVKI+)
-        # to-do: rewrite lo, mid, and hi to reduce repetition
+        # TODO: rewrite lo, mid, and hi to reduce repetition
         data_mid_empty = False
         data_hi_empty = False
         if threshold_by_SNR and (i != 0) and contour:
@@ -80,7 +131,7 @@ def add_measurement_errs_CDFs_to_axs(
 
         # don't sort in place, e.g. data_lo.sort(), since it can re-order data itself if data_lo was the whole column
         data_lo = np.sort(data_lo)
-        # to-do: update bins in clever way to be consistent between all present (note that data_hi not empty implies the same about data_mid), if rewriting code to work with lo, mid, and hi then I may as well write it to be general between any list of snr thresholds to be able to change between different densities of plots
+        # TODO: update bins in clever way to be consistent between all present (note that data_hi not empty implies the same about data_mid), if rewriting code to work with lo, mid, and hi then I may as well write it to be general between any list of snr thresholds to be able to change between different densities of plots
         if not data_hi_empty:
             data_hi = np.sort(data_hi)
             log_bins = np.geomspace(
@@ -184,7 +235,7 @@ def collate_measurement_errs_CDFs_of_networks(
     threshold_by_SNR=True,
     plot_title=None,
     CDFmin=None,
-    data_path="/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/",
+    data_path="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
     linestyles_from_BS2022=False,
     contour=False,
     parallel=False,
@@ -192,7 +243,19 @@ def collate_measurement_errs_CDFs_of_networks(
     seed=None,
     norm_tag="GWTC3",
 ):
-    """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks"""
+    """Short description.
+
+    Args:
+        x: _description_
+
+    Raises:
+        e: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks.
+    normalise_count sets the yscale for the PDFs to logarithmic as well"""
     found_files = find_files_given_networks(
         network_spec_list,
         science_case,
@@ -229,9 +292,9 @@ def collate_measurement_errs_CDFs_of_networks(
         # errs: fractional chirp mass, fractional luminosity distance, symmetric mass ratio, inclination angle
         results = InjectionResults(file, data_path=data_path, norm_tag=norm_tag)
         # re-sampling uniform results using a cosmological model, defaults to using a 10-year observation time
-        # to-do: unify cosmological resampling between networks when comparing them, requires saving the same injections from benchmarking (i.e. going with the weakest network's rejections)
+        # TODO: unify cosmological resampling between networks when comparing them, requires saving the same injections from benchmarking (i.e. going with the weakest network's rejections)
         resampled_results = resample_redshift_cosmologically_from_results(
-            results, parallel=parallel, seed=seed, norm_tag=norm_tag
+            results, parallel=parallel, seed=seed, norm_tag=norm_tag, debug=debug
         )
 
         if full_legend:
@@ -306,7 +369,30 @@ def collate_measurement_errs_CDFs_of_networks(
             ]
         else:
             raise ValueError("Science case not recognised.")
-        # perturb the xlim_list to avoid ticklabels overhanging the boundary of each subplot, perturbation must work on any scale
+    elif xlim_list == "B&S2022-Figs11--12":
+        if science_case == "BNS":
+            xlim_list = (
+                (1e-2, 5e3),
+                (1e-5, 2e5),
+                (4e-9, 2e-3),
+                (2e-7, 5e-2),
+                (5e-5, 4e1),
+                (6e-5, 5e1),
+            )
+        elif science_case == "BBH":
+            xlim_list = (
+                (1e-2, 1e4),
+                (1e-4, 1e7),
+                (1e-7, 1e0),
+                (1e-9, 2e-1),
+                (5e-4, 1e1),
+                (4e-4, 1e1),
+            )
+        else:
+            raise ValueError("Science case not recognised.")
+
+    # perturb the xlim_list to avoid ticklabels overhanging the boundary of each subplot, perturbation must work on any scale
+    if "B&S2022" in xlim_list:
         epsilon = 1e-5
         xlim_list = [
             (xlim[0] * (1 + epsilon), xlim[1] * (1 - epsilon)) for xlim in xlim_list
@@ -346,7 +432,7 @@ def collate_measurement_errs_CDFs_of_networks(
     if normalise_count:
         axs[0, 0].set(ylabel="normalised\ncount wrt height")
     else:
-        axs[0, 0].set(ylabel="count in bin")
+        axs[0, 0].set(ylabel="count in bin", yscale="log")
     if CDFmin == "B&S2022":
         CDFmin = 1e-4
     axs[1, 0].set(ylabel="CDF", ylim=(CDFmin, 1 + 0.1))
@@ -382,7 +468,11 @@ def collate_measurement_errs_CDFs_of_networks(
 
     fig.canvas.draw()
     for ax in axs[0]:
-        force_log_grid(ax, log_axis="x")
+        ax.yaxis.set_tick_params(labelsize=10)
+        if normalise_count:
+            force_log_grid(ax, log_axis="both")
+        else:
+            force_log_grid(ax, log_axis="x")
     for ax in axs[1]:
         ax.yaxis.set_tick_params(labelsize=10)
         force_log_grid(ax, log_axis="both")

@@ -1,4 +1,45 @@
-"""James Gardner, April 2022"""
+"""Short one-sentence description.
+
+Long description.
+
+Usage:
+    Describe the typical usage.
+
+License:
+    BSD 3-Clause License
+
+    Copyright (c) 2022, James Gardner.
+    All rights reserved except for those for the gwbench code which remain reserved
+    by S. Borhanian; the gwbench code is included in this repository for convenience.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+from typing import List, Set, Dict, Tuple, Optional, Union
+from numpy.typing import NDArray
+
 from results_class import InjectionResults
 from useful_functions import HiddenPrints, parallel_map
 from constants import SNR_THRESHOLD_LO, SNR_THRESHOLD_HI
@@ -21,6 +62,17 @@ import matplotlib.lines as mlines
 def collate_eff_detrate_vs_redshift(
     axs, results, zaxis_plot, colours=None, label=None, parallel=True
 ):
+    """Short description.
+
+    Args:
+        x: _description_
+
+    Raises:
+        e: _description_
+
+    Returns:
+        _type_: _description_
+    """
     """collate plots to replicate Fig 2 in B&S2022, adds curves to existing axs.
     use case: collate different networks with data generated/saved using detection_rate_for_network_and_waveform
     defaults to using the same colour"""
@@ -93,11 +145,22 @@ def compare_detection_rate_of_networks_from_saved_results(
     full_legend=False,
     specific_wf=None,
     print_progress=True,
-    data_path="/fred/oz209/jgardner/CEonlyPony/source/data_redshift_snr_errs_sky-area/",
+    data_path="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
     parallel=True,
     debug=False,
     norm_tag="GWTC3",
 ):
+    """Short description.
+
+    Args:
+        x: _description_
+
+    Raises:
+        e: _description_
+
+    Returns:
+        _type_: _description_
+    """
     """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
     even if the absolute detection rate is wildly (1e9) off
     network_spec_list is assumed unique.

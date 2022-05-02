@@ -1,23 +1,75 @@
-"""James Gardner, April 2022
-called in a job array by a slurm bash script, runs a pre-generated set of injections through a given set of networks using the multi-network feature of gwbench"""
-from calculate_unified_injections import multi_network_results_for_injections_file
-from networks import NET_LIST, BS2022_SIX
-from generate_symbolic_derivatives import generate_symbolic_derivatives
+#!/usr/bin/env python3
+"""Runs a pre-generated set of injections through a given set of networks using the multi-network feature of gwbench.
 
-from lal import GreenwichMeanSiderealTime
+Using a specified task index, finds the corresponding injection parameters data file (.npy) and calls calculate_unified_injections.py on the injections with the options set below. An output file (.npy) is produced.
+
+Usage:
+    Called in a job array by a slurm bash script, e.g.
+    $ python3 run_unified_injections_as_task.py TASK_ID
+
+License:
+    BSD 3-Clause License
+
+    Copyright (c) 2022, James Gardner.
+    All rights reserved except for those for the gwbench code which remain reserved
+    by S. Borhanian; the gwbench code is included in this repository for convenience.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+# TODO: update Tuple to tuple when upgraded to Python 3.9+, similarly throughout codebase
+from typing import List, Set, Dict, Tuple, Optional, Union
 import sys
 import glob
 
+from lal import GreenwichMeanSiderealTime
+
+from networks import NET_LIST, BS2022_SIX
+from generate_symbolic_derivatives import generate_symbolic_derivatives
+from calculate_unified_injections import multi_network_results_for_injections_file
+
 
 def settings_from_task_id(
-    task_id, inj_data_path="/fred/oz209/jgardner/CEonlyPony/source/injections/"
-):
-    """returns science case, waveform parameters, and injection file (with path) for the given task_id"""
-    # to-do: rewrite injection_file_name in generate_injections to use it here?
+    task_id: int,
+    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/raw_injections_data/",
+) -> Tuple[str, Dict[str, Union[str, Optional[Dict[str, str]], bool, int]], int]:
+    """Returns injection file (with path), waveform parameters in a dictionary, and number of injections for the given task id.
+
+    Args:
+        task_id: Slurm task ID from 1 to 2048.
+        inj_data_path: Path to injection files.
+
+    Raises:
+        ValueError: If there are no matching or more than one matching injections files.
+            Also, if the science case is not recognised to set the waveform parameters.
+    """
+    # TODO: rewrite injection_file_name in generate_injections to use it here?
     matches = glob.glob(inj_data_path + f"*_TASK_{task_id}.npy")
     if len(matches) != 1:
         raise ValueError(
-            f"Number of matches in injections/ path is not one: {len(matches)}"
+            f"Number of matches in raw_injections_data/ path is not one: {len(matches)}"
         )
     # includes absolute path
     file = matches[0]
@@ -36,7 +88,7 @@ def settings_from_task_id(
             numerical_over_symbolic_derivs=False,
             coeff_fisco=4,
         )
-        # to-do: change to more accurate numerical waveform once gwbench 0.7 released
+        # TODO: change to more accurate numerical waveform once gwbench 0.7 released
     #         wf_dict = dict(science_case=science_case, wf_model_name='lal_bns', wf_other_var_dic=dict(approximant='IMRPhenomD_NRTidalv2'), numerical_over_symbolic_derivs=True, coeff_fisco = 4)
     elif science_case == "BBH":
         wf_dict = dict(
@@ -55,7 +107,7 @@ def settings_from_task_id(
 # --- user inputs
 task_id = int(sys.argv[1])
 # ignore single detector network that is ill-conditioned (sky localisation really poor?) for BNS --> more relevant now that injections are rejected uniformly
-# to-do: update mprof if more networks used
+# TODO: update mprof if more networks used
 # network_specs = [net_spec for net_spec in NET_LIST if net_spec != ['CE2-40-CBO_C']]
 network_specs = BS2022_SIX["nets"]
 # 1464 is the maximum injs_per_task except for the last task, how many of those (counting from the start of the file) do we use?
@@ -66,6 +118,7 @@ debug = False
 
 results_file_name = f"SLURM_TASK_{task_id}"
 injection_file_name, wf_dict, num_injs_per_redshift_bin = settings_from_task_id(task_id)
+# settings: whether to account for the rotation of the earth, whether to only calculate results for the whole network, whether the masses are already redshifted by the injections module, whether to parallelize and if so on how many cores
 misc_settings_dict = dict(use_rot=1, only_net=1, redshifted=1, num_cores=None)
 tecs, locs = zip(
     *[
@@ -76,6 +129,7 @@ tecs, locs = zip(
 )
 unique_tecs, unique_locs = list(set(tecs)), list(set(locs))
 
+# derivative settings
 # sym_derivs = numerical_over_symbolic_derivs
 deriv_dict = dict(
     deriv_symbs_string="Mc eta DL tc phic iota ra dec psi",
