@@ -6,8 +6,8 @@ James Gardner, April 2022
 Current build found [here](https://github.com/daccordeon/CEonlyPony).
 
 ---
-- Contact for any technical enquiries at <james.gardner@anu.edu.au>.
-- see the main README.md for general notes and requirements
+- Contact for any technical enquiries is <james.gardner@anu.edu.au>.
+- See the main README.md for general notes and requirements.
 
 ---
 The critical path to generate injections and create detection rate and measurement error CDF plots is as follows:

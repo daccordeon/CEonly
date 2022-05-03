@@ -1,9 +1,9 @@
-"""Short one-sentence description.
+"""Networks of gravitational-wave detectors of which to benchmark the performance.
 
-Using colours from <https://flatuicolors.com/palette/us>.
+Colours for plotting are drawn from B&S2022 and <https://flatuicolors.com/palette/us>.
 
 Usage:
-    Describe the typical usage.
+    See run_unified_injections_as_task.py.
 
 License:
     BSD 3-Clause License
@@ -38,7 +38,6 @@ License:
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from typing import List, Set, Dict, Tuple, Optional, Union
 from useful_functions import flatten_list
 from filename_search_and_manipulation import network_spec_styler
 
@@ -72,8 +71,8 @@ BS2022_SIX = dict(
 )
 
 # --- CE only ---
-# - One in the US
-CE_C = dict(nets=[["CE2-40-CBO_C"]], colours=["#2d3436"], label="CE_C")
+# - One in the US, removed this ill-conditioned network from the set since injection rejection is now unified.
+# CE_C = dict(nets=[["CE2-40-CBO_C"]], colours=["#2d3436"], label="CE_C")
 # - One in the US, One in Australia
 CE_CS = dict(
     nets=[
@@ -183,10 +182,10 @@ NEMOLF_AND_2G = dict(
     label="NEMO-LF_and_2G",
 )
 
-# list of 10 network sets (dicts)
+# list of 10 network sets (dicts) to run unified tasks over
 NET_DICT_LIST = [
     BS2022_SIX,
-    CE_C,
+#     CE_C,
     CE_CS,
     CE_CN,
     CE_CNS,
@@ -196,8 +195,9 @@ NET_DICT_LIST = [
     CE_CN_AND_ET,
     NEMOLF_AND_2G,
 ]
+# list of network spec's within the broad set
 NET_LIST = flatten_list([net_dict["nets"] for net_dict in NET_DICT_LIST])
-# look-up table: given network_spec return colour, will override if same network_spec used twice
+# lookup table: given network_spec return colour, will override if same network_spec used twice
 DICT_NETSPEC_TO_COLOUR = dict()
 for net_dict in NET_DICT_LIST:
     for network_spec in net_dict["nets"]:

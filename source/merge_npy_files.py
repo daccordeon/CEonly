@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Short one-sentence description.
-
-Long description.
+"""Merges (collates) .npy data files from slurm tasks, e.g. processed injections data, into one .npy file.
 
 Usage:
-    Describe the typical usage.
+    Defaults to targetting processed injections data.
+    To merge without deleting task files:
+    $ python3 merge_npy_files.py
+    or
+    $ python3 merge_npy_files.py 0
+    
+    To merge and delete task files:
+    $ python3 merge_npy_files.py 1
 
 License:
     BSD 3-Clause License
@@ -46,19 +51,15 @@ import glob
 import os, sys
 
 
-def file_tag_from_task_file(file, cut_num_injs=False):
-    """Short description.
+def file_tag_from_task_file(file : str, cut_num_injs : bool=False) -> str:
+    """Returns the file tag from a task output filename.
+    
+    Assumes that the path is in the file name. TODO: this is an old comment, it doesn't look true anymore, update it.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        file: Filename of task file.
+        cut_num_injs: Whether to not include the number of injections per redshift bin.
     """
-    """returns file_tag from task output filenames, assumes that path is in file name"""
     file_tag = file.replace("_TASK_", "results_").split("results_")[1]
     if cut_num_injs:
         return file_tag.split("_INJS-PER-ZBIN_")[0]
@@ -67,31 +68,20 @@ def file_tag_from_task_file(file, cut_num_injs=False):
 
 
 def merge_npy_files(
-    output_filename, input_files=None, pattern=None, path="./", delete_input_files=False
-):
-    """Short description.
+    output_filename : str, input_files: Optional[List[str]]=None, pattern: Optional[str]=None, path: str="./", delete_input_files:bool=False
+) -> None:
+    """Merges input or found .npy files into one .npy file.
 
     Args:
-        x: _description_
+        output_filename: Filename of output collated .npy data file without path.
+        input_files: Filenames of input .npy files.
+        pattern: Pattern to search for input .npy files if input_files isn't given.
+        path: Path to output file and where to search for pattern if given and input_files isn't.
+        delete_input_files: Whether to delete the input files if no error raised.
 
     Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        Exception: If something goes wrong when concatenating arrays, which could be due to memory allocation.
     """
-    """Short description.
-
-    Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
-    """
-    """finds all .npy files matching pattern in path, saves a merged .npy at output_filename, or just merges those given as input_files"""
     # https://stackoverflow.com/questions/44164917/concatenating-numpy-arrays-from-a-directory
     if input_files is None:
         input_files = sorted(
@@ -106,7 +96,7 @@ def merge_npy_files(
         merged_array = np.concatenate(arrays)
         np.save(path + output_filename, merged_array)
     except:
-        raise ValueError(
+        raise Exception(
             "Something went wrong when concatenating arrays, check memory allocation."
         )
     else:
@@ -116,22 +106,17 @@ def merge_npy_files(
 
 
 def merge_all_task_npy_files(
-    path="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
-    pattern="results_NET_*_SCI-CASE_*_WF_*_INJS-PER-ZBIN_*_TASK_*.npy",
-    delete_input_files=False,
-):
-    """Short description.
+    path : str ="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
+    pattern : str ="results_NET_*_SCI-CASE_*_WF_*_INJS-PER-ZBIN_*_TASK_*.npy",
+    delete_input_files : bool =False,
+) -> None:
+    """Merges all processed .npy data files from slurm tasks into one .npy file per network and science case combination.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        path: Path to processed .npy data files from slurm tasks.
+        pattern: Pattern to match input task files.
+        delete_input_files: Whether to delete the input task files after successful merging.
     """
-    """find all .npy outputs from each task from job_run_all_networks_injections.sh and merge them together to have one .npy file per network+sc+wf combination"""
     task_files = sorted(
         glob.glob(path + pattern)
     )  # sorted to make debugging printout easier to read

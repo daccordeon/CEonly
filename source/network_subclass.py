@@ -1,4 +1,4 @@
-"""Extention (subclass) of gwbench's network class with I/O QoL.
+"""Extention (subclass) of gwbench's network class with input/output quality-of-life features.
 
 Usage:
     >> net = NetworkExtended(
@@ -50,19 +50,14 @@ from gwbench import network
 import os
 
 
-def set_file_tags(obj):
-    """Short description.
+def set_file_tags(obj : Any) -> None:
+    """Sets the file_tag and human_file_tag of an instance of NetworkExtended or InjectionResults.
+
+    TODO: Update obj's type hinting to Union[Type[NetworkExtended], Type[InjectionResults]].
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        obj: Object instance with attributes to generate file tags, e.g. NetworkExtended or InjectionResults. The instance must have the attributes: label, science_case, wf_model_name, wf_other_var_dic, num_injs.
     """
-    """sets file_tag and human_file_tag given an instance (obj) of NetworkExtended or InjectionResults with attributes: label, science_case, wf_model_name, wf_other_var_dic, num_injs"""
     obj.file_tag = f"NET_{net_label_styler(obj.label)}_SCI-CASE_{obj.science_case}_WF_{obj.wf_model_name}_INJS-PER-ZBIN_{obj.num_injs}"
     obj.human_file_tag = f'network: {net_label_styler(obj.label).replace("..", ", ")}\nscience case: {obj.science_case}\nwaveform: {obj.wf_model_name}\nnumber of injections per bin: {obj.num_injs}'
     if obj.wf_other_var_dic is not None:
@@ -77,43 +72,47 @@ def set_file_tags(obj):
 
 
 class NetworkExtended(network.Network):
-    """The summary line for a class docstring should fit on one line.
+    """Subclass of gwbench's network class that adds functionality, e.g. filename generation and styling.
 
-    If the class has public attributes, they may be documented here
-    in an ``Attributes`` section and follow the same formatting as a
-    function's ``Args`` section. Alternatively, attributes may be documented
-    inline with the attribute's declaration (see __init__ method below).
-    Properties created with the ``@property`` decorator should be documented
-    in the property's getter method.
+    Since it is a subclass, instances of it can be passed as you would the parent network.Network class (e.g. as net).
 
     Attributes:
-        attr1 (str): Description of `attr1`.
-        attr2 (:obj:`int`, optional): Description of `attr2`.
+        network_spec (List[str]): Network specification, e.g. ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'].
+        science_case (str): Science case, e.g. 'BNS'.
+        wf_model_name (str): Waveform model name.
+        wf_other_var_dic (Optional[Dict[str, str]]): Waveform approximant dictionary.
+        num_injs (int): Number of injections per major redshift bin.
+        tecs (List[str]): Unique detector technologies in network.
+        file_tag (str): File tag for input/output.
+        human_file_tag (str): Human-readable file tag.
+        file_name (Optional[str]): File name for processed results .npy data file without path.
+        data_path (str): Path to the data file.
+        file_name_with_path (str): File name for processed results .npy data file with path.
+        results_file_exists (bool): Whether processed results .npy data file exists.        
+        
+        And all other attributes of the network.Network class as initialised by a network_spec.
     """
-
-    """subclass of gwbench's network class that adds functionality, e.g. filename generation and styling. since it is a subclass instances of it can be passed as you would the parent network class (e.g. as net)"""
 
     def __init__(
         self,
-        network_spec,
-        science_case,
-        wf_model_name,
-        wf_other_var_dic,
-        num_injs,
-        file_name=None,
-        data_path="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
-    ):
-        """Short description.
+        network_spec : List[str],
+        science_case : str,
+        wf_model_name : str,
+        wf_other_var_dic : Optional[Dict[str, str]],
+        num_injs : int,
+        file_name : Optional[str]=None,
+        data_path : str="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
+    ) -> None:
+        """Initialises NetworkExtended with all attributes. 
 
         Args:
-            (Don't include self)
-            x: _description_
-
-        Raises:
-            e: _description_
-
-        Returns:
-            _type_: _description_
+            network_spec: Network specification, e.g. ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'].
+            science_case: Science case, e.g. 'BNS'.
+            wf_model_name: Waveform model name.
+            wf_other_var_dic: Waveform approximant dictionary.
+            num_injs: Number of injections per major redshift bin.
+            file_name: File name for processed results .npy data file without path. If blank, then it is generated from the created file_tag. If containing "SLURM_TASK_", then the task_id is also added to the file_name.
+            data_path: Path to the data file. 
         """
         super().__init__(network_spec)
         self.network_spec = network_spec
@@ -122,7 +121,7 @@ class NetworkExtended(network.Network):
         self.wf_other_var_dic = wf_other_var_dic
         self.num_injs = num_injs
         # detector technologies, necessary to know because gwbench has different frequency ranges for the PSDs
-        self.tecs = [detector.tec for detector in self.detectors]
+        self.tecs = list(set([detector.tec for detector in self.detectors]))
 
         # input/output standard: file name and plot label
         set_file_tags(self)
