@@ -5,7 +5,7 @@ Using a specified task index, finds the corresponding injection parameters data 
 
 Usage:
     Called in a job array by a slurm bash script, e.g.
-    $ python3 run_unified_injections_as_task.py TASK_ID
+    $ python3 run_calculate_unified_injections_as_task.py TASK_ID
 
 License:
     BSD 3-Clause License
@@ -53,7 +53,7 @@ from calculate_unified_injections import multi_network_results_for_injections_fi
 
 def settings_from_task_id(
     task_id: int,
-    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/raw_injections_data/",
+    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/task_files/",
 ) -> Tuple[str, Dict[str, Union[str, Optional[Dict[str, str]], bool, int]], int]:
     """Returns injection file (with path), waveform parameters in a dictionary, and number of injections for the given task id.
 
@@ -69,7 +69,7 @@ def settings_from_task_id(
     matches = glob.glob(inj_data_path + f"*_TASK_{task_id}.npy")
     if len(matches) != 1:
         raise ValueError(
-            f"Number of matches in raw_injections_data/ path is not one: {len(matches)}"
+            f"Number of matches in data_raw_injections/ path is not one: {len(matches)}"
         )
     # includes absolute path
     file = matches[0]

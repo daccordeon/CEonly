@@ -50,7 +50,9 @@ from astropy.cosmology import Planck18
 from gwbench import injections
 
 
-def merger_rate_normalisations_from_gwtc_norm_tag(norm_tag:str="GWTC3") -> Tuple[float, float]:
+def merger_rate_normalisations_from_gwtc_norm_tag(
+    norm_tag: str = "GWTC3",
+) -> Tuple[float, float]:
     """Returns merger rate normalisations from a survey tag.
 
     Args:
@@ -67,9 +69,9 @@ def merger_rate_normalisations_from_gwtc_norm_tag(norm_tag:str="GWTC3") -> Tuple
         raise ValueError("Normalisation not recognised.")
 
 
-def differential_comoving_volume(z : float) -> float:
+def differential_comoving_volume(z: float) -> float:
     """Returns the differential comoving volume at a given redshift.
-    
+
     Uses the Planck18 cosmology.
     Follows the formula: $\frac{\text{d}V}{\text{d}z}(z)$ in B&S2022; 4*pi to convert from Mpc^3 sr^-1 (sr is steradian) to Mpc^3.
 
@@ -79,7 +81,7 @@ def differential_comoving_volume(z : float) -> float:
     return 4.0 * PI * Planck18.differential_comoving_volume(z).value
 
 
-def merger_rate_bns(z : float, normalisation: float=GWTC3_MERGER_RATE_BNS) -> float:
+def merger_rate_bns(z: float, normalisation: float = GWTC3_MERGER_RATE_BNS) -> float:
     """Returns the binary neutron-star merger rate at a given redshift.
 
     Formula: $R(z)$ in B&S2022; normalisation of merger rate density $\dot{n}(z)$ in the source frame to GWTC3_MERGER_RATE_BNS in https://arxiv.org/pdf/2111.03606v2.pdf.
@@ -98,7 +100,7 @@ def merger_rate_bns(z : float, normalisation: float=GWTC3_MERGER_RATE_BNS) -> fl
     )
 
 
-def merger_rate_bbh(z : float, normalisation: float=GWTC3_MERGER_RATE_BBH) -> float:
+def merger_rate_bbh(z: float, normalisation: float = GWTC3_MERGER_RATE_BBH) -> float:
     """Returns the binary black-hole merger rate at a given redshift.
 
     Formula: $R(z)$ in B&S2022; normalisation of merger rate density $\dot{n}(z)$ in the source frame to GWTC3_MERGER_RATE_BBH in https://arxiv.org/pdf/2111.03606v2.pdf.
@@ -117,9 +119,11 @@ def merger_rate_bbh(z : float, normalisation: float=GWTC3_MERGER_RATE_BBH) -> fl
     )
 
 
-def merger_rate_in_obs_frame(merger_rate : Callable[..., float], z : float, **kwargs : Any) -> float:
+def merger_rate_in_obs_frame(
+    merger_rate: Callable[..., float], z: float, **kwargs: Any
+) -> float:
     """Returns the merger rate at the given redshift as time dilated in the observer's frame.
-    
+
     TODO: update type hints when typing Protocol for kwargs in Callable is updated/released, similarly throughout.
 
     Args:
@@ -130,7 +134,13 @@ def merger_rate_in_obs_frame(merger_rate : Callable[..., float], z : float, **kw
     return merger_rate(z, **kwargs) / (1 + z)
 
 
-def detection_rate(merger_rate : Callable[..., float], detection_efficiency: Callable[[float, float], float], z0 : float, snr_threshold : float, **kwargs : Any) -> float:
+def detection_rate(
+    merger_rate: Callable[..., float],
+    detection_efficiency: Callable[[float, float], float],
+    z0: float,
+    snr_threshold: float,
+    **kwargs: Any
+) -> float:
     """Returns the detection rate of a source type given its merger rate and detector efficiency.
 
     Formula: $D_R(z, \rho_\ast)$ in B&S2022.
@@ -151,7 +161,9 @@ def detection_rate(merger_rate : Callable[..., float], detection_efficiency: Cal
     )[0]
 
 
-def detection_rate_limit(merger_rate: Callable[..., float], z0 : float, **kwargs : Any) -> float:
+def detection_rate_limit(
+    merger_rate: Callable[..., float], z0: float, **kwargs: Any
+) -> float:
     """Returns the maximum possible detection rate, i.e. the total number of sources, of a source type given its merger rate.
 
     Formula: $D_R(z, \rho_\ast)|_{\varepsilon=1}$ in B&S2022;i.e. "merger rate" in Fig 2, not R(z) but int R(z)/(1+z), i.e. if perfect efficiency.

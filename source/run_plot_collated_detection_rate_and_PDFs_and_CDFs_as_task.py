@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Generates detection rate vs redshift and CDF sky area and measurement errors etc. plots from saved data given a task array.
-
-Long description.
+"""Generates detection rate vs redshift and CDF sky area and measurement errors etc. plots from saved data for a slurm task.
 
 Usage:
-    Describe the typical usage.
+    Called in a job array by a slurm bash script, e.g.
+    $ python3 run_plot_collated_detection_rate_and_PDFs_and_CDFs_as_task.py TASK_ID
 
 License:
     BSD 3-Clause License
@@ -39,7 +38,6 @@ License:
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from typing import List, Set, Dict, Tuple, Optional, Union
 from networks import *
 from plot_collated_detection_rate import *
 from plot_collated_PDFs_and_CDFs import *
@@ -84,7 +82,7 @@ else:
     plot_label = f"NET_{network_label}_SCI-CASE_{science_case}_WF_{wf_model_name}"
     plot_title = f"Networks: {network_label}, science-case: {science_case}, waveform: {wf_model_name}"
 
-data_path = "/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/"
+data_path = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/"
 
 # print(network_set, science_case, plot_label, plot_index)
 

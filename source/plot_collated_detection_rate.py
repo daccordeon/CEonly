@@ -1,9 +1,8 @@
-"""Short one-sentence description.
-
-Long description.
+"""Collates the detection rate plots for the different networks from the .npy processed injections data files.
 
 Usage:
-    Describe the typical usage.
+    Requires process injections data files to exist.
+    See run_plot_collated_detection_rate_and_PDFs_and_CDFs_as_task.py.
 
 License:
     BSD 3-Clause License
@@ -37,7 +36,7 @@ License:
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional, Union, Type
 from numpy.typing import NDArray
 
 from results_class import InjectionResults
@@ -60,22 +59,20 @@ import matplotlib.lines as mlines
 
 
 def collate_eff_detrate_vs_redshift(
-    axs, results, zaxis_plot, colours=None, label=None, parallel=True
-):
-    """Short description.
-
+    axs : NDArray[Type[plt.Subplot]], results: Type[InjectionResults], zaxis_plot : NDArray, colours : Optional[List[str]]=None, label : Optional[str]=None, parallel : bool=True
+) -> None:
+    """Adds the detection efficiency and rate versus redshift plot for a given network onto existing axes.
+    
+    Usage: collate different networks with data generated/saved using InjectionResults.calculate_and_set_detection_rate.
+    
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        axs: Axes to add plots onto.
+        results: Results with calculate_and_set_detection_rate() already run.
+        zaxis_plot: Redshift axis to plot over.
+        colours: Colours for the detection efficiency and rate plots. Defaults to using the same colour for each plot. 
+        label: Legend label for the results.
+        parallel: Whether to parallelize the computation.
     """
-    """collate plots to replicate Fig 2 in B&S2022, adds curves to existing axs.
-    use case: collate different networks with data generated/saved using detection_rate_for_network_and_waveform
-    defaults to using the same colour"""
     if colours is None:
         colours = [None, None]  # list is mutable, None is not
 
@@ -137,34 +134,38 @@ def collate_eff_detrate_vs_redshift(
 
 
 def compare_detection_rate_of_networks_from_saved_results(
-    network_spec_list,
-    science_case,
-    save_fig=True,
-    show_fig=True,
-    plot_label=None,
-    full_legend=False,
-    specific_wf=None,
-    print_progress=True,
-    data_path="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
-    parallel=True,
-    debug=False,
-    norm_tag="GWTC3",
-):
-    """Short description.
+    network_spec_list : List[List[str]],
+    science_case : str,
+    save_fig : bool= True,
+    show_fig : bool= True,
+    plot_label : Optional[str] =None,
+    full_legend : bool= False,
+    specific_wf : Optional[str] =None,
+    print_progress : bool= True,
+    data_path : str ="/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    parallel : bool= True,
+    debug : bool= False,
+    norm_tag : str ="GWTC3",
+) -> None:
+    """Collates the detection efficiency and rate versus redshift plots for different networks.
+    
+    Replication of Fig 2 in B&S2022, use to check if detection rates are correct.
+    Uses uniformly sampled results in redshift to have good resolution along detection rate curve, this is actually the main motivation for using a non-physical initial population.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        network_spec_list: Set of unique networks to compare.
+        science_case: Science case, e.g. 'BNS'.
+        save_fig: Whether to save the plot.
+        show_fig: Whether to show the plot interactively.
+        plot_label: File name to save plot as.
+        full_legend: Whether to display a verbose legend.
+        specific_wf: If specified, then filters to only show the given waveform.
+        print_progress: Whether to print progress statements.
+        data_path: Path to processed injections data files.
+        parallel: Whether to parallelize the computation.
+        debug: Whether to print debug statements.
+        norm_tag: Survey to normalise cosmological merger rates to.
     """
-    """replication of Fig 2 in B&S2022, use to check if relative detection rates are correct
-    even if the absolute detection rate is wildly (1e9) off
-    network_spec_list is assumed unique.
-    uses uniformly sampled results in redshift to have good resolution along detection rate curve"""
     # finding file names
     net_labels = [
         network_spec_to_net_label(network_spec, styled=True)

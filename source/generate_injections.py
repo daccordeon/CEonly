@@ -76,7 +76,7 @@ def fisco_obs_from_Mc_eta(
 def injection_file_name(
     science_case: str, num_injs_per_redshift_bin: int, task_id: Optional[int] = None
 ) -> str:
-    """Returns the file name for the raw injection data.
+    """Returns the file name for the raw injection data without path.
 
     Args:
         science_case: Science case.
@@ -160,7 +160,7 @@ def generate_injections(
     redshifted: bool,
     coeff_fisco: int,
     science_case: str,
-    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/raw_injections_data/",
+    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/",
 ) -> None:
     """Generates raw injections data sampled uniformly linearly in redshift, saves as .npy.
 
@@ -276,7 +276,8 @@ def inj_params_for_science_case(
 
 def chop_injections_data_for_processing(
     job_array_size: int = 2048,
-    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/raw_injections_data/",
+    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/",
+    output_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/task_files/",
 ) -> None:
     """Splits (chops) the saved injections data into different files for each of the parallel tasks later to run over.
 
@@ -284,9 +285,10 @@ def chop_injections_data_for_processing(
 
     Args:
         job_array_size: Number of tasks in slurm job array.
-        inj_data_path: Path to input and output injections data.
+        inj_data_path: Path to input injections data.
+        output_data_path: Path to output (chopped) injections data.
     """
-    files = [file for file in glob.glob(inj_data_path + "*") if "TASK" not in file]
+    files = [file for file in glob.glob(inj_data_path + "*.npy")]
     num_science_cases = len(files)
     # TODO: more efficiently allocate the tasks, currently is 1464 in each task and more in the last of each science case to pick up the remainder
     tasks_per_sc = job_array_size // num_science_cases
@@ -310,7 +312,10 @@ def chop_injections_data_for_processing(
             task_file_name = injection_file_name(
                 science_case, num_injs_per_redshift_bin, task_id=task_id
             )
-            np.save(task_file_name, inj_data[chop_inds[i][0] : chop_inds[i][1]])
+            np.save(
+                output_data_path + task_file_name,
+                inj_data[chop_inds[i][0] : chop_inds[i][1]],
+            )
 
 
 if __name__ == "__main__":

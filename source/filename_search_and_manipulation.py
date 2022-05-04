@@ -166,7 +166,7 @@ def find_files_given_networks(
     science_case: str,
     specific_wf: Optional[str] = None,
     print_progress: bool = True,
-    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
+    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
     raise_error_if_no_files_found: bool = True,
 ) -> List[str]:
     """Returns a list of found files that match networks, science case, and specific wf.
@@ -190,12 +190,8 @@ def find_files_given_networks(
         for network_spec in network_spec_list
     ]
 
-    # return files wrt data_path (i.e. exclude the path from glob results); ignore task files
-    file_list = [
-        file.replace(data_path, "")
-        for file in glob.glob(data_path + "*")
-        if not "TASK" in file
-    ]
+    # return files wrt data_path (i.e. exclude the path from glob results)
+    file_list = [file.replace(data_path, "") for file in glob.glob(data_path + "*.npy")]
     found_files = np.array([])
     for net_label in net_labels:
         # file_tag = f'NET_{net_label_styler(net.label)}_SCI-CASE_{science_case}_WF_..._INJS-PER-ZBIN_{num_injs}'

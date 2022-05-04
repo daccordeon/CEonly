@@ -42,7 +42,7 @@ License:
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional, Union, Any
 from useful_functions import insert_at_pattern
 from filename_search_and_manipulation import net_label_styler
 
@@ -50,7 +50,7 @@ from gwbench import network
 import os
 
 
-def set_file_tags(obj : Any) -> None:
+def set_file_tags(obj: Any) -> None:
     """Sets the file_tag and human_file_tag of an instance of NetworkExtended or InjectionResults.
 
     TODO: Update obj's type hinting to Union[Type[NetworkExtended], Type[InjectionResults]].
@@ -88,22 +88,22 @@ class NetworkExtended(network.Network):
         file_name (Optional[str]): File name for processed results .npy data file without path.
         data_path (str): Path to the data file.
         file_name_with_path (str): File name for processed results .npy data file with path.
-        results_file_exists (bool): Whether processed results .npy data file exists.        
-        
+        results_file_exists (bool): Whether processed results .npy data file exists.
+
         And all other attributes of the network.Network class as initialised by a network_spec.
     """
 
     def __init__(
         self,
-        network_spec : List[str],
-        science_case : str,
-        wf_model_name : str,
-        wf_other_var_dic : Optional[Dict[str, str]],
-        num_injs : int,
-        file_name : Optional[str]=None,
-        data_path : str="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
+        network_spec: List[str],
+        science_case: str,
+        wf_model_name: str,
+        wf_other_var_dic: Optional[Dict[str, str]],
+        num_injs: int,
+        file_name: Optional[str] = None,
+        data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
     ) -> None:
-        """Initialises NetworkExtended with all attributes. 
+        """Initialises NetworkExtended with all attributes.
 
         Args:
             network_spec: Network specification, e.g. ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'].
@@ -112,7 +112,7 @@ class NetworkExtended(network.Network):
             wf_other_var_dic: Waveform approximant dictionary.
             num_injs: Number of injections per major redshift bin.
             file_name: File name for processed results .npy data file without path. If blank, then it is generated from the created file_tag. If containing "SLURM_TASK_", then the task_id is also added to the file_name.
-            data_path: Path to the data file. 
+            data_path: Path to the data file.
         """
         super().__init__(network_spec)
         self.network_spec = network_spec
@@ -124,6 +124,7 @@ class NetworkExtended(network.Network):
         self.tecs = list(set([detector.tec for detector in self.detectors]))
 
         # input/output standard: file name and plot label
+        self.data_path = data_path
         set_file_tags(self)
         if file_name is None:
             self.file_name = f"results_{self.file_tag}.npy"
@@ -131,8 +132,8 @@ class NetworkExtended(network.Network):
             self.file_name = (
                 f'results_{self.file_tag}_TASK_{file_name.split("SLURM_TASK_")[1]}.npy'
             )
+        #             self.data_path = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/task_files/"
         else:
             self.file_name = file_name
-        self.data_path = data_path
         self.file_name_with_path = self.data_path + self.file_name
         self.results_file_exists = os.path.isfile(self.file_name_with_path)

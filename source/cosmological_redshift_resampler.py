@@ -43,7 +43,7 @@ License:
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional, Union, Type, Any
 from numpy.typing import NDArray
 import numpy as np
 from scipy.stats import gmean
@@ -144,10 +144,10 @@ def cosmological_redshift_sample(
 
 
 def resample_redshift_cosmologically_from_results(
-    results: InjectionResults,
+    results: Type[InjectionResults],
     print_progress: bool = False,
     print_samples_with_replacement: bool = False,
-    **kwargs,
+    **kwargs : Any,
 ) -> NDArray[NDArray[float]]:
     """Returns the resampled given results using a cosmological model.
 

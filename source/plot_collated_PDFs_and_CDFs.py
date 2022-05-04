@@ -1,10 +1,12 @@
-"""Short one-sentence description.
+"""Collates the distributions of the signal-to-noise ratio, 90%-credible sky-area, and measurement errors for different networks.
 
-Long description.
+Uses the .npy processed injections data files.
 
 Usage:
-    Describe the typical usage.
-
+    Requires process injections data files to exist.
+    Code structure is similar to plot_collated_detection_rates.py.
+    See run_plot_collated_detection_rate_and_PDFs_and_CDFs_as_task.py.
+    
 License:
     BSD 3-Clause License
 
@@ -37,7 +39,7 @@ License:
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional, Union, Type
 from numpy.typing import NDArray
 from results_class import InjectionResults
 from constants import (
@@ -67,30 +69,33 @@ from copy import deepcopy
 
 
 def add_measurement_errs_CDFs_to_axs(
-    axs,
-    resampled_results,
-    num_bins,
-    colour,
-    linestyle,
-    label,
-    normalise_count=True,
-    threshold_by_SNR=True,
-    contour=True,
-    debug=False,
-):
-    """Short description.
+    axs : NDArray[Type[plt.Subplot]],
+    resampled_results : NDArray[NDArray[float]],
+    num_bins : int,
+    colour : Optional[str],
+    linestyle : Optional[str],
+    label : str,
+    normalise_count : bool=True,
+    threshold_by_SNR : bool=True,
+    contour : bool=True,
+    debug : bool=False,
+) -> None:
+    """Adds the distributions for SNR, sky area, and measurement errors plots for a given network onto existing axes.
+
+    Takes array of results from file cosmologically re-sampled, add PDFs wrt dlog(x) for the x-axis variable x and CDFs on log-log scale to axes.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        axs: Existing axes to add plots to.
+        resampled_results: Cosmologically resampled results.
+        num_bins: Number of sub-bins to split redshift into to calculate PDF/histogram.
+        colour: Colour for plot curves.
+        linestyle: Linestyle for plot curves.
+        label: Legend label for plot.
+        normalise_count: Whether to set the yaxis for the PDFs to be normalised to one instead of displaying the actual count histogram-like. The yscale is logarithmic either way.
+        threshold_by_SNR: Whether to threshold the non-SNR quantities by SNR.
+        contour: Whether to display contours between the different SNR thresholds for non-SNR quantities (between SNR > 100 (detected well) and SNR > 10 (detected)). This crowds the plot. TODO: figure out a way to display the information cleanly.
+        debug: Whether to print debug statements.
     """
-    """takes array of results from file cosmologically re-sampled, add PDFs wrt dlog(x) and CDFs on log-log scale to axs.
-    the bool contour controls whether to display contours on the CDFs between SNR > 100 (detected well) and SNR > 10 (detected) curves"""
     # re-order results columns and transpose: [snr, sky-area, err_logMc, err_eta, err_logDL, err_iota]
     results_reordered = resampled_results.transpose()[(1, 6, 2, 4, 3, 5), :]
     snr = results_reordered[0]
@@ -221,41 +226,58 @@ def add_measurement_errs_CDFs_to_axs(
 
 
 def collate_measurement_errs_CDFs_of_networks(
-    network_spec_list,
-    science_case,
-    specific_wf=None,
-    num_bins=20,
-    save_fig=True,
-    show_fig=True,
-    plot_label=None,
-    full_legend=False,
-    print_progress=True,
-    xlim_list=None,
-    normalise_count=True,
-    threshold_by_SNR=True,
-    plot_title=None,
-    CDFmin=None,
-    data_path="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
-    linestyles_from_BS2022=False,
-    contour=False,
-    parallel=False,
-    debug=False,
-    seed=None,
-    norm_tag="GWTC3",
-):
-    """Short description.
+    network_spec_list: List[List[str]],
+    science_case: str,
+    specific_wf: Optional[str]=None,
+    num_bins:int=20,
+    save_fig:bool=True,
+    show_fig:bool=True,
+    plot_label:Optional[str]=None,
+    full_legend:bool=False,
+    print_progress:bool=True,
+    xlim_list:Optional[Union[Tuple[tuple, ...], str]]=None,
+    normalise_count:bool=True,
+    threshold_by_SNR:bool=True,
+    plot_title:Optional[str]=None,
+    CDFmin:Optional[float]=None,
+    data_path:str="/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    linestyles_from_BS2022:bool=False,
+    contour:bool=False,
+    parallel:bool=False,
+    debug:bool=False,
+    seed:Optional[int]=None,
+    norm_tag:str="GWTC3",
+) -> None:
+    """Collates distributions of SNR, sky-area, and measurement errors for different networks.
+    
+    Distributions are the probability density function (PDF) wrt the logarithmic axis (i.e. if a histogram with uniform logarithmic width bins was normalised to height instead of the actual integrated area) and the cumulative (CDF) function of the raw variable.
 
     Args:
-        x: _description_
+        network_spec_list: Set of unique networks to compare.
+        science_case: Science case, e.g. 'BNS'.
+        specific_wf: If specified, then filters to only show the given waveform.
+        num_bins: Number of sub-bins to split redshift into to calculate PDF/histogram.
+        save_fig: Whether to save the plot.
+        show_fig: Whether to show the plot interactively.
+        plot_label: File name to save plot as.
+        full_legend: Whether to display a verbose legend.
+        print_progress: Whether to print progress statements.
+        xlim_list: X-axis limits for the six plots, or a tag to load a preset.
+        normalise_count: Whether to set the yaxis for the PDFs to be normalised to one instead of displaying the actual count histogram-like. The yscale is logarithmic either way.
+        threshold_by_SNR: Whether to threshold the non-SNR quantities by SNR.
+        plot_title: Sub-title for the plot.
+        CDFmin: Minimum CDF value to plot.
+        data_path: Path to processed injections data files.
+        linestyles_from_BS2022: Whether to use the linesstyles from B&S2022
+        contour: Whether to display contours between the different SNR thresholds for non-SNR quantities. This crowds the plot. TODO: figure out a way to display the information cleanly.
+        parallel: Whether to parallelize the computation.
+        debug: Whether to print debug statements.
+        seed: Random seed for the cosmological resampling of the uniform-in-linear-redshift injections.
+        norm_tag: Survey to normalise cosmological merger rates to.
 
     Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        ValueError: If the science case is not recognised.
     """
-    """collate PDFs-dlog(x) and CDFs of SNR, sky-area, and measurement errs for given networks.
-    normalise_count sets the yscale for the PDFs to logarithmic as well"""
     found_files = find_files_given_networks(
         network_spec_list,
         science_case,
@@ -432,7 +454,7 @@ def collate_measurement_errs_CDFs_of_networks(
     if normalise_count:
         axs[0, 0].set(ylabel="normalised\ncount wrt height")
     else:
-        axs[0, 0].set(ylabel="count in bin", yscale="log")
+        axs[0, 0].set(ylabel="count in bin")
     if CDFmin == "B&S2022":
         CDFmin = 1e-4
     axs[1, 0].set(ylabel="CDF", ylim=(CDFmin, 1 + 0.1))
@@ -469,10 +491,7 @@ def collate_measurement_errs_CDFs_of_networks(
     fig.canvas.draw()
     for ax in axs[0]:
         ax.yaxis.set_tick_params(labelsize=10)
-        if normalise_count:
-            force_log_grid(ax, log_axis="both")
-        else:
-            force_log_grid(ax, log_axis="x")
+        force_log_grid(ax, log_axis="both")
     for ax in axs[1]:
         ax.yaxis.set_tick_params(labelsize=10)
         force_log_grid(ax, log_axis="both")

@@ -1,6 +1,6 @@
 """Calculates the same set of injections for a set of networks.
 
-Based on the old calculate_injections.py and gwbench's multi_network.py example script, this processes the injections (e.g. in raw_injections_data/) in union for each network in a set and saves the results (e.g. in processed_injections_data/). This is faster than the previous implementation if detectors are shared between the networks because the detector responses are only calculated once.
+Based on the old calculate_injections.py and gwbench's multi_network.py example script, this processes the injections (e.g. in data_raw_injections/) in union for each network in a set and saves the results (e.g. in data_processed_injections/). This is faster than the previous implementation if detectors are shared between the networks because the detector responses are only calculated once.
 
 Usage:
     See the example in run_unified_injections.py.
@@ -248,7 +248,7 @@ def multi_network_results_for_injections_file(
         ],
     ],
     misc_settings_dict: Dict[str, Optional[int]],
-    data_path: int = "/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
+    data_path: int = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/task_files/",
     debug: int = False,
 ) -> None:
     """Runs the injections in the given file through the given set of networks and saves them as a .npy file.
@@ -265,7 +265,7 @@ def multi_network_results_for_injections_file(
         wf_dict: Waveform dictionary of model name and options, also contains the science case string.
         deriv_dict: Derivative options dictionary.
         misc_settings_dict: Options for gwbench, e.g. whether to account for Earth's rotation about its axis.
-        data_path: Path to the output file.
+        data_path: Path to the output processed data file for the task.
         debug: Whether to debug.
 
     Raises:

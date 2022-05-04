@@ -51,13 +51,11 @@ import glob
 import os, sys
 
 
-def file_tag_from_task_file(file : str, cut_num_injs : bool=False) -> str:
+def file_tag_from_task_file(file: str, cut_num_injs: bool = False) -> str:
     """Returns the file tag from a task output filename.
-    
-    Assumes that the path is in the file name. TODO: this is an old comment, it doesn't look true anymore, update it.
 
     Args:
-        file: Filename of task file.
+        file: Filename of task file with or without path.
         cut_num_injs: Whether to not include the number of injections per redshift bin.
     """
     file_tag = file.replace("_TASK_", "results_").split("results_")[1]
@@ -68,15 +66,19 @@ def file_tag_from_task_file(file : str, cut_num_injs : bool=False) -> str:
 
 
 def merge_npy_files(
-    output_filename : str, input_files: Optional[List[str]]=None, pattern: Optional[str]=None, path: str="./", delete_input_files:bool=False
+    output_filename: str,
+    input_files: Optional[List[str]] = None,
+    pattern: Optional[str] = None,
+    input_path: Optional[str] = None,
+    delete_input_files: bool = False,
 ) -> None:
     """Merges input or found .npy files into one .npy file.
 
     Args:
-        output_filename: Filename of output collated .npy data file without path.
+        output_filename: Filename of output collated .npy data file with path.
         input_files: Filenames of input .npy files.
         pattern: Pattern to search for input .npy files if input_files isn't given.
-        path: Path to output file and where to search for pattern if given and input_files isn't.
+        input_path: Path to where to search for pattern if given and input_files isn't.
         delete_input_files: Whether to delete the input files if no error raised.
 
     Raises:
@@ -85,7 +87,7 @@ def merge_npy_files(
     # https://stackoverflow.com/questions/44164917/concatenating-numpy-arrays-from-a-directory
     if input_files is None:
         input_files = sorted(
-            glob.glob(path + pattern)
+            glob.glob(input_path + pattern)
         )  # sorted to make debugging printout easier to read
     arrays = []
     for input_file in input_files:
@@ -94,7 +96,7 @@ def merge_npy_files(
     try:
         # concatenate works with empty data arrays as long as they have shape=(0, 7) which is the case for without_rows_w_nan
         merged_array = np.concatenate(arrays)
-        np.save(path + output_filename, merged_array)
+        np.save(output_filename, merged_array)
     except:
         raise Exception(
             "Something went wrong when concatenating arrays, check memory allocation."
@@ -106,19 +108,21 @@ def merge_npy_files(
 
 
 def merge_all_task_npy_files(
-    path : str ="/fred/oz209/jgardner/CEonlyPony/source/processed_injections_data/",
-    pattern : str ="results_NET_*_SCI-CASE_*_WF_*_INJS-PER-ZBIN_*_TASK_*.npy",
-    delete_input_files : bool =False,
+    input_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/task_files/",
+    pattern: str = "results_NET_*_SCI-CASE_*_WF_*_INJS-PER-ZBIN_*_TASK_*.npy",
+    output_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    delete_input_files: bool = False,
 ) -> None:
     """Merges all processed .npy data files from slurm tasks into one .npy file per network and science case combination.
 
     Args:
-        path: Path to processed .npy data files from slurm tasks.
+        input_path: Path to processed .npy data files from slurm tasks.
         pattern: Pattern to match input task files.
+        output_path: Path to save merged .npy data files.
         delete_input_files: Whether to delete the input task files after successful merging.
     """
     task_files = sorted(
-        glob.glob(path + pattern)
+        glob.glob(input_path + pattern)
     )  # sorted to make debugging printout easier to read
     # split into separate network+sc+wf combinations
     # dict(tag1=[net1-task1, net1-task2], tag2=[net2-task1, net2-task2], ...)
@@ -155,12 +159,12 @@ def merge_all_task_npy_files(
             .split("_INJS-PER-ZBIN_")[1]
         )
         output_filename = (
-            f"results_{file_tag_net_sc_wf}_INJS-PER-ZBIN_{input_num_injs}.npy"
+            output_path
+            + f"results_{file_tag_net_sc_wf}_INJS-PER-ZBIN_{input_num_injs}.npy"
         )
         merge_npy_files(
             output_filename,
             input_files=task_files_same_tag,
-            path=path,
             delete_input_files=delete_input_files,
         )
 

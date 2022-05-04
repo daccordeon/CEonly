@@ -1,9 +1,4 @@
-"""Short one-sentence description.
-
-Long description.
-
-Usage:
-    Describe the typical usage.
+"""Miscellaneous useful mathematical and python functions that are not implementation specific.
 
 License:
     BSD 3-Clause License
@@ -37,7 +32,8 @@ License:
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional, Union, Type
+from types import TracebackType
 from numpy.typing import NDArray
 import os, sys
 import numpy as np
@@ -45,31 +41,26 @@ from p_tqdm import p_map, p_umap
 from multiprocessing import Pool
 
 
-class HiddenPrints:
-    """Short description.
+class HiddenPrints(object):
+    """Class used in with statement to hide stdout, e.g. print statements.
 
-    Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+    From <https://stackoverflow.com/a/45669280>; use as ``with HiddenPrints():''.
+    Typing from <https://stackoverflow.com/questions/49959656/typing-exit-in-3-5-fails-on-runtime-but-typechecks>.
     """
 
-    """https://stackoverflow.com/a/45669280; use as ``with HiddenPrints():''"""
-
-    def __enter__(self):
+    # TODO: Add docstrings to these private methods once I'm familiar with them, see above urls for now.
+    def __enter__(self) -> None:
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Optional[Type[BaseException]],
+             exc_value: Optional[BaseException],
+             traceback: Optional[TracebackType]) -> None:
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
 
-class PassEnterExit:
+class PassEnterExit(object):
     """Short description.
 
     Args:
