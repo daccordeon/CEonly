@@ -248,7 +248,7 @@ def multi_network_results_for_injections_file(
         ],
     ],
     misc_settings_dict: Dict[str, Optional[int]],
-    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/task_files/",
+    data_path: str = "./data_processed_injections/task_files/",
     debug: int = False,
 ) -> None:
     """Runs the injections in the given file through the given set of networks and saves them as a .npy file.

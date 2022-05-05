@@ -50,4 +50,4 @@ TEST_INDS=(1 1024 1025 2048)
 # slurm uses a base index of 1 but bash uses 0
 let "TEST_IND = ${TEST_INDS[$SLURM_ARRAY_TASK_ID - 1]}"
 
-srun mprof run -o "mprof_plot_unified_injs_${TEST_IND}.dat" /fred/oz209/jgardner/CEonlyPony/source/run_calculate_unified_injections_as_task.py ${TEST_IND}; mprof plot -o "mprof_plot_unified_injs_${TEST_IND}.pdf" "mprof_plot_unified_injs_${TEST_IND}.dat"
+srun mprof run -o "mprof_plot_unified_injs_${TEST_IND}.dat" ./run_calculate_unified_injections_as_task.py ${TEST_IND}; mprof plot -o "mprof_plot_unified_injs_${TEST_IND}.pdf" "mprof_plot_unified_injs_${TEST_IND}.dat"

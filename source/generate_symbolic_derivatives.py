@@ -121,8 +121,10 @@ def generate_symbolic_derivatives(
 
 if __name__ == "__main__":
     # tf2_tidal is used as a replacement for numerical BNS simulations until they become well-conditioned
+    # TODO: make a user input file somewhere to unify the considered waveforms
     wf_model_name, wf_other_var_dic = "tf2_tidal", None
     deriv_symbs_string = "Mc eta DL tc phic iota ra dec psi"
+    # TODO: make this automated by using a locs list from networks.py
     locs = ["H", "L", "V", "K", "I", "ET1", "ET2", "ET3", "C", "N", "S"]
     use_rot = True
 

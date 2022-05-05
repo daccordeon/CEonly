@@ -47,4 +47,4 @@
 #     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # James Gardner, March 2022
-srun python3 /fred/oz209/jgardner/CEonlyPony/source/run_plot_collated_detection_rate_and_PDFs_and_CDFs_as_task.py $SLURM_ARRAY_TASK_ID
+srun python3 ./run_plot_collated_detection_rate_and_PDFs_and_CDFs_as_task.py $SLURM_ARRAY_TASK_ID

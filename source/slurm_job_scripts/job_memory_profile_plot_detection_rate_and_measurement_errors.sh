@@ -48,4 +48,4 @@
 
 NETWORK_INDEX=4 # 0 for first network set (B&S2022_SIX)
 let "OFFSET_TASK_ID = $SLURM_ARRAY_TASK_ID + 4*$NETWORK_INDEX"
-srun mprof run -o "mprof_plot_plotters_${OFFSET_TASK_ID}.dat" /fred/oz209/jgardner/CEonlyPony/source/run_plot_collated_detection_rate_and_PDFs_and_CDFs_as_task.py ${OFFSET_TASK_ID}; mprof plot -o "mprof_plot_plotters_${OFFSET_TASK_ID}.pdf" "mprof_plot_plotters_${OFFSET_TASK_ID}.dat"
+srun mprof run -o "mprof_plot_plotters_${OFFSET_TASK_ID}.dat" ./run_plot_collated_detection_rate_and_PDFs_and_CDFs_as_task.py ${OFFSET_TASK_ID}; mprof plot -o "mprof_plot_plotters_${OFFSET_TASK_ID}.pdf" "mprof_plot_plotters_${OFFSET_TASK_ID}.dat"

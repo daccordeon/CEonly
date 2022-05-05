@@ -82,7 +82,7 @@ else:
     plot_label = f"NET_{network_label}_SCI-CASE_{science_case}_WF_{wf_model_name}"
     plot_title = f"Networks: {network_label}, science-case: {science_case}, waveform: {wf_model_name}"
 
-data_path = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/"
+data_path = "./data_processed_injections/"
 
 # print(network_set, science_case, plot_label, plot_index)
 

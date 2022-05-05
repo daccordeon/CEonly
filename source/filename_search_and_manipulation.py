@@ -166,7 +166,7 @@ def find_files_given_networks(
     science_case: str,
     specific_wf: Optional[str] = None,
     print_progress: bool = True,
-    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    data_path: str = "./data_processed_injections/",
     raise_error_if_no_files_found: bool = True,
 ) -> List[str]:
     """Returns a list of found files that match networks, science case, and specific wf.

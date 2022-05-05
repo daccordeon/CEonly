@@ -101,7 +101,7 @@ class NetworkExtended(network.Network):
         wf_other_var_dic: Optional[Dict[str, str]],
         num_injs: int,
         file_name: Optional[str] = None,
-        data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+        data_path: str = "./data_processed_injections/",
     ) -> None:
         """Initialises NetworkExtended with all attributes.
 
@@ -132,7 +132,7 @@ class NetworkExtended(network.Network):
             self.file_name = (
                 f'results_{self.file_tag}_TASK_{file_name.split("SLURM_TASK_")[1]}.npy'
             )
-        #             self.data_path = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/task_files/"
+        #             self.data_path = "./data_processed_injections/task_files/"
         else:
             self.file_name = file_name
         self.file_name_with_path = self.data_path + self.file_name

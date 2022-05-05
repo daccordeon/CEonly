@@ -120,9 +120,7 @@ class InjectionResults(object):
                     # if some relative path is given, then assume it to be local
                     data_path = "./"
             else:
-                data_path = (
-                    "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/"
-                )
+                data_path = "./data_processed_injections/"
                 if "_TASK_" in file_name:
                     data_path += "task_files/"
 
@@ -154,7 +152,7 @@ class InjectionResults(object):
                 self.file_name.replace(".npy", "_TASK_").split("_TASK_")[1]
             )
             self.injections_task_file_name = glob.glob(
-                f"/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/task_files/*TASK_{self.task_id}.npy"
+                f"./data_raw_injections/task_files/*TASK_{self.task_id}.npy"
             )[0]
             self.initial_task_num_injs = np.load(self.injections_task_file_name).shape[
                 0

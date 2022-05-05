@@ -4,12 +4,12 @@
 Usage:
     Defaults to targetting processed injections data.
     To merge without deleting task files:
-    $ python3 merge_npy_files.py
+    $ python3 merge_processed_injections_task_files.py
     or
-    $ python3 merge_npy_files.py 0
+    $ python3 merge_processed_injections_task_files.py 0
     
     To merge and delete task files:
-    $ python3 merge_npy_files.py 1
+    $ python3 merge_processed_injections_task_files.py 1
 
 License:
     BSD 3-Clause License
@@ -108,9 +108,9 @@ def merge_npy_files(
 
 
 def merge_all_task_npy_files(
-    input_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/task_files/",
+    input_path: str = "./data_processed_injections/task_files/",
     pattern: str = "results_NET_*_SCI-CASE_*_WF_*_INJS-PER-ZBIN_*_TASK_*.npy",
-    output_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    output_path: str = "./data_processed_injections/",
     delete_input_files: bool = False,
 ) -> None:
     """Merges all processed .npy data files from slurm tasks into one .npy file per network and science case combination.

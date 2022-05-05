@@ -160,7 +160,7 @@ def generate_injections(
     redshifted: bool,
     coeff_fisco: int,
     science_case: str,
-    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/",
+    inj_data_path: str = "./data_raw_injections/",
 ) -> None:
     """Generates raw injections data sampled uniformly linearly in redshift, saves as .npy.
 
@@ -276,8 +276,8 @@ def inj_params_for_science_case(
 
 def chop_injections_data_for_processing(
     job_array_size: int = 2048,
-    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/",
-    output_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/task_files/",
+    inj_data_path: str = "./data_raw_injections/",
+    output_data_path: str = "./data_raw_injections/task_files/",
 ) -> None:
     """Splits (chops) the saved injections data into different files for each of the parallel tasks later to run over.
 

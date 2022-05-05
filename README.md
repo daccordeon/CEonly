@@ -7,5 +7,5 @@ Current build found [here](https://github.com/daccordeon/CEonlyPony).
 
 ---
 - Contact james.gardner (at) anu.edu.au for any technical enquiries.
-- Python requirements for the codebase in source/ found in requirements.txt.
-- The critical path to replicate the results and plots is explained in source/guide_to_using_codebase.ipynb.
+- Python requirements for the codebase in `source/` found in `requirements.txt`.
+- The critical path to replicate the results and plots is explained in `source/guide_to_replicating_results.ipynb`.

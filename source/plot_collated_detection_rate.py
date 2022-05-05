@@ -147,7 +147,7 @@ def compare_detection_rate_of_networks_from_saved_results(
     full_legend: bool = False,
     specific_wf: Optional[str] = None,
     print_progress: bool = True,
-    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    data_path: str = "./data_processed_injections/",
     parallel: bool = True,
     debug: bool = False,
     norm_tag: str = "GWTC3",

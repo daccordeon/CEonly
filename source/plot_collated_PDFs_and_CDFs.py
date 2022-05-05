@@ -240,7 +240,7 @@ def collate_measurement_errs_CDFs_of_networks(
     threshold_by_SNR: bool = True,
     plot_title: Optional[str] = None,
     CDFmin: Optional[float] = None,
-    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    data_path: str = "./data_processed_injections/",
     linestyles_from_BS2022: bool = False,
     contour: bool = False,
     parallel: bool = False,

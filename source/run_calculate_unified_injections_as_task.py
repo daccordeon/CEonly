@@ -53,7 +53,7 @@ from calculate_unified_injections import multi_network_results_for_injections_fi
 
 def settings_from_task_id(
     task_id: int,
-    inj_data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_raw_injections/task_files/",
+    inj_data_path: str = "./data_raw_injections/task_files/",
 ) -> Tuple[str, Dict[str, Union[str, Optional[Dict[str, str]], bool, int]], int]:
     """Returns injection file (with path), waveform parameters in a dictionary, and number of injections for the given task id.
 
@@ -154,6 +154,7 @@ deriv_dict: Dict[
 deriv_dict["numerical_over_symbolic_derivs"] = wf_dict["numerical_over_symbolic_derivs"]
 if not deriv_dict["numerical_over_symbolic_derivs"]:
     deriv_dict["numerical_deriv_settings"] = None
+    # TODO: Slurm gets upset when multiple tasks try to create the derivatives if there aren't any there already, so run in series using `$ python3 generate_symbolic_derivatives.py`. Presently, this just performs a check that they exist but hopefully won't regenerate them in parallel.
     generate_symbolic_derivatives(
         wf_dict["wf_model_name"],
         wf_dict["wf_other_var_dic"],

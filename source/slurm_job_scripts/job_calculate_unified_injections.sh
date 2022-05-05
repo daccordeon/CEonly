@@ -51,4 +51,4 @@
 let "ONE_INDEXED_TASK_ID = ${SLURM_ARRAY_TASK_ID} + 1"
 
 # argument/s: task_id (handle everything else inside python)
-srun python3 /fred/oz209/jgardner/CEonlyPony/source/run_calculate_unified_injections_as_task.py ${ONE_INDEXED_TASK_ID}
+srun python3 ./run_calculate_unified_injections_as_task.py ${ONE_INDEXED_TASK_ID}
