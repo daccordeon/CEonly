@@ -57,7 +57,7 @@ from network_subclass import NetworkExtended
 
 def multi_network_results_for_injection(
     network_specs: List[List[str]],
-    inj: NDArray[float],
+    inj: NDArray[np.float64],
     base_params: Dict[str, Union[int, float]],
     wf_dict: Dict[str, Union[str, Optional[Dict[str, str]], bool, int]],
     deriv_dict: Dict[
@@ -72,7 +72,7 @@ def multi_network_results_for_injection(
     ],
     misc_settings_dict: Dict[str, Optional[int]],
     debug: bool = False,
-) -> Dict[str, Tuple[float]]:
+) -> Dict[str, Tuple[float, ...]]:
     """Returns the benchmark as a dict of tuples for a single injection using the inj and base_params and the settings dicts through the networks in network_specs.
 
     If a single network fails an injection, then the unified results will save it as a np.nan in all networks so that the universe of injections is the same between each network. TODO: check that this doesn't bias the results away from loud sources that we care about.
@@ -248,7 +248,7 @@ def multi_network_results_for_injections_file(
         ],
     ],
     misc_settings_dict: Dict[str, Optional[int]],
-    data_path: int = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/task_files/",
+    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/task_files/",
     debug: int = False,
 ) -> None:
     """Runs the injections in the given file through the given set of networks and saves them as a .npy file.
@@ -271,7 +271,7 @@ def multi_network_results_for_injections_file(
     Raises:
         Exception: If any of the target results files already exist.
     """
-    inj_data: NDArray[NDArray[float]] = np.load(injections_file)
+    inj_data: NDArray[NDArray[np.float64]] = np.load(injections_file)
     if process_injs_per_task is None:
         process_injs_per_task = len(inj_data)
     # only process the first process_injs_per_task of inj_data

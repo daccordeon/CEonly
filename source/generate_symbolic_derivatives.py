@@ -124,7 +124,7 @@ if __name__ == "__main__":
     wf_model_name, wf_other_var_dic = "tf2_tidal", None
     deriv_symbs_string = "Mc eta DL tc phic iota ra dec psi"
     locs = ["H", "L", "V", "K", "I", "ET1", "ET2", "ET3", "C", "N", "S"]
-    use_rot = 1
+    use_rot = True
 
     generate_symbolic_derivatives(
         wf_model_name,

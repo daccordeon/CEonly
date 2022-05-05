@@ -173,4 +173,5 @@ def detection_rate_limit(
         z0: Maximum redshift to integrate detection rate from zero out to.
         **kwargs: Options passed to merger_rate.
     """
-    return detection_rate(merger_rate, lambda _, __: 1, z0, None, **kwargs)
+    # snr threshold of 0 is arbitrary since the efficiency is constant
+    return detection_rate(merger_rate, lambda _, __: 1, z0, 0, **kwargs)

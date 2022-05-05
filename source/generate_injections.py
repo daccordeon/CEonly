@@ -90,7 +90,7 @@ def injection_file_name(
 
 
 def filter_bool_for_injection(
-    inj: NDArray[float],
+    inj: NDArray[np.float64],
     redshifted: bool,
     coeff_fisco: int,
     science_case: str,
@@ -294,12 +294,12 @@ def chop_injections_data_for_processing(
     tasks_per_sc = job_array_size // num_science_cases
     for j, file in enumerate(files):
         # absolute path included
-        science_case, num_injs_per_redshift_bin = (
+        science_case, num_injs_per_redshift_bin_str = (
             file.replace("_INJS-PER-ZBIN_", "_SCI-CASE_")
             .replace(".npy", "_SCI-CASE_")
             .split("_SCI-CASE_")[1:3]
         )
-        num_injs_per_redshift_bin = int(num_injs_per_redshift_bin)
+        num_injs_per_redshift_bin = int(num_injs_per_redshift_bin_str)
         inj_data = np.load(file)
         injs_per_task = len(inj_data) // tasks_per_sc
         chop_inds = [
@@ -322,7 +322,7 @@ if __name__ == "__main__":
     # 250k injections to match B&S2022
     num_injs_per_redshift_bin = 250000
     science_cases = ("BBH", "BNS")
-    redshifted = 1
+    redshifted = True
 
     for science_case in science_cases:
         mass_dict, spin_dict, redshift_bins, coeff_fisco = inj_params_for_science_case(

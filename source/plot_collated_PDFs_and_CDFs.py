@@ -70,7 +70,7 @@ from copy import deepcopy
 
 def add_measurement_errs_CDFs_to_axs(
     axs: NDArray[Type[plt.Subplot]],
-    resampled_results: NDArray[NDArray[float]],
+    resampled_results: NDArray[NDArray[np.float64]],
     num_bins: int,
     colour: Optional[str],
     linestyle: Optional[str],
@@ -372,23 +372,23 @@ def collate_measurement_errs_CDFs_of_networks(
         xlim_list = tuple((None, None) for _ in range(6))
     elif xlim_list == "B&S2022":
         if science_case == "BNS":
-            xlim_list = [
+            xlim_list = (
                 (1e0, 1e2),
                 (1e-2, 1e2),
                 (1e-7, 1e-4),
                 (1e-6, 1e-3),
                 (1e-2, 1e1),
                 (1e-3, 1e1),
-            ]
+            )
         elif science_case == "BBH":
-            xlim_list = [
+            xlim_list = (
                 (1e0, 1e3),
                 (1e-3, 1e2),
                 (1e-6, 1e-1),
                 (1e-7, 1e-2),
                 (1e-3, 1e0),
                 (1e-3, 1e0),
-            ]
+            )
         else:
             raise ValueError("Science case not recognised.")
     elif xlim_list == "B&S2022-Figs11--12":

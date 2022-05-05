@@ -32,7 +32,18 @@ License:
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from typing import List, Set, Dict, Tuple, Optional, Union, Type, Callable, Iterable
+from typing import (
+    List,
+    Set,
+    Dict,
+    Tuple,
+    Optional,
+    Union,
+    Type,
+    Callable,
+    Iterable,
+    Any,
+)
 from types import TracebackType
 from numpy.typing import NDArray
 import os, sys
@@ -106,7 +117,7 @@ def sigmoid_3parameter(z: float, a: float, b: float, c: float) -> float:
     return ((1 + b) / (1 + b * np.exp(a * z))) ** c
 
 
-def flatten_list(x: list[list]) -> list:
+def flatten_list(x: List[list]) -> list:
     """Returns a list with two levels flattened, e.g. flattens a 2D list.
 
     TODO: remove bug that it affects strings, e.g. x = ['ab', 'cd'].
@@ -123,7 +134,7 @@ def parallel_map(
     xarr: Iterable,
     display_progress_bar: bool = False,
     unordered: bool = False,
-    num_cpus: int = os.cpu_count(),
+    num_cpus: Optional[int] = os.cpu_count(),
     parallel: bool = True,
 ) -> list:
     """Returns a function mapped over an iterable using parallel computation.
@@ -137,8 +148,14 @@ def parallel_map(
         unordered: Whether to let the parallel computations occur out of order.
         num_cpus: The number of CPUs to use.
         parallel: Whether to parallelize the computation.
+
+    Raises:
+        ValueError: If the number of CPUs is undetermined, i.e. if num_cpus is None.
     """
     if parallel:
+        if num_cpus is None:
+            raise ValueError("Number of CPUs undetermined.")
+
         if display_progress_bar:
             if unordered:
                 return list(p_umap(fn, xarr, num_cpus=num_cpus))
@@ -161,7 +178,7 @@ def parallel_map(
 
 def logarithmically_uniform_sample(
     low: float, high: float, num_samples: int, seed: Optional[int] = None
-) -> NDArray[float]:
+) -> NDArray[np.float64]:
     """Returns a number of samples uniformly distributed when viewed on a logarithmic scale.
 
     Done by uniformly sampling the log-transform variable.

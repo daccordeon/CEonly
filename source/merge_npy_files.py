@@ -126,7 +126,7 @@ def merge_all_task_npy_files(
     )  # sorted to make debugging printout easier to read
     # split into separate network+sc+wf combinations
     # dict(tag1=[net1-task1, net1-task2], tag2=[net2-task1, net2-task2], ...)
-    dict_tag_task_files = dict()
+    dict_tag_task_files: Dict[str, List[str]] = dict()
     for file in task_files:
         # remove num_injs from file_tag to capture the last injection task which contains more injections since 1024 doesn't divide the injections remaining after initial filtering
         file_tag_net_sc_wf = file_tag_from_task_file(file, cut_num_injs=True)
@@ -175,4 +175,4 @@ if __name__ == "__main__":
         delete_input_files = int(sys.argv[1])
     else:
         delete_input_files = 0
-    merge_all_task_npy_files(delete_input_files=delete_input_files)
+    merge_all_task_npy_files(delete_input_files=bool(delete_input_files))

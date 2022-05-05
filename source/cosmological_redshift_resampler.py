@@ -64,7 +64,7 @@ def cosmological_redshift_sample(
     parallel: bool = True,
     seed: Optional[int] = None,
     debug: bool = False,
-) -> Tuple[List[Tuple[float, float]], NDArray[float]]:
+) -> Tuple[List[Tuple[float, float]], NDArray[np.float64]]:
     """Returns the redshift sub-bins with index i and count n_i of the mergers within determined cosmologically in the observers frame.
 
     Merger rate (R(z) in B&S2022) is in [count]/yr/[redshift] so multiply by the number of years and integrate against z to get the actual count.
@@ -144,11 +144,11 @@ def cosmological_redshift_sample(
 
 
 def resample_redshift_cosmologically_from_results(
-    results: Type[InjectionResults],
+    results: InjectionResults,
     print_progress: bool = False,
     print_samples_with_replacement: bool = False,
     **kwargs: Any,
-) -> NDArray[NDArray[float]]:
+) -> NDArray[NDArray[np.float64]]:
     """Returns the resampled given results using a cosmological model.
 
     Given an InjectionResults instance, following B&S2022 Section 4A, use a cosmological model of the observed merger rate to uniformly sample n_i times from the saved results data in the subzbin with index i where n_i is determined cosmologically and, ultimately, phenomenologically. Returns the resampled results.results.

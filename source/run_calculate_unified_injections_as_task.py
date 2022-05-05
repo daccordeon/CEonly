@@ -73,13 +73,13 @@ def settings_from_task_id(
         )
     # includes absolute path
     file = matches[0]
-    science_case, num_injs_per_redshift_bin = (
+    science_case, num_injs_per_redshift_bin_str = (
         file.replace("_INJS-PER-ZBIN_", "_SCI-CASE_")
         .replace("_TASK_", "_SCI-CASE_")
         .replace(".npy", "_SCI-CASE_")
         .split("_SCI-CASE_")[1:3]
     )
-    num_injs_per_redshift_bin = int(num_injs_per_redshift_bin)
+    num_injs_per_redshift_bin = int(num_injs_per_redshift_bin_str)
 
     if science_case == "BNS":
         wf_dict = dict(
@@ -119,7 +119,7 @@ debug = False
 results_file_name = f"SLURM_TASK_{task_id}"
 injection_file_name, wf_dict, num_injs_per_redshift_bin = settings_from_task_id(task_id)
 # settings: whether to account for the rotation of the earth, whether to only calculate results for the whole network, whether the masses are already redshifted by the injections module, whether to parallelize and if so on how many cores
-misc_settings_dict = dict(use_rot=1, only_net=1, redshifted=1, num_cores=None)
+misc_settings_dict = dict(use_rot=True, only_net=True, redshifted=True, num_cores=None)
 tecs, locs = zip(
     *[
         det_spec.split("_")
@@ -131,7 +131,16 @@ unique_tecs, unique_locs = list(set(tecs)), list(set(locs))
 
 # derivative settings
 # sym_derivs = numerical_over_symbolic_derivs
-deriv_dict = dict(
+deriv_dict: Dict[
+    str,
+    Union[
+        str,
+        Tuple[str, ...],
+        List[Set[str]],
+        bool,
+        Optional[Dict[str, Union[float, str, int]]],
+    ],
+] = dict(
     deriv_symbs_string="Mc eta DL tc phic iota ra dec psi",
     conv_cos=("dec", "iota"),
     conv_log=(

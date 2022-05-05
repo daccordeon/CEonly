@@ -60,9 +60,9 @@ import matplotlib.lines as mlines
 
 def collate_eff_detrate_vs_redshift(
     axs: NDArray[Type[plt.Subplot]],
-    results: Type[InjectionResults],
+    results: InjectionResults,
     zaxis_plot: NDArray,
-    colours: Optional[List[str]] = None,
+    colours: Optional[List[Optional[str]]] = None,
     label: Optional[str] = None,
     parallel: bool = True,
 ) -> None:

@@ -69,14 +69,14 @@ class InjectionResults(object):
         file_name (str): File name for processed results .npy data file without path (slightly more flexible than this).
         data_path (str): Path to the data file.
         file_name_with_path (str): File name for processed results .npy data file with path.
-        results (NDArray[NDArray[float]]): Loaded .npy data file, rows are different injections, columns are different variables.
-        redshift (NDArray[float]): Redshift of injections.
-        snr (NDArray[float]): Signal-to-noise ratio of injections.
-        err_logMc (NDArray[float]): Fractional measurement error of chirp mass of injections.
-        err_logDL (NDArray[float]): Fractional measurement error of luminosity distance of injections.
-        err_eta (NDArray[float]): Measurement error of symmetric mass ratio of injections.
-        err_iota (NDArray[float]): Measurement error of inclination angle of injections.
-        sky_area_90 (NDArray[float]): Measurement error of 90%-credible sky-area of injections.
+        results (NDArray[NDArray[np.float64]]): Loaded .npy data file, rows are different injections, columns are different variables.
+        redshift (NDArray[np.float64]): Redshift of injections.
+        snr (NDArray[np.float64]): Signal-to-noise ratio of injections.
+        err_logMc (NDArray[np.float64]): Fractional measurement error of chirp mass of injections.
+        err_logDL (NDArray[np.float64]): Fractional measurement error of luminosity distance of injections.
+        err_eta (NDArray[np.float64]): Measurement error of symmetric mass ratio of injections.
+        err_iota (NDArray[np.float64]): Measurement error of inclination angle of injections.
+        sky_area_90 (NDArray[np.float64]): Measurement error of 90%-credible sky-area of injections.
         network_spec (List[str]): Network specification, e.g. ['A+_H', 'A+_L', 'V+_V', 'K+_K', 'A+_I'].
         science_case (str): Science case, e.g. 'BNS'.
         wf_model_name (str): Waveform model name.
@@ -96,7 +96,7 @@ class InjectionResults(object):
         If calculate_and_set_detection_rate is run, then the following attributes will also be set.
         zmin_plot (float): Minimum redshift for plotting.
         zmax_plot (float): Maximum redshift for plotting.
-        zavg_efflo_effhi (NDArray[NDArray[float]]): Detection efficiency across the redshift range, for each redshift sub-bin contains the geometric mean and the proportion of sources above the low and high SNR thresholds.
+        zavg_efflo_effhi (NDArray[NDArray[np.float64]]): Detection efficiency across the redshift range, for each redshift sub-bin contains the geometric mean and the proportion of sources above the low and high SNR thresholds.
         det_eff_fits (List[Callable[[float], float]]): 3-parameter sigmoid fits to the low and high SNR threshold detection efficiency curves.
         det_rate_limit (Callable[[float], float]): Maximum possible detection rate, i.e. actual number of sources merger rate, at a given redshift.
         det_rate (Callable[[float, float], float]): Detection rate at a given redshift for a given SNR threshold (low or high).
@@ -293,10 +293,25 @@ class InjectionResults(object):
         else:
             raise ValueError("Science case not recognised.")
 
-        def det_rate_limit(z0):
+        def det_rate_limit(z0: float) -> float:
+            """Returns the maximum possible detection rate, i.e. the total number of sources.
+
+            Formula: $D_R(z, \rho_\ast)|_{\varepsilon=1}$ in B&S2022;i.e. "merger rate" in Fig 2, not R(z) but int R(z)/(1+z), i.e. if perfect efficiency.
+
+            Args:
+                z0: Maximum redshift to integrate detection rate from zero out to.
+            """
             return detection_rate_limit(merger_rate, z0)
 
-        def det_rate(z0, snr_threshold):
+        def det_rate(z0: float, snr_threshold: float) -> float:
+            """Returns the detection rate above a given threshold.
+
+            Formula: $D_R(z, \rho_\ast)$ in B&S2022.
+
+            Args:
+                z0: Maximum redshift to integrate detection rate from zero out to.
+                snr_threshold: Signal-to-noise ratio detection threshold.
+            """
             return detection_rate(merger_rate, _det_eff, z0, snr_threshold)
 
         # TODO: do this using global?

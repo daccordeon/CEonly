@@ -183,7 +183,9 @@ NEMOLF_AND_2G = dict(
 )
 
 # list of 10 network sets (dicts) to run unified tasks over
-NET_DICT_LIST = [
+NET_DICT_LIST: List[
+    Dict[str, Union[List[List[str]], List[str], str, List[tuple, str]]]
+] = [
     BS2022_SIX,
     #     CE_C,
     CE_CS,

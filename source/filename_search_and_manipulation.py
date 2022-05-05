@@ -100,7 +100,7 @@ def network_spec_to_net_label(network_spec: List[str], styled: bool = False) -> 
 
 def filename_to_netspec_sc_wf_injs(
     filename: str,
-) -> Tuple[List[str], str, str, Dict[str, str], int]:
+) -> Tuple[List[str], str, str, Optional[Dict[str, str]], int]:
     """Returns the network specification, waveform options, and number of injections from a processed results filename.
 
     Args:
@@ -109,14 +109,14 @@ def filename_to_netspec_sc_wf_injs(
     if "_TASK_" in filename:
         filename = filename[: filename.find("_TASK_")] + ".npy"
     # [1:-1] to cut out 'results' and '.npy'
-    net_label, science_case, wf_str, num_injs = (
+    net_label, science_case, wf_str, num_injs_str = (
         filename.replace("_SCI-CASE_", "_NET_")
         .replace("_WF_", "_NET_")
         .replace("_INJS-PER-ZBIN_", "_NET_")
         .replace(".npy", "_NET_")
         .split("_NET_")[1:-1]
     )
-    network_spec = net_label_to_network_spec(net_label)
+    network_spec = net_label_to_network_spec(net_label, styled=False)
     # TODO: update wf_str to more distinctly separate approximant, currently searching for IMR...
     if "_IMR" in wf_str:
         approximant_index = wf_str.find("_IMR")
@@ -126,7 +126,7 @@ def filename_to_netspec_sc_wf_injs(
         )
     else:
         wf_model_name, wf_other_var_dic = wf_str, None
-    num_injs = int(num_injs)
+    num_injs = int(num_injs_str)
     return network_spec, science_case, wf_model_name, wf_other_var_dic, num_injs
 
 
