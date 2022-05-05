@@ -69,16 +69,16 @@ from copy import deepcopy
 
 
 def add_measurement_errs_CDFs_to_axs(
-    axs : NDArray[Type[plt.Subplot]],
-    resampled_results : NDArray[NDArray[float]],
-    num_bins : int,
-    colour : Optional[str],
-    linestyle : Optional[str],
-    label : str,
-    normalise_count : bool=True,
-    threshold_by_SNR : bool=True,
-    contour : bool=True,
-    debug : bool=False,
+    axs: NDArray[Type[plt.Subplot]],
+    resampled_results: NDArray[NDArray[float]],
+    num_bins: int,
+    colour: Optional[str],
+    linestyle: Optional[str],
+    label: str,
+    normalise_count: bool = True,
+    threshold_by_SNR: bool = True,
+    contour: bool = True,
+    debug: bool = False,
 ) -> None:
     """Adds the distributions for SNR, sky area, and measurement errors plots for a given network onto existing axes.
 
@@ -228,28 +228,28 @@ def add_measurement_errs_CDFs_to_axs(
 def collate_measurement_errs_CDFs_of_networks(
     network_spec_list: List[List[str]],
     science_case: str,
-    specific_wf: Optional[str]=None,
-    num_bins:int=20,
-    save_fig:bool=True,
-    show_fig:bool=True,
-    plot_label:Optional[str]=None,
-    full_legend:bool=False,
-    print_progress:bool=True,
-    xlim_list:Optional[Union[Tuple[tuple, ...], str]]=None,
-    normalise_count:bool=True,
-    threshold_by_SNR:bool=True,
-    plot_title:Optional[str]=None,
-    CDFmin:Optional[float]=None,
-    data_path:str="/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
-    linestyles_from_BS2022:bool=False,
-    contour:bool=False,
-    parallel:bool=False,
-    debug:bool=False,
-    seed:Optional[int]=None,
-    norm_tag:str="GWTC3",
+    specific_wf: Optional[str] = None,
+    num_bins: int = 20,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    plot_label: Optional[str] = None,
+    full_legend: bool = False,
+    print_progress: bool = True,
+    xlim_list: Optional[Union[Tuple[tuple, ...], str]] = None,
+    normalise_count: bool = True,
+    threshold_by_SNR: bool = True,
+    plot_title: Optional[str] = None,
+    CDFmin: Optional[float] = None,
+    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    linestyles_from_BS2022: bool = False,
+    contour: bool = False,
+    parallel: bool = False,
+    debug: bool = False,
+    seed: Optional[int] = None,
+    norm_tag: str = "GWTC3",
 ) -> None:
     """Collates distributions of SNR, sky-area, and measurement errors for different networks.
-    
+
     Distributions are the probability density function (PDF) wrt the logarithmic axis (i.e. if a histogram with uniform logarithmic width bins was normalised to height instead of the actual integrated area) and the cumulative (CDF) function of the raw variable.
 
     Args:

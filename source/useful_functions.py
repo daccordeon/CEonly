@@ -32,7 +32,7 @@ License:
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from typing import List, Set, Dict, Tuple, Optional, Union, Type
+from typing import List, Set, Dict, Tuple, Optional, Union, Type, Callable, Iterable
 from types import TracebackType
 from numpy.typing import NDArray
 import os, sys
@@ -42,10 +42,10 @@ from multiprocessing import Pool
 
 
 class HiddenPrints(object):
-    """Class used in with statement to hide stdout, e.g. print statements.
+    """Class used in with statements to hide stdout, e.g. print statements.
 
     From <https://stackoverflow.com/a/45669280>; use as ``with HiddenPrints():''.
-    Typing from <https://stackoverflow.com/questions/49959656/typing-exit-in-3-5-fails-on-runtime-but-typechecks>.
+    Typing from <https://stackoverflow.com/questions/49959656/typing-exit-in-3-5-fails-on-runtime-but-typechecks>, how does this work for exc_value without Type?
     """
 
     # TODO: Add docstrings to these private methods once I'm familiar with them, see above urls for now.
@@ -53,106 +53,91 @@ class HiddenPrints(object):
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
-    def __exit__(self, exc_type: Optional[Type[BaseException]],
-             exc_value: Optional[BaseException],
-             traceback: Optional[TracebackType]) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         sys.stdout.close()
         sys.stdout = self._original_stdout
 
 
 class PassEnterExit(object):
-    """Short description.
+    """Class used in with statements to just execute the block of code.
 
-    Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+    Used to replace HiddenPrints in with statements to allow prints.
     """
 
-    """do-nothing class to replace HiddenPrints with in with statements to allow prints"""
-
-    def __enter__(self):
+    def __enter__(self) -> None:
         pass
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         pass
 
 
-def without_rows_w_nan(xarr):
-    """Short description.
+def without_rows_w_nan(xarr: NDArray) -> NDArray:
+    """Returns an array with all rows (2nd axis) containing NaNs filtered out.
+
+    From <https://note.nkmk.me/en/python-numpy-nan-remove/>.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        xarr: Array to filter.
     """
-    """https://note.nkmk.me/en/python-numpy-nan-remove/"""
     return xarr[np.logical_not(np.isnan(xarr).any(axis=1))]
 
 
-def sigmoid_3parameter(z, a, b, c):
-    """Short description.
+def sigmoid_3parameter(z: float, a: float, b: float, c: float) -> float:
+    """Returns the modified (3-parameter) sigmoid function evaluated at a point.
+
+    For c = 1 it is the regular sigmoid.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        z: Point to evaluate at.
+        a: First sigmoid parameter.
+        b: Second sigmoid parameter.
+        c: Third, now free, sigmoid parameter.
     """
-    """the modified sigmoid function with c free, for c=1 it is the regular sigmoid"""
     return ((1 + b) / (1 + b * np.exp(a * z))) ** c
 
 
-def flatten_list(x):
-    """Short description.
+def flatten_list(x: list[list]) -> list:
+    """Returns a list with two levels flattened, e.g. flattens a 2D list.
+
+    TODO: remove bug that it affects strings, e.g. x = ['ab', 'cd'].
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        x: 2D list to flatten.
     """
-    """x = [y, ...], y = [z, ...]. TODO: remove bug that it affects strings"""
+    # multiple list comprehension evaluated left-to-right like nested for loops but with the last code block as the initial item
     return [z for y in x for z in y]
 
 
 def parallel_map(
-    fn,
-    xarr,
-    display_progress_bar=False,
-    unordered=False,
-    num_cpus=os.cpu_count(),
-    parallel=True,
-):
-    """Short description.
+    fn: Callable[[Any], Any],
+    xarr: Iterable,
+    display_progress_bar: bool = False,
+    unordered: bool = False,
+    num_cpus: int = os.cpu_count(),
+    parallel: bool = True,
+) -> list:
+    """Returns a function mapped over an iterable using parallel computation.
+
+    Direct substitution doesn't work because pool.map and p_map work differently, e.g. the latter can take fn as a lambda itself (but still no internal functions or lambda calls).
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        fn: Function to map from elements of xarr. Cannot be pickled if it contains inner functions or calls to lambdas, TODO: change to dill to allow this?
+        xarr: Elements to map over.
+        display_progress_bar: Whether to use tqdm to display a progress bar.
+        unordered: Whether to let the parallel computations occur out of order.
+        num_cpus: The number of CPUs to use.
+        parallel: Whether to parallelize the computation.
     """
-    """fn is a function to apply to elements in iterable xarr, display_progress_bar is a bool about whether to use tqdm;
-    returns a list of fn applied to xarr.
-    fn cannot be pickled if it contains inner functions or calls to lambdas, TODO: change to dill to allow this?
-    direct substitution doesn't work because pool.map and p_map work differently, e.g. the latter can take fn as a lambda itself (but still no internal functions or lambda calls)."""
     if parallel:
         if display_progress_bar:
             if unordered:
@@ -174,20 +159,20 @@ def parallel_map(
         return list(map(fn, xarr))
 
 
-def logarithmically_uniform_sample(low, high, num_samples, seed=None):
-    """Short description.
+def logarithmically_uniform_sample(
+    low: float, high: float, num_samples: int, seed: Optional[int] = None
+) -> NDArray[float]:
+    """Returns a number of samples uniformly distributed when viewed on a logarithmic scale.
+
+    Done by uniformly sampling the log-transform variable.
+    From <https://stackoverflow.com/a/43977980>.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        low: Minimum value.
+        high: Maximum value.
+        num_samples: Number of samples to draw.
+        seed: Random seed to generate samples.
     """
-    """generates a number of samples (num_samples) in (low, high) such that they are uniformly distributed when viewed on a logarithmic scale, done by uniformly sampling the log-transform variable
-    credit: https://stackoverflow.com/a/43977980"""
     # TODO: update seeding to the best practice described here: https://towardsdatascience.com/stop-using-numpy-random-seed-581a9972805f
     return np.exp(
         np.random.default_rng(seed).uniform(
@@ -196,18 +181,13 @@ def logarithmically_uniform_sample(low, high, num_samples, seed=None):
     )
 
 
-def insert_at_pattern(initial, insert, pattern):
-    """Short description.
+def insert_at_pattern(initial: str, insert: str, pattern: str) -> str:
+    """Returns a string with a different string inserted at the first matching pattern.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        initial: String to search over.
+        insert: String to replace with.
+        pattern: String to replace the first instance of.
     """
-    """given three strings, returns a copy of initial with insert inserted at the first matching pattern"""
     insert_index = initial.find(pattern)
     return initial[:insert_index] + insert + initial[insert_index:]

@@ -59,17 +59,22 @@ import matplotlib.lines as mlines
 
 
 def collate_eff_detrate_vs_redshift(
-    axs : NDArray[Type[plt.Subplot]], results: Type[InjectionResults], zaxis_plot : NDArray, colours : Optional[List[str]]=None, label : Optional[str]=None, parallel : bool=True
+    axs: NDArray[Type[plt.Subplot]],
+    results: Type[InjectionResults],
+    zaxis_plot: NDArray,
+    colours: Optional[List[str]] = None,
+    label: Optional[str] = None,
+    parallel: bool = True,
 ) -> None:
     """Adds the detection efficiency and rate versus redshift plot for a given network onto existing axes.
-    
+
     Usage: collate different networks with data generated/saved using InjectionResults.calculate_and_set_detection_rate.
-    
+
     Args:
         axs: Axes to add plots onto.
         results: Results with calculate_and_set_detection_rate() already run.
         zaxis_plot: Redshift axis to plot over.
-        colours: Colours for the detection efficiency and rate plots. Defaults to using the same colour for each plot. 
+        colours: Colours for the detection efficiency and rate plots. Defaults to using the same colour for each plot.
         label: Legend label for the results.
         parallel: Whether to parallelize the computation.
     """
@@ -134,21 +139,21 @@ def collate_eff_detrate_vs_redshift(
 
 
 def compare_detection_rate_of_networks_from_saved_results(
-    network_spec_list : List[List[str]],
-    science_case : str,
-    save_fig : bool= True,
-    show_fig : bool= True,
-    plot_label : Optional[str] =None,
-    full_legend : bool= False,
-    specific_wf : Optional[str] =None,
-    print_progress : bool= True,
-    data_path : str ="/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
-    parallel : bool= True,
-    debug : bool= False,
-    norm_tag : str ="GWTC3",
+    network_spec_list: List[List[str]],
+    science_case: str,
+    save_fig: bool = True,
+    show_fig: bool = True,
+    plot_label: Optional[str] = None,
+    full_legend: bool = False,
+    specific_wf: Optional[str] = None,
+    print_progress: bool = True,
+    data_path: str = "/fred/oz209/jgardner/CEonlyPony/source/data_processed_injections/",
+    parallel: bool = True,
+    debug: bool = False,
+    norm_tag: str = "GWTC3",
 ) -> None:
     """Collates the detection efficiency and rate versus redshift plots for different networks.
-    
+
     Replication of Fig 2 in B&S2022, use to check if detection rates are correct.
     Uses uniformly sampled results in redshift to have good resolution along detection rate curve, this is actually the main motivation for using a non-physical initial population.
 

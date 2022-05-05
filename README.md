@@ -1,25 +1,11 @@
 # CEonlyPony
-*Analysing the Cosmic Explorer (CE) only --- without any 2G or ET detectors --- science case*
+*Analysing the various cases for a gravitational-wave detector in Australia. Including the science case for Cosmic Explorer (CE) operating alone (without any 2nd generation or Einstein Telescope detectors).*
 
-James Gardner, February 2022
+James Gardner, 2022
 
 Current build found [here](https://github.com/daccordeon/CEonlyPony).
 
 ---
-- Contact for any technical enquiries at <james.gardner@anu.edu.au>.
-- See explanation of code in the README.md inside source/
-
-Requirements:
-- see requirements.txt
-
----
-file structure
-```bash
-.
-├── .gitignore
-├── LICENSE
-├── README.md
-├── source
-│   ├── ...
-```
-[//]: # (tree -I '*.pdf|*.png')
+- Contact james.gardner (at) anu.edu.au for any technical enquiries.
+- Python requirements for the codebase in source/ found in requirements.txt.
+- The critical path to replicate the results and plots is explained in source/guide_to_using_codebase.ipynb.

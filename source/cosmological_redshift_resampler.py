@@ -147,7 +147,7 @@ def resample_redshift_cosmologically_from_results(
     results: Type[InjectionResults],
     print_progress: bool = False,
     print_samples_with_replacement: bool = False,
-    **kwargs : Any,
+    **kwargs: Any,
 ) -> NDArray[NDArray[float]]:
     """Returns the resampled given results using a cosmological model.
 

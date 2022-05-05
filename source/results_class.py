@@ -62,7 +62,7 @@ import matplotlib.lines as mlines
 
 class InjectionResults(object):
     """Class for results processing, besides the results array it has common things like the science case, network, and label.
-    
+
     Information is stored in the filename of the data file, this is extracted for later reference. The columns of the data file are also labelled for readability. The detection efficiency and rate can also be calculated.
 
     Attributes:
@@ -87,22 +87,24 @@ class InjectionResults(object):
         file_tag (str): File tag for input/output.
         human_file_tag (str): Human-readable file tag.
         norm_tag (str): Survey tag to normalise cosmological merger rates to, e.g. .
-        
+
         If the file is from a task, then the following attributes will also be set.
         task_id (int): Slurm task ID.
         injections_task_file_name (str): File name to injections task data file with path.
         initial_task_num_injs (int): Number of injections in the raw injections data file.
-        
+
         If calculate_and_set_detection_rate is run, then the following attributes will also be set.
-        zmin_plot (float): Minimum redshift for plotting. 
-        zmax_plot (float): Maximum redshift for plotting. 
+        zmin_plot (float): Minimum redshift for plotting.
+        zmax_plot (float): Maximum redshift for plotting.
         zavg_efflo_effhi (NDArray[NDArray[float]]): Detection efficiency across the redshift range, for each redshift sub-bin contains the geometric mean and the proportion of sources above the low and high SNR thresholds.
         det_eff_fits (List[Callable[[float], float]]): 3-parameter sigmoid fits to the low and high SNR threshold detection efficiency curves.
-        det_rate_limit (Callable[[float], float]): Maximum possible detection rate, i.e. actual number of sources merger rate, at a given redshift. 
+        det_rate_limit (Callable[[float], float]): Maximum possible detection rate, i.e. actual number of sources merger rate, at a given redshift.
         det_rate (Callable[[float, float], float]): Detection rate at a given redshift for a given SNR threshold (low or high).
     """
 
-    def __init__(self, file_name : str, data_path : Optional[str]=None, norm_tag :str="GWTC3"):
+    def __init__(
+        self, file_name: str, data_path: Optional[str] = None, norm_tag: str = "GWTC3"
+    ):
         """Initialises InjectionResults with all non--detection rate attributes.
 
         Args:
@@ -158,14 +160,14 @@ class InjectionResults(object):
                 0
             ]
 
-    def calculate_and_set_detection_rate(self, print_reach : bool=False) -> None:
+    def calculate_and_set_detection_rate(self, print_reach: bool = False) -> None:
         """Calculates detection rate and auxiliary quantities and sets them as attributes.
 
         Adapted from legacy calculate_detection_rate_from_results.
 
         Args:
             print_reach: Whether to print the horizon and reach of the network, i.e. the redshifts to achieve particular values of the detection efficiency wrt both SNR thresholds (0.1% and 50% respectively).
-        
+
         Raises:
             ValueError: If the science case is not recognised. Also, not appearing in the execution of this function, but if the detection efficiency function calculated here is later used then it can raise this error if the SNR threshold is not recognised.
         """
@@ -241,11 +243,11 @@ class InjectionResults(object):
 
         # from this point on, I sample the sigmoid fit to the raw data (e.g. for the detection rate)
         # detection efficiency, interpolate from sigmoid fit
-        def _det_eff(z : float, snr_threshold : float) -> float:
+        def _det_eff(z: float, snr_threshold: float) -> float:
             """Returns the detection efficiency of sources above a given threshold at a given redshift.
-            
+
             Calculates the detection efficiency using the 3-parameter sigmoid fits rather than the raw data.
-            
+
             Args:
                 z: Redshift.
                 snr_threshold: Signal-to-noise ratio threshold.
@@ -253,9 +255,9 @@ class InjectionResults(object):
             Raises:
                 ValueError: If the SNR threshold is not recognised.
             """
-            if snr_threshold == 10.:
+            if snr_threshold == 10.0:
                 return self.det_eff_fits[0](z)
-            elif snr_threshold == 100.:
+            elif snr_threshold == 100.0:
                 return self.det_eff_fits[1](z)
             else:
                 # TODO: add this feature
@@ -267,7 +269,7 @@ class InjectionResults(object):
         # want initial guess to be near the transition (high derivative) part of the sigmoid, how?
         reach_initial_guess = 0.1  # pulling from Table 3
         reach_eff, horizon_eff = 0.5, 0.001
-        for snr_threshold in (10., 100.):
+        for snr_threshold in (10.0, 100.0):
             # fsolve finds a zero x* of f(x) near an initial guess x0
             reach = fsolve(
                 lambda z: _det_eff(z, snr_threshold) - reach_eff, reach_initial_guess
@@ -303,14 +305,14 @@ class InjectionResults(object):
 
     def plot_detection_rate(
         self,
-        show_fig: bool=False,
-        save_fig: bool=True,
+        show_fig: bool = False,
+        save_fig: bool = True,
         file_extension: Optional[str] = ".pdf",
-        print_progress: bool=True,
-        parallel: bool=True,
+        print_progress: bool = True,
+        parallel: bool = True,
     ) -> None:
         """Plots three-panels of integrated SNR, detection efficiency, and detection rate versus redshift.
-        
+
         Designed to replicate Fig 2 in B&S2022. Similar to calling the legacy plot_snr_eff_detrate_vs_redshift with given kwargs.
 
         Args:
@@ -454,7 +456,7 @@ class InjectionResults(object):
 
     def print_results(self) -> None:
         """Prints out a summary of the results.
-        
+
         TODO: summarise results, currently just prints column headings and results.
         """
         print(

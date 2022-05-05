@@ -1,9 +1,4 @@
-"""Short one-sentence description.
-
-Long description.
-
-Usage:
-    Describe the typical usage.
+"""Miscellaneous tools for plotting that are not implementation specific.
 
 License:
     BSD 3-Clause License
@@ -38,54 +33,50 @@ License:
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import List, Set, Dict, Tuple, Optional, Union, Type, Any
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from constants import *
 
 
-def plt_global_fontsize(fontsize):
-    """Short description.
+def plt_global_fontsize(fontsize: float) -> None:
+    """Updates the matplotlib.pyplot fontsize globally, e.g. in axes labels, legends, etc..
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        fontsize: Fontsize.
     """
     plt.rcParams.update({"font.size": fontsize})
 
 
 def force_log_grid(
-    ax, log_axis="both", color="gainsboro", preserve_tick_labels=True, **kwargs
-):
-    """Short description.
+    ax: Type[plt.Subplot],
+    log_axis: str = "both",
+    colour: str = "gainsboro",
+    preserve_tick_labels: bool = True,
+    **kwargs: Any,
+) -> None:
+    """Forces matplotlib to display all major and minor grid lines.
+
+    If the plot would be too dense, then it will fail to do so.
+    TODO: fix preserve_tick_labels, currently doesn't do anything, just calling fig.canvas.draw() before doesn't fix it.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        ax: Axes to apply axes to.
+        log_axis: Which of the x and y axes to apply a grid to.
+        colour: Grid colour.
+        preserve_tick_labels: Whether to preserve the existing tick labels. For this to work, the axis limits (e.g. xlim) and fig.canvas.draw() must be set beforehand.
+        **kwargs: Options to pass to matplotlib.axes.Axes.grid.
     """
-    """attempts to force matplotlib to display all major and minor grid lines on both axes, if the plot would be too dense, then it will fail to do so
-    for preserve_tick_labels to work, the y/xlim must be set beforehand
-    TODO: fix preserve_tick_labels, just calling fig.canvas.draw() before doesn't fix it"""
     #     if preserve_tick_labels:
     #         # this could be re-written with a decorator
     #         ax.set(ylim=ax.get_ylim(), xlim=ax.get_xlim())
     #         yticklabels, xticklabels = ax.yaxis.get_ticklabels(), ax.xaxis.get_ticklabels()
     #         #print(ax.get_ylim(), ax.get_xlim(), yticklabels, xticklabels)
-    #         force_log_grid(ax, log_axis=log_axis, preserve_tick_labels=False, color=color, **kwargs)
+    #         force_log_grid(ax, log_axis=log_axis, preserve_tick_labels=False, colour=color, **kwargs)
     #         ax.yaxis.set_ticklabels(yticklabels)
     #         ax.xaxis.set_ticklabels(xticklabels)
     #     else:
-    ax.grid(which="both", axis="both", color=color, **kwargs)
+    ax.grid(which="both", axis="both", color=colour, **kwargs)
     # minorticks_on must be called before the locators by experimentation
     ax.minorticks_on()
     # TODO: fix this, current doesn't force loglog grid
@@ -105,19 +96,12 @@ def force_log_grid(
 #         ax.set(xticks=ax.get_xticks()[::2], xlim=ax.get_xlim())
 
 
-def add_SNR_contour_legend(ax):
-    """Short description.
+def add_SNR_contour_legend(ax: Type[plt.Subplot]) -> None:
+    """Adds a contour legend a la Kuns+ 2020 to the given axes.
 
     Args:
-        x: _description_
-
-    Raises:
-        e: _description_
-
-    Returns:
-        _type_: _description_
+        ax: Axes to which to add a legend to explain the contouring.
     """
-    """adds a contour legend a la Kuns+ 2020 to the given axes"""
     rect_pos = (0.05, 0.8)
     rect_width = 0.06
     rect_height = 0.1
