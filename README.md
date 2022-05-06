@@ -3,7 +3,7 @@
 
 James Gardner, 2022
 
-Current build found [here](https://github.com/daccordeon/CEonlyPony).
+This is an old version of the code, the current build is on the LIGO GitLab available [here](https://git.ligo.org/jameswalter.gardner/CEonlyPony).
 
 ---
 - Contact james.gardner (at) anu.edu.au for any technical enquiries.
